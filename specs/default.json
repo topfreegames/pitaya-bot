@@ -1,0 +1,30 @@
+{
+  "numberOfInstances": 10,
+  "initial": {
+    "function": "initializeDb"
+  },
+  "sequentialOperations": [
+    {
+      "request": "connector.testsvc.testrequestreturnsptr",
+      "args": { "msg": { "type": "string", "value": "good" } },
+      "expect": { "code": 200 },
+      "store": {
+        "name": { "type": "string", "value": "name" },
+        "gold": { "type": "int", "value": "gold" }
+      }
+    },
+    {
+      "request": "decrementGemsRoute",
+      "args": {},
+      "expect": {
+        "response.success": { "type": "bool", "value": true },
+        "response.gold": { "type": "int",  "value": "$gold + 100" }
+      },
+      "store": { "gold": { "type": "int", "value": "$response.gold" } },
+      "change": { "gems": { "type": "int", "value": "$gems-50" } }
+    }
+  ],
+  "final": {
+    "function": "saveToFile"
+  }
+}
