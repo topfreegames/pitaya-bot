@@ -16,8 +16,11 @@ setup-protobuf-macos:
 ensure-bin:
 	@[ -f ./testing/server ] || go build -o ./testing/server ./testing/main.go
 
-run-bin:
+run-server:
 	@go run ./testing/main.go
+
+run-bots:
+	@go run *.go run
 
 ensure-deps:
 	@cd ./testing && docker-compose up -d
@@ -25,4 +28,4 @@ ensure-deps:
 kill-deps:
 	@cd ./testing && docker-compose down; true
 
-dev-deps: ensure-deps ensure-bin run-bin
+dev-deps: ensure-deps ensure-bin

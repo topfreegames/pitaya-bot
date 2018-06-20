@@ -5,4 +5,7 @@ type Bot interface {
 	Initialize() error
 	Run() error
 	Finalize() error
+	Connect()
+	Disconnect()
+	Reconnect()
 }

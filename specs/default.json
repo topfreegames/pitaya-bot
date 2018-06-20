@@ -1,30 +1,48 @@
 {
-  "numberOfInstances": 10,
-  "initial": {
+  "numberOfInstances": 1,
+  "preRun": {
     "function": "initializeDb"
   },
   "sequentialOperations": [
     {
-      "request": "connector.testsvc.testrequestreturnsptr",
-      "args": { "msg": { "type": "string", "value": "good" } },
-      "expect": { "code": 200 },
+      "request": "connector.playerHandler.create",
+      "expect": {
+        "$response.code": {
+          "type": "string",
+          "value": "200"
+        } 
+      },
       "store": {
-        "name": { "type": "string", "value": "name" },
-        "gold": { "type": "int", "value": "gold" }
+        "playerAccessToken": {
+          "type": "string",
+          "value": "$response.player.accessToken"
+        }
       }
     },
     {
-      "request": "decrementGemsRoute",
-      "args": {},
-      "expect": {
-        "response.success": { "type": "bool", "value": true },
-        "response.gold": { "type": "int",  "value": "$gold + 100" }
+      "function": "reconnect"
+    },
+    {
+      "request": "connector.playerHandler.authenticate",
+      "args": { 
+        "accessToken": { 
+          "type": "string", 
+          "value": "$store.playerAccessToken"
+        } 
       },
-      "store": { "gold": { "type": "int", "value": "$response.gold" } },
-      "change": { "gems": { "type": "int", "value": "$gems-50" } }
+      "expect": { 
+        "$response.code": {
+          "type": "string",
+          "value": "200" 
+        },
+        "$response.player.accessToken": {
+          "type": "string",
+          "value": "$store.playerAccessToken"
+        }
+      }
     }
   ],
-  "final": {
+  "postRun": {
     "function": "saveToFile"
   }
 }
