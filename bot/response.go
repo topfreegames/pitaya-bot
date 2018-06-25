@@ -12,31 +12,31 @@ type Response map[string]interface{}
 // Expr ...
 type Expr string
 
-func (e Expr) extractAtoms() []string {
-	atoms := strings.Split(string(e), ".")
+func (e Expr) tokenize() []string {
+	tokens := strings.Split(string(e), ".")
 
-	if atoms[0] == "$response" {
-		return atoms[1:]
+	if tokens[0] == "$response" {
+		return tokens[1:]
 	}
-	return atoms
+	return tokens
 }
 
-// TODO - handle slice atom
-func (r Response) fromAtom(atom string) (interface{}, error) {
-	value, ok := r[atom]
+// TODO - handle slice token
+func visitToken(container map[string]interface{}, token string) (interface{}, error) {
+	value, ok := container[token]
 	if !ok {
-		return nil, fmt.Errorf("atom '%s' not found", atom)
+		return nil, fmt.Errorf("atom '%s' not found", token)
 	}
 
 	return value, nil
 }
 
 func extractValue(src map[string]interface{}, expr Expr) (interface{}, error) {
-	atoms := expr.extractAtoms()
+	tokens := expr.tokenize()
 	var container interface{} = src
-	for i, atom := range atoms {
+	for i, token := range tokens {
 		if isLiteral(container) {
-			if i == len(atoms)-1 {
+			if i == len(tokens)-1 {
 				return container, nil
 			}
 
@@ -49,13 +49,18 @@ func extractValue(src map[string]interface{}, expr Expr) (interface{}, error) {
 		}
 
 		var err error
-		container, err = Response(parsedContainer).fromAtom(atom)
+		container, err = visitToken(parsedContainer, token)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return container, nil
+}
+
+func (r Response) tryExtractValue(expr Expr) interface{} {
+	v, _ := r.extractValue(expr)
+	return v
 }
 
 func (r Response) extractValue(expr Expr) (interface{}, error) {

@@ -28,7 +28,7 @@ func tryGetFromStorage(expr interface{}, store *storage) (interface{}, error) {
 	return nil, nil
 }
 
-func castType(value interface{}, typ string) (interface{}, error) {
+func assertType(value interface{}, typ string) (interface{}, error) {
 	ret := value
 	switch typ {
 	case "string":
@@ -66,7 +66,7 @@ func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]inter
 			value = valueFromStorage
 		}
 
-		value, err = castType(value, valueType)
+		value, err = assertType(value, valueType)
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +114,7 @@ func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{},
 	}
 
 	if value == nil {
-		value, err = castType(spec.Value, spec.Type)
+		value, err = assertType(spec.Value, spec.Type)
 	}
 
 	return value, nil
@@ -172,14 +172,9 @@ func equals(lhs interface{}, rhs interface{}) bool {
 
 func storeData(storeSpec models.StoreSpec, store *storage, resp Response) error {
 	for name, spec := range storeSpec {
-		valueFromResponse := strings.HasPrefix(spec.Value, "$response")
-		if valueFromResponse {
-			value, err := Response(resp).extractValue(Expr(spec.Value))
-			if err != nil {
-				return err
-			}
-
-			store.Set(name, value)
+		valueFromResponse := resp.tryExtractValue(Expr(spec.Value))
+		if valueFromResponse != nil {
+			store.Set(name, valueFromResponse)
 			return nil
 		}
 
