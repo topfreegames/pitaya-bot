@@ -249,7 +249,6 @@
     "constants",
     "context",
     "errors",
-    "examples/testing/protos",
     "interfaces",
     "internal/codec",
     "internal/message",
@@ -259,7 +258,6 @@
     "modules",
     "pipeline",
     "protos",
-    "protos/test",
     "remote",
     "route",
     "router",
@@ -272,13 +270,13 @@
     "util",
     "util/compression"
   ]
-  revision = "aa31b49ad17055dbc092c6efe3e6dc94ac396068"
+  revision = "4e4f74c527bb1489dba140145aac4e36e6c084e1"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "027cca12c2d63e3d62b670d901e8a2c95854feec"
+  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
   branch = "master"
@@ -292,7 +290,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
+  revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
 
 [[projects]]
   branch = "master"
@@ -301,7 +299,7 @@
     "unix",
     "windows"
   ]
-  revision = "fc8bd948cf46f9c7af0f07d34151ce25fe90e477"
+  revision = "a200a19cb90b19de298170992778b1fda7217bd6"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -328,7 +326,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "32ee49c4dd805befd833990acba36cb75042378c"
+  revision = "80063a038e333bbe006c878e4c5ce4c74d055498"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -337,16 +335,17 @@
     "balancer",
     "balancer/base",
     "balancer/roundrobin",
-    "channelz",
     "codes",
     "connectivity",
     "credentials",
     "encoding",
     "encoding/proto",
-    "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "health/grpc_health_v1",
     "internal",
+    "internal/backoff",
+    "internal/channelz",
+    "internal/grpcrand",
     "keepalive",
     "metadata",
     "naming",
@@ -359,8 +358,8 @@
     "tap",
     "transport"
   ]
-  revision = "7a6a684ca69eb4cae85ad0a484f2e531598c047b"
-  version = "v1.12.2"
+  revision = "168a6198bcb0ef175f7dacec0b8691fc141dc9b8"
+  version = "v1.13.0"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -371,6 +370,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e447f4d3135f1484bdeb7afd6e265e33336d29a9607d77e9006cfbcc72562a00"
+  inputs-digest = "4307bf4d459941c620b49b8eab1a523d9c163ad871caac89ba2c582c721d5682"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -6,12 +6,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya-bot/models"
-	"github.com/topfreegames/pitaya/client"
 )
 
 // SequentialBot defines the struct for the sequential bot that is going to run
 type SequentialBot struct {
-	client  *client.Client
+	client  *PClient
 	config  *viper.Viper
 	id      int
 	spec    *models.Spec
@@ -55,47 +54,87 @@ func (b *SequentialBot) Run() error {
 	return nil
 }
 
-// TODO - refactor
-func (b *SequentialBot) runOperation(op *models.Operation) error {
-	if op.Request != "" {
-		route := op.Request
-		b.logger.Info("Will send request: ", route)
-
-		args, err := buildArgs(op.Args, b.storage)
-		if err != nil {
-			return err
-		}
-
-		resp, err := sendRequest(args, route, b.client)
-		if err != nil {
-			return err
-		}
-
-		b.logger.Info("validating expectations")
-		err = validateExpectations(op.Expect, resp, b.storage)
-		if err != nil {
-			return err
-		}
-		b.logger.Info("received valid response")
-
-		b.logger.Info("storing data")
-		err = storeData(op.Store, b.storage, resp)
-		if err != nil {
-			return err
-		}
-
-		b.logger.Info("all done")
-		return nil
+func (b *SequentialBot) runRequest(op *models.Operation) error {
+	b.logger.Info("Executing request to: " + op.URI)
+	route := op.URI
+	args, err := buildArgs(op.Args, b.storage)
+	if err != nil {
+		return err
 	}
 
-	b.logger.Info("Will execute internal function: ", op.Function)
-	switch op.Function {
+	resp, err := sendRequest(args, route, b.client)
+	if err != nil {
+		return err
+	}
+
+	b.logger.Info("validating expectations")
+	err = validateExpectations(op.Expect, resp, b.storage)
+	if err != nil {
+		return err
+	}
+	b.logger.Info("received valid response")
+
+	b.logger.Info("storing data")
+	err = storeData(op.Store, b.storage, resp)
+	if err != nil {
+		return err
+	}
+
+	b.logger.Info("all done")
+	return nil
+}
+
+func (b *SequentialBot) runFunction(op *models.Operation) error {
+	b.logger.Info("Will execute internal function: ", op.URI)
+	switch op.URI {
 	case "disconnect":
 		b.Disconnect()
 	case "connect":
 		b.Connect()
 	case "reconnect":
 		b.Reconnect()
+	}
+
+	return nil
+}
+
+func (b *SequentialBot) listenToPush(op *models.Operation) error {
+	b.logger.Info("Waiting for push on route: " + op.URI)
+	resp, err := b.client.ReceivePush(op.URI)
+	if err != nil {
+		return err
+	}
+
+	b.logger.Info("validating expectations")
+	err = validateExpectations(op.Expect, resp, b.storage)
+	if err != nil {
+		return err
+	}
+	b.logger.Info("received valid response")
+
+	b.logger.Info("storing data")
+	err = storeData(op.Store, b.storage, resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// StartListening ...
+func (b *SequentialBot) startListening() {
+	b.client.StartListening()
+}
+
+// TODO - refactor
+func (b *SequentialBot) runOperation(op *models.Operation) error {
+	switch op.Type {
+	case "request":
+		return b.runRequest(op)
+	case "function":
+		return b.runFunction(op)
+	case "listen":
+		return b.listenToPush(op)
 	}
 
 	return nil
@@ -109,35 +148,25 @@ func (b *SequentialBot) Finalize() error {
 
 // Disconnect ...
 func (b *SequentialBot) Disconnect() {
+	fmt.Println("Disconnect")
 	b.client.Disconnect()
-	b.client = nil
 }
 
 // Connect ...
 func (b *SequentialBot) Connect() {
-	if b.client != nil {
-		if b.client.Connected {
-			fmt.Println("Client already connected")
-			return
-		}
-
-		b.client = nil
-	}
-
-	pclient := client.New(logrus.InfoLevel)
+	fmt.Println("Connect")
 	host := b.config.GetString("server.host")
-	err := pclient.ConnectTo(host)
-	if err != nil {
-		fmt.Println("Error connecting to server")
-		fmt.Println(err)
+	if b.client != nil && b.client.Connected() {
+		b.logger.Fatal("Bot already connected")
 	}
 
-	b.client = pclient
+	b.client = NewPClient(host)
+	b.startListening()
 }
 
 // Reconnect ...
 func (b *SequentialBot) Reconnect() {
 	b.Disconnect()
 	b.Connect()
-	b.logger.Info("done")
+	b.logger.Info("Reconnect done")
 }

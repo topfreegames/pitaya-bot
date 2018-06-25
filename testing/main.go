@@ -25,6 +25,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -45,6 +46,11 @@ type AuthArg struct {
 	AccessToken uuid.UUID `json:"accessToken"`
 }
 
+// findMatchArg ...
+type findMatchArg struct {
+	RoomType string `json:"roomType"`
+}
+
 // Player ...
 type Player struct {
 	PrivateID    uuid.UUID `json:"privateID"`
@@ -61,6 +67,18 @@ type AuthResponse struct {
 	Player *Player `json:"player"`
 }
 
+// FindMatchResponse ...
+type FindMatchResponse struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
+}
+
+type findMatchPush struct {
+	Code string `json:"code"`
+	IP   string `json:"ip"`
+	Port int    `json:"port"`
+}
+
 var (
 	player = &Player{
 		PrivateID:    uuid.New(),
@@ -73,17 +91,40 @@ var (
 
 // Create ...
 func (p *PlayerHandler) Create(ctx context.Context) (*AuthResponse, error) {
+	bindSession(ctx, player.PrivateID)
 	return &AuthResponse{
 		Code:   "200",
 		Player: player,
 	}, nil
 }
 
+func bindSession(ctx context.Context, uid uuid.UUID) error {
+	return pitaya.GetSessionFromCtx(ctx).Bind(ctx, uid.String())
+}
+
 // Authenticate ...
 func (p *PlayerHandler) Authenticate(ctx context.Context, arg *AuthArg) (*AuthResponse, error) {
+	bindSession(ctx, player.PrivateID)
 	return &AuthResponse{
 		Code:   "200",
 		Player: player,
+	}, nil
+}
+
+// FindMatch ...
+func (p *PlayerHandler) FindMatch(ctx context.Context, arg *findMatchArg) (*FindMatchResponse, error) {
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		response := findMatchPush{
+			Code: "200",
+			IP:   "127.0.0.1",
+			Port: 9090,
+		}
+		pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, []string{player.PrivateID.String()}, "connector")
+	}()
+
+	return &FindMatchResponse{
+		Code: "200",
 	}, nil
 }
 

@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/topfreegames/pitaya-bot/models"
-	"github.com/topfreegames/pitaya/client"
 )
 
 func initializeDb(store *storage) error {
@@ -38,10 +36,21 @@ func assertType(value interface{}, typ string) (interface{}, error) {
 			return nil, fmt.Errorf("Failed to cast to string")
 		}
 	case "int":
-		if val, ok := ret.(int); ok {
-			ret = val
-		} else {
-			return nil, fmt.Errorf("Failed to cast to int")
+		t := reflect.TypeOf(ret)
+		switch t.Kind() {
+		case reflect.Int:
+			if val, ok := ret.(int); ok {
+				ret = val
+			} else {
+				return nil, fmt.Errorf("Failed to cast to int")
+			}
+
+		case reflect.Float64:
+			if val, ok := ret.(float64); ok {
+				ret = int(val)
+			} else {
+				return nil, fmt.Errorf("Failed to cast to int")
+			}
 		}
 	default:
 		return nil, fmt.Errorf("Unknown type %s", typ)
@@ -60,10 +69,12 @@ func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]inter
 			return nil, err
 		}
 
-		var value interface{}
 		var valueType = p["type"].(string)
+		var value interface{}
 		if valueFromStorage != nil {
 			value = valueFromStorage
+		} else {
+			value = p["value"]
 		}
 
 		value, err = assertType(value, valueType)
@@ -76,35 +87,13 @@ func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]inter
 	return preparedArgs, nil
 }
 
-func sendRequest(args map[string]interface{}, route string, pclient *client.Client) (Response, error) {
+func sendRequest(args map[string]interface{}, route string, pclient *PClient) (Response, error) {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return nil, err
 	}
 
-	err = pclient.SendRequest(route, encodedData)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Define type
-	ret := make(Response)
-	select {
-	case val := <-pclient.IncomingMsgChan:
-		// TODO: Treat Route?
-		if val.Err {
-			return nil, fmt.Errorf("Request error: %s", string(val.Data))
-		}
-		err = json.Unmarshal(val.Data, &ret)
-		if err != nil {
-			err = fmt.Errorf("Error unmarshaling response: %s", err)
-			return nil, err
-		}
-	case <-time.After(time.Second):
-		return nil, fmt.Errorf("Timeout waiting for response on route %s", route)
-	}
-
-	return ret, nil
+	return pclient.Request(route, encodedData)
 }
 
 func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{}, error) {
@@ -115,13 +104,15 @@ func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{},
 
 	if value == nil {
 		value, err = assertType(spec.Value, spec.Type)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return value, nil
 }
 
 func validateExpectations(expectations models.ExpectSpec, resp Response, store *storage) error {
-	fmt.Println("validateExpectations")
 	for propertyExpr, spec := range expectations {
 		expectedValue, err := getValueFromSpec(spec, store)
 		if err != nil {
@@ -147,23 +138,23 @@ func equals(lhs interface{}, rhs interface{}) bool {
 	switch t.Kind() {
 	case reflect.String:
 		lhsVal := lhs.(string)
-		rhsVal, ok := rhs.(string)
-		if !ok {
+		rhsVal, err := assertType(rhs, "string")
+		if err != nil {
 			return false
 		}
 
 		return lhsVal == rhsVal
 	case reflect.Int:
 		lhsVal := lhs.(int)
-		rhsVal, ok := rhs.(int)
-		if !ok {
+		rhsVal, err := assertType(rhs, "int")
+		if err != nil {
 			return false
 		}
 
 		return lhsVal == rhsVal
 
 	default:
-		fmt.Println("Unknown type %s", t.Kind().String())
+		fmt.Printf("Unknown type %s\n", t.Kind().String())
 		return false
 	}
 

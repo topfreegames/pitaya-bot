@@ -33,6 +33,10 @@
   name = "github.com/spf13/viper"
   version = "1.0.2"
 
+[[constraint]]
+  name = "github.com/topfreegames/pitaya"
+  branch = "master"
+
 [prune]
   go-tests = true
   unused-packages = true

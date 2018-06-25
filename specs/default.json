@@ -5,7 +5,8 @@
   },
   "sequentialOperations": [
     {
-      "request": "connector.playerHandler.create",
+      "type": "request",
+      "uri": "connector.playerHandler.create",
       "expect": {
         "$response.code": {
           "type": "string",
@@ -20,17 +21,19 @@
       }
     },
     {
-      "function": "reconnect"
+      "type": "function",
+      "uri": "reconnect"
     },
     {
-      "request": "connector.playerHandler.authenticate",
+      "type": "request",
+      "uri": "connector.playerHandler.authenticate",
       "args": { 
         "accessToken": { 
-          "type": "string", 
+          "type": "string",
           "value": "$store.playerAccessToken"
         } 
       },
-      "expect": { 
+      "expect": {
         "$response.code": {
           "type": "string",
           "value": "200" 
@@ -38,6 +41,40 @@
         "$response.player.accessToken": {
           "type": "string",
           "value": "$store.playerAccessToken"
+        }
+      }
+    }, 
+    {
+      "type": "request",
+      "uri": "connector.playerHandler.findmatch",
+      "args": {
+        "roomType": {
+          "type": "string",
+          "value": "default"
+        }
+      }, 
+      "expect": {
+        "$response.code": {
+          "type": "string",
+          "value": "200"
+        }
+      }
+    },
+    {
+      "type": "listen",
+      "uri": "connector.playerHandler.matchfound",
+      "expect": {
+        "$response.code": {
+          "type": "string",
+          "value": "200"
+        },
+        "$response.ip": {
+          "type": "string",
+          "value": "127.0.0.1"
+        },
+        "$response.port": {
+          "type": "int",
+          "value": 9090
         }
       }
     }
