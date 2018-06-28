@@ -31,13 +31,13 @@ func visitToken(container map[string]interface{}, token string) (interface{}, er
 	return value, nil
 }
 
-func extractValue(src map[string]interface{}, expr Expr) (interface{}, error) {
+func extractValue(src map[string]interface{}, expr Expr, exprType string) (interface{}, error) {
 	tokens := expr.tokenize()
 	var container interface{} = src
 	for i, token := range tokens {
 		if isLiteral(container) {
 			if i == len(tokens)-1 {
-				return container, nil
+				break // Found value. Exit loop
 			}
 
 			return nil, fmt.Errorf("malformed spec file. expr %s doesn't match the object received", expr)
@@ -55,16 +55,20 @@ func extractValue(src map[string]interface{}, expr Expr) (interface{}, error) {
 		}
 	}
 
-	return container, nil
+	finalValue, err := assertType(container, exprType)
+	if err != nil {
+		return nil, err
+	}
+
+	return finalValue, nil
 }
 
-func (r Response) tryExtractValue(expr Expr) interface{} {
-	v, _ := r.extractValue(expr)
-	return v
+func (r Response) tryExtractValue(expr Expr, exprType string) (interface{}, error) {
+	return r.extractValue(expr, exprType)
 }
 
-func (r Response) extractValue(expr Expr) (interface{}, error) {
-	return extractValue(r, expr)
+func (r Response) extractValue(expr Expr, exprType string) (interface{}, error) {
+	return extractValue(r, expr, exprType)
 }
 
 func isLiteral(i interface{}) bool {

@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"errors"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -10,7 +11,7 @@ import (
 )
 
 // Run runs a bot according to the spec
-func Run(config *viper.Viper, spec *models.Spec, id int) {
+func Run(config *viper.Viper, spec *models.Spec, id int) error {
 	log := logrus.New()
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Out = os.Stdout
@@ -28,32 +29,35 @@ func Run(config *viper.Viper, spec *models.Spec, id int) {
 		bot, err = pbot.NewSequentialBot(config, spec, id)
 		if err != nil {
 			logger.WithError(err).Error("Failed to create bot")
-			return
+			return err
 		}
 	}
 
 	if bot == nil {
-		logger.Error("No bot types defined")
-		return
+		err := errors.New("No bot types defined")
+		logger.Error(err)
+		return err
 	}
 
 	err := bot.Initialize()
 	if err != nil {
 		logger.WithError(err).Error("Failed to initialize bot")
-		return
+		return err
 	}
 
 	err = bot.Run()
 	if err != nil {
 		logger.WithError(err).Error("Error running bot")
-		return
+		return err
 	}
 
 	err = bot.Finalize()
 	if err != nil {
 		logger.WithError(err).Error("Failed to finalize bot")
-		return
+		return err
 	}
 
 	logger.Info("Finished running")
+
+	return nil
 }

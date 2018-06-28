@@ -10,8 +10,7 @@ import (
 	"github.com/topfreegames/pitaya/client"
 )
 
-// FIXME - Roubei os defines do package internal do pitaya
-// isso eh BEEEEM zuado...
+// FIXME - contants from interal pitaya package
 const (
 	MsgResponseType byte = 0x02
 	MsgPushType     byte = 0x03
@@ -95,7 +94,6 @@ func (c *PClient) Request(route string, data []byte) (Response, error) {
 	select {
 	case responseData := <-ch:
 		ret := make(Response)
-		fmt.Println(string(responseData))
 		if err := json.Unmarshal(responseData, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
 			return nil, err
@@ -116,7 +114,6 @@ func (c *PClient) ReceivePush(route string) (Response, error) {
 	select {
 	case data := <-ch:
 		ret := make(Response)
-		fmt.Println(string(data))
 		if err := json.Unmarshal(data, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
 			return nil, err

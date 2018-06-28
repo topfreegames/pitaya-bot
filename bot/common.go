@@ -33,7 +33,7 @@ func assertType(value interface{}, typ string) (interface{}, error) {
 		if val, ok := ret.(string); ok {
 			ret = val
 		} else {
-			return nil, fmt.Errorf("Failed to cast to string")
+			return nil, fmt.Errorf("String type assetion failed for filed: %v", ret)
 		}
 	case "int":
 		t := reflect.TypeOf(ret)
@@ -42,15 +42,17 @@ func assertType(value interface{}, typ string) (interface{}, error) {
 			if val, ok := ret.(int); ok {
 				ret = val
 			} else {
-				return nil, fmt.Errorf("Failed to cast to int")
+				return nil, fmt.Errorf("Int type assetion failed for filed: %v", ret)
 			}
 
 		case reflect.Float64:
 			if val, ok := ret.(float64); ok {
 				ret = int(val)
 			} else {
-				return nil, fmt.Errorf("Failed to cast to int")
+				return nil, fmt.Errorf("Int type assetion failed for filed: %v", ret)
 			}
+		default:
+			return nil, fmt.Errorf("Int type assertion failed for field: %v", ret)
 		}
 	default:
 		return nil, fmt.Errorf("Unknown type %s", typ)
@@ -119,7 +121,7 @@ func validateExpectations(expectations models.ExpectSpec, resp Response, store *
 			return err
 		}
 
-		gotValue, err := Response(resp).extractValue(Expr(propertyExpr))
+		gotValue, err := Response(resp).extractValue(Expr(propertyExpr), spec.Type)
 		if err != nil {
 			return err
 		}
@@ -163,7 +165,10 @@ func equals(lhs interface{}, rhs interface{}) bool {
 
 func storeData(storeSpec models.StoreSpec, store *storage, resp Response) error {
 	for name, spec := range storeSpec {
-		valueFromResponse := resp.tryExtractValue(Expr(spec.Value))
+		valueFromResponse, err := resp.tryExtractValue(Expr(spec.Value), spec.Type)
+		if err != nil {
+			return err
+		}
 		if valueFromResponse != nil {
 			store.Set(name, valueFromResponse)
 			return nil

@@ -25,10 +25,6 @@ func readSpec(specPath string) (*models.Spec, error) {
 
 // Launch launches the bot spec
 func Launch(config *viper.Viper, specPath string) {
-	spec, err := readSpec(specPath)
-	if err != nil {
-		panic(err)
-	}
 	log := logrus.New()
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Out = os.Stdout
@@ -37,12 +33,20 @@ func Launch(config *viper.Viper, specPath string) {
 		"function": "launch",
 	})
 
+	spec, err := readSpec(specPath)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	logger.Infof("Launching %d bots\n", spec.NumberOfInstances)
 	var wg sync.WaitGroup
 	for i := 0; i < spec.NumberOfInstances; i++ {
 		wg.Add(1)
 		go func(i int) {
-			runner.Run(config, spec, i)
+			if err := runner.Run(config, spec, i); err != nil {
+				logger.Error("Bot execution failed")
+				logger.Error(err)
+			}
 			wg.Done()
 		}(i)
 	}

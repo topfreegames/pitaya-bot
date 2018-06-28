@@ -118,6 +118,7 @@ func (b *SequentialBot) listenToPush(op *models.Operation) error {
 		return err
 	}
 
+	b.logger.Info("all done")
 	return nil
 }
 
