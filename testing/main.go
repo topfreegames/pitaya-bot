@@ -91,7 +91,10 @@ var (
 
 // Create ...
 func (p *PlayerHandler) Create(ctx context.Context) (*AuthResponse, error) {
-	bindSession(ctx, player.PrivateID)
+	if err := bindSession(ctx, player.PrivateID); err != nil {
+		panic(err)
+	}
+
 	return &AuthResponse{
 		Code:   "200",
 		Player: player,
@@ -104,7 +107,10 @@ func bindSession(ctx context.Context, uid uuid.UUID) error {
 
 // Authenticate ...
 func (p *PlayerHandler) Authenticate(ctx context.Context, arg *AuthArg) (*AuthResponse, error) {
-	bindSession(ctx, player.PrivateID)
+	if err := bindSession(ctx, player.PrivateID); err != nil {
+		panic(err)
+	}
+
 	return &AuthResponse{
 		Code:   "200",
 		Player: player,
@@ -120,7 +126,9 @@ func (p *PlayerHandler) FindMatch(ctx context.Context, arg *findMatchArg) (*Find
 			IP:   "127.0.0.1",
 			Port: 9090,
 		}
-		pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, []string{player.PrivateID.String()}, "connector")
+		if err := pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, []string{player.PrivateID.String()}, "connector"); err != nil {
+			panic(err)
+		}
 	}()
 
 	return &FindMatchResponse{
