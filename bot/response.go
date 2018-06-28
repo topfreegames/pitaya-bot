@@ -25,7 +25,7 @@ func (e Expr) tokenize() []string {
 func visitToken(container map[string]interface{}, token string) (interface{}, error) {
 	value, ok := container[token]
 	if !ok {
-		return nil, fmt.Errorf("atom '%s' not found", token)
+		return nil, fmt.Errorf("token '%s' not found", token)
 	}
 
 	return value, nil
