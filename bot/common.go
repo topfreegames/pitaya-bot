@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -61,38 +62,67 @@ func assertType(value interface{}, typ string) (interface{}, error) {
 	return ret, nil
 }
 
-func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]interface{}, error) {
-	preparedArgs := map[string]interface{}{}
-
-	for key, params := range rawArgs {
-		p := params.(map[string]interface{})
-		valueFromStorage, err := tryGetFromStorage(p["value"], store)
-		if err != nil {
-			return nil, err
+func buildArgByType(value interface{}, valueType string, store *storage) (interface{}, error) {
+	var err error
+	switch valueType {
+	case "object":
+		arg, ok := value.(map[string]interface{})
+		if !ok {
+			return nil, errors.New("Mallformed object type argument")
 		}
 
-		var valueType = p["type"].(string)
-		var value interface{}
-		if valueFromStorage != nil {
-			value = valueFromStorage
-		} else {
-			value = p["value"]
+		preparedArgs := map[string]interface{}{}
+		for key, params := range arg {
+			p := params.(map[string]interface{})
+
+			valueFromStorage, err := tryGetFromStorage(p["value"], store)
+			if err != nil {
+				return nil, err
+			}
+
+			paramType := p["type"].(string)
+			var paramValue interface{}
+
+			if valueFromStorage != nil {
+				paramValue = valueFromStorage
+			} else {
+				paramValue = p["value"]
+			}
+
+			builtParam, err := buildArgByType(paramValue, paramType, store)
+			if err != nil {
+				return nil, err
+			}
+			preparedArgs[key] = builtParam
 		}
 
+		return preparedArgs, nil
+	case "array":
+		fmt.Println("buildArgByType for array Not implemented")
+	default:
 		value, err = assertType(value, valueType)
 		if err != nil {
 			return nil, err
 		}
-		preparedArgs[key] = value
 	}
 
-	return preparedArgs, nil
+	return value, nil
 }
 
-func sendRequest(args map[string]interface{}, route string, pclient *PClient) (Response, error) {
-	encodedData, err := json.Marshal(args)
+func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]interface{}, error) {
+	args, err := buildArgByType(rawArgs, "object", store)
 	if err != nil {
 		return nil, err
+	}
+
+	r := args.(map[string]interface{})
+	return r, nil
+}
+
+func sendRequest(args map[string]interface{}, route string, pclient *PClient) (Response, []byte, error) {
+	encodedData, err := json.Marshal(args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return pclient.Request(route, encodedData)

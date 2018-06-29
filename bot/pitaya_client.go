@@ -83,10 +83,10 @@ func (c *PClient) getPushChannelForRoute(route string) chan []byte {
 }
 
 // Request ...
-func (c *PClient) Request(route string, data []byte) (Response, error) {
+func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 	messageID, err := c.client.SendRequest(route, data)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	ch := c.getResponseChannelForID(messageID)
@@ -96,19 +96,19 @@ func (c *PClient) Request(route string, data []byte) (Response, error) {
 		ret := make(Response)
 		if err := json.Unmarshal(responseData, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
-			return nil, err
+			return nil, nil, err
 		}
 
-		return ret, nil
+		return ret, responseData, nil
 	case <-time.After(time.Second):
-		return nil, fmt.Errorf("Timeout waiting for response on route %s", route)
+		return nil, nil, fmt.Errorf("Timeout waiting for response on route %s", route)
 	}
 
-	return nil, nil
+	return nil, nil, nil
 }
 
 // ReceivePush ...
-func (c *PClient) ReceivePush(route string) (Response, error) {
+func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
 	ch := c.getPushChannelForRoute(route)
 
 	select {
@@ -120,7 +120,7 @@ func (c *PClient) ReceivePush(route string) (Response, error) {
 		}
 
 		return ret, nil
-	case <-time.After(time.Second):
+	case <-time.After(time.Duration(timeout) * time.Millisecond):
 		return nil, fmt.Errorf("Timeout waiting for push on route %s", route)
 	}
 }

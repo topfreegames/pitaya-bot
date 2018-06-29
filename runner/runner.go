@@ -47,7 +47,6 @@ func Run(config *viper.Viper, spec *models.Spec, id int) error {
 
 	err = bot.Run()
 	if err != nil {
-		logger.WithError(err).Error("Error running bot")
 		return err
 	}
 

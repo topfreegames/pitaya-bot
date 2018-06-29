@@ -62,7 +62,7 @@ func (b *SequentialBot) runRequest(op *models.Operation) error {
 		return err
 	}
 
-	resp, err := sendRequest(args, route, b.client)
+	resp, rawResp, err := sendRequest(args, route, b.client)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (b *SequentialBot) runRequest(op *models.Operation) error {
 	b.logger.Info("validating expectations")
 	err = validateExpectations(op.Expect, resp, b.storage)
 	if err != nil {
-		return err
+		return NewExpectError(err, rawResp, op.Expect)
 	}
 	b.logger.Info("received valid response")
 
@@ -100,7 +100,7 @@ func (b *SequentialBot) runFunction(op *models.Operation) error {
 
 func (b *SequentialBot) listenToPush(op *models.Operation) error {
 	b.logger.Info("Waiting for push on route: " + op.URI)
-	resp, err := b.client.ReceivePush(op.URI)
+	resp, err := b.client.ReceivePush(op.URI, op.Timeout)
 	if err != nil {
 		return err
 	}

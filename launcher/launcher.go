@@ -26,7 +26,7 @@ func readSpec(specPath string) (*models.Spec, error) {
 // Launch launches the bot spec
 func Launch(config *viper.Viper, specPath string) {
 	log := logrus.New()
-	log.Formatter = new(logrus.JSONFormatter)
+	log.Formatter = new(logrus.TextFormatter)
 	log.Out = os.Stdout
 	logger := log.WithFields(logrus.Fields{
 		"source":   "pitaya-bot",
@@ -46,9 +46,6 @@ func Launch(config *viper.Viper, specPath string) {
 		wg.Add(1)
 		go func(i int) {
 			if err := runner.Run(config, spec, i); err != nil {
-				logger.Error("Bot execution failed")
-				logger.Error(err)
-
 				errmutex.Lock()
 				boterr = append(boterr, err)
 				errmutex.Unlock()
