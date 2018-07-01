@@ -201,11 +201,10 @@ func storeData(storeSpec models.StoreSpec, store *storage, resp Response) error 
 		}
 		if valueFromResponse != nil {
 			store.Set(name, valueFromResponse)
-			return nil
+			continue
 		}
 
 		store.Set(name, spec.Value)
-		return nil
 	}
 
 	return nil
