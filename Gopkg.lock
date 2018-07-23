@@ -270,7 +270,7 @@
     "util",
     "util/compression"
   ]
-  revision = "4e4f74c527bb1489dba140145aac4e36e6c084e1"
+  revision = "cd98720ef068e6387da1f17b4d3afb85f03a4278"
 
 [[projects]]
   branch = "master"

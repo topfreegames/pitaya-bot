@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/topfreegames/pitaya-bot/models"
 )
 
@@ -14,14 +15,30 @@ func initializeDb(store *storage) error {
 	return nil
 }
 
-func tryGetFromStorage(expr interface{}, store *storage) (interface{}, error) {
-	if val, ok := expr.(string); ok && strings.HasPrefix(val, "$store") {
-		variable := val[7:]
-		if val, ok := store.Get(variable); ok {
-			return val, nil
+func valueFromUtil(fName string) (interface{}, error) {
+	switch fName {
+	case "uuid":
+		return uuid.New().String(), nil
+	default:
+		return nil, fmt.Errorf("util.%s undefined", fName)
+	}
+}
+
+func tryGetValue(expr interface{}, store *storage) (interface{}, error) {
+	if val, ok := expr.(string); ok {
+		if strings.HasPrefix(val, "$store") {
+			variable := val[7:]
+			if val, ok := store.Get(variable); ok {
+				return val, nil
+			}
+
+			return nil, fmt.Errorf("Variable %s not found", variable)
 		}
 
-		return nil, fmt.Errorf("Variable %s not found", variable)
+		if strings.HasPrefix(val, "$util") {
+			f := val[6:]
+			return valueFromUtil(f)
+		}
 	}
 
 	return nil, nil
@@ -68,14 +85,15 @@ func buildArgByType(value interface{}, valueType string, store *storage) (interf
 	case "object":
 		arg, ok := value.(map[string]interface{})
 		if !ok {
-			return nil, errors.New("Mallformed object type argument")
+			return nil, errors.New("Malformed object type argument")
 		}
 
 		preparedArgs := map[string]interface{}{}
 		for key, params := range arg {
+			fmt.Println(params)
 			p := params.(map[string]interface{})
 
-			valueFromStorage, err := tryGetFromStorage(p["value"], store)
+			valueFromStorage, err := tryGetValue(p["value"], store)
 			if err != nil {
 				return nil, err
 			}
@@ -129,7 +147,7 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient) (R
 }
 
 func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{}, error) {
-	value, err := tryGetFromStorage(spec.Value, store)
+	value, err := tryGetValue(spec.Value, store)
 	if err != nil {
 		return nil, err
 	}
