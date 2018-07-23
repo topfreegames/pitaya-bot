@@ -90,7 +90,6 @@ func buildArgByType(value interface{}, valueType string, store *storage) (interf
 
 		preparedArgs := map[string]interface{}{}
 		for key, params := range arg {
-			fmt.Println(params)
 			p := params.(map[string]interface{})
 
 			valueFromStorage, err := tryGetValue(p["value"], store)
