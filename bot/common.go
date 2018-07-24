@@ -145,6 +145,15 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient) (R
 	return pclient.Request(route, encodedData)
 }
 
+func sendNotify(args map[string]interface{}, route string, pclient *PClient) error {
+	encodedData, err := json.Marshal(args)
+	if err != nil {
+		return err
+	}
+
+	return pclient.Notify(route, encodedData)
+}
+
 func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{}, error) {
 	value, err := tryGetValue(spec.Value, store)
 	if err != nil {

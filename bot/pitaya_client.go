@@ -107,6 +107,12 @@ func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 	return nil, nil, nil
 }
 
+// Notify sends a notify to the server
+func (c *PClient) Notify(route string, data []byte) error {
+	err := c.client.SendNotify(route, data)
+	return err
+}
+
 // ReceivePush ...
 func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
 	ch := c.getPushChannelForRoute(route)

@@ -16,6 +16,7 @@ type SequentialBot struct {
 	spec    *models.Spec
 	storage *storage
 	logger  logrus.FieldLogger
+	host    string
 }
 
 // NewSequentialBot returns a new sequantial bot instance
@@ -26,6 +27,7 @@ func NewSequentialBot(config *viper.Viper, spec *models.Spec, id int) (Bot, erro
 		id:      id,
 		storage: newStorage(config),
 		logger:  logrus.New(),
+		host:    config.GetString("server.host"),
 	}
 
 	bot.Connect()
@@ -84,15 +86,47 @@ func (b *SequentialBot) runRequest(op *models.Operation) error {
 	return nil
 }
 
+func (b *SequentialBot) runNotify(op *models.Operation) error {
+	b.logger.Info("Executing notify to: " + op.URI)
+	route := op.URI
+	args, err := buildArgs(op.Args, b.storage)
+	if err != nil {
+		return err
+	}
+
+	err = sendNotify(args, route, b.client)
+	if err != nil {
+		return err
+	}
+
+	b.logger.Info("all done")
+	return nil
+}
+
 func (b *SequentialBot) runFunction(op *models.Operation) error {
-	b.logger.Info("Will execute internal function: ", op.URI)
-	switch op.URI {
+	fName := op.URI
+	b.logger.Info("Will execute internal function: ", fName)
+
+	switch fName {
 	case "disconnect":
 		b.Disconnect()
 	case "connect":
-		b.Connect()
+		host := b.host
+		args, err := buildArgs(op.Args, b.storage)
+		if err != nil {
+			return err
+		}
+		if val, ok := args["host"]; ok {
+			b.logger.Info("Connecting to custom host")
+			if h, ok := val.(string); ok {
+				host = h
+			}
+		}
+		b.Connect(host)
 	case "reconnect":
 		b.Reconnect()
+	default:
+		return fmt.Errorf("Unknown function: %s", fName)
 	}
 
 	return nil
@@ -132,13 +166,15 @@ func (b *SequentialBot) runOperation(op *models.Operation) error {
 	switch op.Type {
 	case "request":
 		return b.runRequest(op)
+	case "notify":
+		return b.runNotify(op)
 	case "function":
 		return b.runFunction(op)
 	case "listen":
 		return b.listenToPush(op)
 	}
 
-	return nil
+	return fmt.Errorf("Unknown type: %s", op.Type)
 }
 
 // Finalize finalizes the bot
@@ -154,14 +190,16 @@ func (b *SequentialBot) Disconnect() {
 }
 
 // Connect ...
-func (b *SequentialBot) Connect() {
+func (b *SequentialBot) Connect(hosts ...string) {
 	fmt.Println("Connect")
-	host := b.config.GetString("server.host")
+	if len(hosts) > 0 {
+		b.host = hosts[0]
+	}
 	if b.client != nil && b.client.Connected() {
 		b.logger.Fatal("Bot already connected")
 	}
 
-	b.client = NewPClient(host)
+	b.client = NewPClient(b.host)
 	b.startListening()
 }
 
