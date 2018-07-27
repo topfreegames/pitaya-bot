@@ -3,6 +3,8 @@ package bot
 import (
 	"fmt"
 	"reflect"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -31,10 +33,23 @@ func visitToken(container map[string]interface{}, token string) (interface{}, er
 	return value, nil
 }
 
+func sliceAccess(term string) (int, string) {
+	r := regexp.MustCompile(`\[([0-9]+)\]`)
+	ssubmatch := r.FindStringSubmatch(term)
+
+	if len(ssubmatch) == 2 {
+		idx, _ := strconv.Atoi(ssubmatch[1])
+		return idx, term[0:strings.Index(term, "[")]
+	}
+
+	return -1, ""
+}
+
 func extractValue(src map[string]interface{}, expr Expr, exprType string) (interface{}, error) {
 	tokens := expr.tokenize()
 	var container interface{} = src
 	for i, token := range tokens {
+		// Is literal
 		if isLiteral(container) {
 			if i == len(tokens)-1 {
 				break // Found value. Exit loop
@@ -43,6 +58,14 @@ func extractValue(src map[string]interface{}, expr Expr, exprType string) (inter
 			return nil, fmt.Errorf("malformed spec file. expr %s doesn't match the object received", expr)
 		}
 
+		// Is slice
+		idx, exprWithoutBracket := sliceAccess(string(token))
+		if idx != -1 {
+			container = (container.(map[string]interface{})[exprWithoutBracket]).([]interface{})[idx]
+			continue
+		}
+
+		// Is object
 		parsedContainer, ok := container.(map[string]interface{})
 		if !ok {
 			return nil, fmt.Errorf("Unable to parse container to Response")

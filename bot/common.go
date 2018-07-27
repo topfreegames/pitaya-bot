@@ -53,6 +53,12 @@ func assertType(value interface{}, typ string) (interface{}, error) {
 		} else {
 			return nil, fmt.Errorf("String type assetion failed for filed: %v", ret)
 		}
+	case "bool":
+		if val, ok := ret.(bool); ok {
+			ret = val
+		} else {
+			return nil, fmt.Errorf("Boolean type assetion failed for filed: %v", ret)
+		}
 	case "int":
 		t := reflect.TypeOf(ret)
 		switch t.Kind() {
@@ -205,6 +211,15 @@ func equals(lhs interface{}, rhs interface{}) bool {
 	case reflect.Int:
 		lhsVal := lhs.(int)
 		rhsVal, err := assertType(rhs, "int")
+		if err != nil {
+			return false
+		}
+
+		return lhsVal == rhsVal
+
+	case reflect.Bool:
+		lhsVal := lhs.(bool)
+		rhsVal, err := assertType(rhs, "bool")
 		if err != nil {
 			return false
 		}
