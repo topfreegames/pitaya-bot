@@ -85,6 +85,31 @@ func assertType(value interface{}, typ string) (interface{}, error) {
 	return ret, nil
 }
 
+func parseArg(params interface{}, store *storage) (interface{}, error) {
+	p := params.(map[string]interface{})
+
+	valueFromStorage, err := tryGetValue(p["value"], store)
+	if err != nil {
+		return nil, err
+	}
+
+	paramType := p["type"].(string)
+	var paramValue interface{}
+
+	if valueFromStorage != nil {
+		paramValue = valueFromStorage
+	} else {
+		paramValue = p["value"]
+	}
+
+	builtParam, err := buildArgByType(paramValue, paramType, store)
+	if err != nil {
+		return nil, err
+	}
+
+	return builtParam, nil
+}
+
 func buildArgByType(value interface{}, valueType string, store *storage) (interface{}, error) {
 	var err error
 	switch valueType {
@@ -96,23 +121,7 @@ func buildArgByType(value interface{}, valueType string, store *storage) (interf
 
 		preparedArgs := map[string]interface{}{}
 		for key, params := range arg {
-			p := params.(map[string]interface{})
-
-			valueFromStorage, err := tryGetValue(p["value"], store)
-			if err != nil {
-				return nil, err
-			}
-
-			paramType := p["type"].(string)
-			var paramValue interface{}
-
-			if valueFromStorage != nil {
-				paramValue = valueFromStorage
-			} else {
-				paramValue = p["value"]
-			}
-
-			builtParam, err := buildArgByType(paramValue, paramType, store)
+			builtParam, err := parseArg(params, store)
 			if err != nil {
 				return nil, err
 			}
@@ -121,7 +130,21 @@ func buildArgByType(value interface{}, valueType string, store *storage) (interf
 
 		return preparedArgs, nil
 	case "array":
-		fmt.Println("buildArgByType for array Not implemented")
+		arg, ok := value.([]interface{})
+		if !ok {
+			return nil, errors.New("Malformed object type argument")
+		}
+
+		preparedArgs := make([]interface{}, len(arg))
+		for idx, params := range arg {
+			builtParam, err := parseArg(params, store)
+			if err != nil {
+				return nil, err
+			}
+			preparedArgs[idx] = builtParam
+		}
+
+		return preparedArgs, nil
 	default:
 		value, err = assertType(value, valueType)
 		if err != nil {
