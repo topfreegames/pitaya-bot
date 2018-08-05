@@ -46,8 +46,8 @@
     "proto",
     "protoc-gen-gogo/descriptor"
   ]
-  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
-  version = "v1.0.0"
+  revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
+  version = "v1.1.1"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -270,7 +270,7 @@
     "util",
     "util/compression"
   ]
-  revision = "cd98720ef068e6387da1f17b4d3afb85f03a4278"
+  revision = "a4eec7ef7c35da412d5029727f59051fd2063b0b"
 
 [[projects]]
   branch = "master"
