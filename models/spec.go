@@ -2,6 +2,7 @@ package models
 
 // Spec defines the bots' spec
 type Spec struct {
+	Name                 string              `json:"name"`
 	NumberOfInstances    int                 `json:"numberOfInstances"`
 	PreRun               *InitialDefinitions `json:"preRun,omitempty"`
 	SequentialOperations []*Operation        `json:"sequentialOperations,omitempty"`

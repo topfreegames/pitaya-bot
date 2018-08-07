@@ -29,19 +29,20 @@ type PClient struct {
 }
 
 // NewPClient is the PCLient constructor
-func NewPClient(host string) *PClient {
+func NewPClient(host string) (*PClient, error) {
 	pclient := client.New(logrus.InfoLevel)
 	err := pclient.ConnectTo(host)
 	if err != nil {
 		fmt.Println("Error connecting to server")
 		fmt.Println(err)
+		return nil, err
 	}
 
 	return &PClient{
 		client:    pclient,
 		responses: make(map[uint]chan []byte),
 		pushes:    make(map[string]chan []byte),
-	}
+	}, nil
 }
 
 // Disconnect disconnects the client
@@ -100,7 +101,7 @@ func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 		}
 
 		return ret, responseData, nil
-	case <-time.After(time.Second):
+	case <-time.After(5 * time.Second):
 		return nil, nil, fmt.Errorf("Timeout waiting for response on route %s", route)
 	}
 
@@ -133,7 +134,6 @@ func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
 
 // StartListening ...
 func (c *PClient) StartListening() {
-	fmt.Println("Listening...")
 	go func() {
 		for m := range c.client.IncomingMsgChan {
 			t := byte(m.Type)

@@ -2,31 +2,39 @@ package runner
 
 import (
 	"errors"
-	"os"
+	"runtime/debug"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	pbot "github.com/topfreegames/pitaya-bot/bot"
 	"github.com/topfreegames/pitaya-bot/models"
+	"github.com/topfreegames/pitaya-bot/state"
 )
 
 // Run runs a bot according to the spec
-func Run(config *viper.Viper, spec *models.Spec, id int) error {
-	log := logrus.New()
-	log.Formatter = new(logrus.JSONFormatter)
-	log.Out = os.Stdout
+func Run(app *state.App, config *viper.Viper, spec *models.Spec, id int, log logrus.FieldLogger) error {
 	logger := log.WithFields(logrus.Fields{
 		"source":   "pitaya-bot",
 		"function": "run",
 		"botId":    id,
 	})
 
+	var err error
+	defer func() {
+		err := recover()
+		if err != nil {
+			logger.Error("PANIC")
+			logger.Errorf("%s", debug.Stack())
+
+			logger.Error(err)
+		}
+	}()
+
 	var bot pbot.Bot
-	logger.Info("Starting")
+	logger.Infof("Starting bot with id: %d", id)
 	if spec.SequentialOperations != nil {
-		logger.Info("Found sequential operations")
-		var err error
-		bot, err = pbot.NewSequentialBot(config, spec, id)
+		logger.Debug("Found sequential operations")
+		bot, err = pbot.NewSequentialBot(config, spec, id, app.MetricsReporter, logger)
 		if err != nil {
 			logger.WithError(err).Error("Failed to create bot")
 			return err
@@ -39,7 +47,7 @@ func Run(config *viper.Viper, spec *models.Spec, id int) error {
 		return err
 	}
 
-	err := bot.Initialize()
+	err = bot.Initialize()
 	if err != nil {
 		logger.WithError(err).Error("Failed to initialize bot")
 		return err
@@ -56,7 +64,7 @@ func Run(config *viper.Viper, spec *models.Spec, id int) error {
 		return err
 	}
 
-	logger.Info("Finished running")
+	logger.Debug("Finished running")
 
-	return nil
+	return err
 }
