@@ -101,7 +101,7 @@ func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 		}
 
 		return ret, responseData, nil
-	case <-time.After(5 * time.Second):
+	case <-time.After(5 * time.Second): // TODO - pass timeout as config
 		return nil, nil, fmt.Errorf("Timeout waiting for response on route %s", route)
 	}
 

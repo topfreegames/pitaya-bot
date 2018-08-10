@@ -31,6 +31,7 @@ import (
 var (
 	specsDirectory string
 	testDuration   time.Duration
+	reportMetrics  bool
 )
 
 // runCmd represents the run command
@@ -39,8 +40,8 @@ var runCmd = &cobra.Command{
 	Short: "Runs the pitaya bot",
 	Long:  `Runs the pitaya bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := state.NewApp(config)
-		launcher.Launch(app, config, specsDirectory, testDuration.Seconds())
+		app := state.NewApp(config, reportMetrics)
+		launcher.Launch(app, config, specsDirectory, testDuration.Seconds(), reportMetrics)
 	},
 }
 
@@ -50,5 +51,6 @@ func init() {
 	// The bot will recusrively find all json files within specDir directory
 	// and run the specs
 	runCmd.PersistentFlags().StringVarP(&specsDirectory, "dir", "d", "./specs/", "Spec to run")
-	rootCmd.PersistentFlags().DurationVar(&testDuration, "duration", 1*time.Minute, "how long should the test take")
+	runCmd.PersistentFlags().DurationVar(&testDuration, "duration", 1*time.Minute, "how long should the test take")
+	runCmd.PersistentFlags().BoolVar(&reportMetrics, "report-metrics", false, "Should metrics be reported")
 }

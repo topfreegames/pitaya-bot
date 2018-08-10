@@ -82,7 +82,7 @@ func runClients(app *state.App, spec *models.Spec, config *viper.Viper, logger l
 	return compoundError
 }
 
-func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration float64, logger logrus.FieldLogger) {
+func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration float64, logger logrus.FieldLogger) []error {
 	logger = logger.WithFields(logrus.Fields{
 		"spec": spec.Name,
 	})
@@ -103,14 +103,11 @@ func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration fl
 		}
 	}
 
-	if len(compoundError) > 0 {
-		logger.Error("Spec execution error")
-		logger.Error(compoundError)
-	}
+	return compoundError
 }
 
 // Launch launches the bot spec
-func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration float64) {
+func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool) {
 	log := logrus.New()
 	log.Formatter = new(logrus.TextFormatter)
 	log.Out = os.Stdout
@@ -126,10 +123,17 @@ func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration
 	logger.Infof("Found %d specs to be executed", len(specs))
 
 	var wg sync.WaitGroup
+	errmutex := sync.Mutex{}
+	compoundError := []error{}
 	for _, spec := range specs {
 		wg.Add(1)
 		go func(spec *models.Spec) {
-			runSpec(app, spec, config, duration, logger)
+			err := runSpec(app, spec, config, duration, logger)
+			if err != nil {
+				errmutex.Lock()
+				compoundError = append(compoundError, err...)
+				errmutex.Unlock()
+			}
 			wg.Done()
 		}(spec)
 	}
@@ -139,9 +143,18 @@ func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration
 	logger.Info("Finished running bots")
 	logger.Info("Waiting for metrics to be collected...")
 	app.FinishedExecition = true
-	select {
-	case <-app.DieChan: // when dieChan is closed the application can quit
-		<-time.After(10 * time.Second)
-		logger.Info("DieChan closed - All done. Application will close")
+
+	if shouldReportMetrics {
+		select {
+		case <-app.DieChan: // when dieChan is closed the application can quit
+			<-time.After(10 * time.Second)
+			logger.Info("DieChan closed - All done. Application will close")
+		}
+	}
+
+	if len(compoundError) > 0 {
+		logger.Error("Spec execution failed")
+		logger.Error(compoundError)
+		os.Exit(1)
 	}
 }

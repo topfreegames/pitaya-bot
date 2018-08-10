@@ -120,7 +120,7 @@ func (p *PrometheusReporter) ReportSummary(metric string, labels map[string]stri
 }
 
 // ReportHistogram reports a summary metric
-//  - implements the ReportSummary method of the Reporter interface
+//  - implements the ReportHistogram method of the Reporter interface
 func (p *PrometheusReporter) ReportHistogram(metric string, labels map[string]string, value float64) error {
 	sum := p.histogramRepotersMap[metric]
 	if sum != nil {

@@ -167,7 +167,6 @@ func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]inter
 	return r, nil
 }
 
-// FIXME - s* code
 func sendRequest(args map[string]interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter) (Response, []byte, error) {
 	encodedData, err := json.Marshal(args)
 	if err != nil {

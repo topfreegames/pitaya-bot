@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -17,7 +18,7 @@ type App struct {
 }
 
 // NewApp is the NewApp constructor
-func NewApp(config *viper.Viper) *App {
+func NewApp(config *viper.Viper, shouldReportMetrics bool) *App {
 	game := config.GetString("game")
 	prometheusPort := config.GetInt("prometheus.port")
 
@@ -26,17 +27,20 @@ func NewApp(config *viper.Viper) *App {
 		DieChan:           make(chan struct{}),
 	}
 
-	mr := []metrics.Reporter{
-		metrics.GetPrometheusReporter(game, prometheusPort, map[string]string{}, func() {
-			defer app.Mu.Unlock()
-			app.Mu.Lock()
-			if app.FinishedExecition && !app.ChannelClosed {
-				app.ChannelClosed = true
-				close(app.DieChan)
-			}
-		}),
+	if shouldReportMetrics {
+		fmt.Println("[INFO] Will report metrics")
+		mr := []metrics.Reporter{
+			metrics.GetPrometheusReporter(game, prometheusPort, map[string]string{}, func() {
+				defer app.Mu.Unlock()
+				app.Mu.Lock()
+				if app.FinishedExecition && !app.ChannelClosed {
+					app.ChannelClosed = true
+					close(app.DieChan)
+				}
+			}),
+		}
+		app.MetricsReporter = mr
 	}
 
-	app.MetricsReporter = mr
 	return app
 }
