@@ -141,10 +141,10 @@ func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration
 	wg.Wait()
 
 	logger.Info("Finished running bots")
-	logger.Info("Waiting for metrics to be collected...")
 	app.FinishedExecition = true
 
 	if shouldReportMetrics {
+		logger.Info("Waiting for metrics to be collected...")
 		select {
 		case <-app.DieChan: // when dieChan is closed the application can quit
 			<-time.After(10 * time.Second)
