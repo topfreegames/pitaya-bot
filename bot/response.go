@@ -45,6 +45,18 @@ func sliceAccess(term string) (int, string) {
 	return -1, ""
 }
 
+func mapAccess(term string) (string, string) {
+	r := regexp.MustCompile(`\[(.*?)\]`)
+	ssubmatch := r.FindStringSubmatch(term)
+
+	if len(ssubmatch) == 2 {
+		key := ssubmatch[1][1 : len(ssubmatch[1])-1]
+		return key, term[0:strings.Index(term, "[")]
+	}
+
+	return "", ""
+}
+
 func extractValue(src map[string]interface{}, expr Expr, exprType string) (interface{}, error) {
 	tokens := expr.tokenize()
 	var container interface{} = src
@@ -62,6 +74,13 @@ func extractValue(src map[string]interface{}, expr Expr, exprType string) (inter
 		idx, exprWithoutBracket := sliceAccess(string(token))
 		if idx != -1 {
 			container = (container.(map[string]interface{})[exprWithoutBracket]).([]interface{})[idx]
+			continue
+		}
+
+		// Is map
+		key, exprWithoutBracket := mapAccess(string(token))
+		if key != "" {
+			container = (container.(map[string]interface{})[exprWithoutBracket]).(map[string]interface{})[key]
 			continue
 		}
 

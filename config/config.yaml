@@ -1,2 +1,7 @@
+game: ""
+
 server:
   host: "localhost:30123"
+
+prometheus:
+  port: 9191

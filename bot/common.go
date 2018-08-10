@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
 )
 
@@ -165,13 +167,29 @@ func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]inter
 	return r, nil
 }
 
-func sendRequest(args map[string]interface{}, route string, pclient *PClient) (Response, []byte, error) {
+func sendRequest(args map[string]interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter) (Response, []byte, error) {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return pclient.Request(route, encodedData)
+	startTime := time.Now().UTC()
+	response, b, err := pclient.Request(route, encodedData)
+	if err != nil {
+		metricsReporterTags := map[string]string{"route": route}
+		for _, mr := range metricsReporter {
+			mr.ReportCount(metrics.ErrorCount, metricsReporterTags, 1)
+		}
+	}
+
+	elapsed := time.Since(startTime)
+
+	metricsReporterTags := map[string]string{"route": route}
+	for _, mr := range metricsReporter {
+		mr.ReportSummary(metrics.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/10e6))
+	}
+
+	return response, b, err
 }
 
 func sendNotify(args map[string]interface{}, route string, pclient *PClient) error {

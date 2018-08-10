@@ -21,11 +21,18 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 	"github.com/topfreegames/pitaya-bot/launcher"
+	"github.com/topfreegames/pitaya-bot/state"
 )
 
-var specFile string
+var (
+	specsDirectory string
+	testDuration   time.Duration
+	reportMetrics  bool
+)
 
 // runCmd represents the run command
 var runCmd = &cobra.Command{
@@ -33,12 +40,17 @@ var runCmd = &cobra.Command{
 	Short: "Runs the pitaya bot",
 	Long:  `Runs the pitaya bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		launcher.Launch(config, specFile)
+		app := state.NewApp(config, reportMetrics)
+		launcher.Launch(app, config, specsDirectory, testDuration.Seconds(), reportMetrics)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(runCmd)
 
-	runCmd.PersistentFlags().StringVarP(&specFile, "spec", "s", "./specs/default.json", "Spec to run")
+	// The bot will recusrively find all json files within specDir directory
+	// and run the specs
+	runCmd.PersistentFlags().StringVarP(&specsDirectory, "dir", "d", "./specs/", "Spec to run")
+	runCmd.PersistentFlags().DurationVar(&testDuration, "duration", 1*time.Minute, "how long should the test take")
+	runCmd.PersistentFlags().BoolVar(&reportMetrics, "report-metrics", false, "Should metrics be reported")
 }
