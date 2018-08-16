@@ -173,7 +173,7 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 		return nil, nil, err
 	}
 
-	startTime := time.Now().UTC()
+	startTime := time.Now()
 	response, b, err := pclient.Request(route, encodedData)
 	if err != nil {
 		metricsReporterTags := map[string]string{"route": route}
