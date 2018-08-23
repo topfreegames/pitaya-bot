@@ -203,7 +203,7 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 		b.logger.Fatal("Bot already connected")
 	}
 
-	client, err := NewPClient(b.host)
+	client, err := NewPClient(b.host, b.config.GetBool("server.tls"))
 	if err != nil {
 		b.logger.Error("Unable to create client...")
 		return err

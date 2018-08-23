@@ -10,7 +10,7 @@ import (
 	"github.com/topfreegames/pitaya/client"
 )
 
-// FIXME - contants from interal pitaya package
+// FIXME - constants from internal pitaya package
 const (
 	MsgResponseType byte = 0x02
 	MsgPushType     byte = 0x03
@@ -18,7 +18,7 @@ const (
 
 // PClient is a wrapper arund pitaya/client.
 // The ideia is to be able to separeta request/responses
-// from server pushes.
+// from server pushes
 type PClient struct {
 	client         *client.Client
 	responsesMutex sync.Mutex
@@ -29,13 +29,20 @@ type PClient struct {
 }
 
 // NewPClient is the PCLient constructor
-func NewPClient(host string) (*PClient, error) {
+func NewPClient(host string, useTLS bool) (*PClient, error) {
 	pclient := client.New(logrus.InfoLevel)
-	err := pclient.ConnectTo(host)
-	if err != nil {
-		fmt.Println("Error connecting to server")
-		fmt.Println(err)
-		return nil, err
+	if useTLS {
+		if err := pclient.ConnectToTLS(host, true); err != nil {
+			fmt.Println("Error connecting to server")
+			fmt.Println(err)
+			return nil, err
+		}
+	} else {
+		if err := pclient.ConnectTo(host); err != nil {
+			fmt.Println("Error connecting to server")
+			fmt.Println(err)
+			return nil, err
+		}
 	}
 
 	return &PClient{

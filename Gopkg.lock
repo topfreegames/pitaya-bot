@@ -50,6 +50,25 @@
   version = "v1.4.7"
 
 [[projects]]
+  digest = "1:e1ff887e232b2d8f4f7c7db15a5fac7be418025afc4dda53c59c765dbb5aa6b4"
+  name = "github.com/go-playground/locales"
+  packages = [
+    ".",
+    "currency",
+  ]
+  pruneopts = "UT"
+  revision = "f63010822830b6fe52288ee52d5a1151088ce039"
+  version = "v0.12.1"
+
+[[projects]]
+  digest = "1:e022cf244bcac1b6ef933f1a2e0adcf6a6dfd7b872d8d41e4d4179bb09a87cbc"
+  name = "github.com/go-playground/universal-translator"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
+  version = "v0.16.0"
+
+[[projects]]
   digest = "1:bfc758d5a03d57d97226fac6934551c01bd76612adb119c177395b057a0a46db"
   name = "github.com/gogo/protobuf"
   packages = [
@@ -299,7 +318,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:23e02848a0473fffadbb742060e51505e27ee841ed49fc10e196188176ca4ae5"
+  digest = "1:5bc6d095b978cf9be65bcbab5267f8898e5d5152df9e27aa1d641bdd5757e4fb"
   name = "github.com/topfreegames/pitaya"
   packages = [
     ".",
@@ -311,6 +330,8 @@
     "config",
     "constants",
     "context",
+    "defaultpipelines",
+    "docgenerator",
     "errors",
     "interfaces",
     "internal/codec",
@@ -334,7 +355,7 @@
     "util/compression",
   ]
   pruneopts = "UT"
-  revision = "080be917d5124acb660d25ddcaa371b68f86f4b6"
+  revision = "45608d11f9c5dd02b5ecaa8553045a89691771b5"
 
 [[projects]]
   branch = "master"
@@ -437,6 +458,14 @@
   pruneopts = "UT"
   revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
   version = "v1.14.0"
+
+[[projects]]
+  digest = "1:e2f64cca6e235f32cd4c2f9be9ae0cda1f8608fc6fdb68936e8d10e4e0bb074d"
+  name = "gopkg.in/go-playground/validator.v9"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e69e9a28bb62b977fdc58d051f1bb477b7cbe486"
+  version = "v9.21.0"
 
 [[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
