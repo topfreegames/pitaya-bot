@@ -186,7 +186,7 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 
 	metricsReporterTags := map[string]string{"route": route}
 	for _, mr := range metricsReporter {
-		mr.ReportSummary(metrics.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/10e6))
+		mr.ReportSummary(metrics.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/1e6))
 	}
 
 	return response, b, err
