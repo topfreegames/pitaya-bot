@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -29,6 +30,19 @@ func readSpec(specPath string) (*models.Spec, error) {
 	return &spec, err
 }
 
+func validFile(info os.FileInfo) bool {
+	if info.IsDir() {
+		return false
+	}
+	if runtime.GOOS != "windows" && info.Name()[0:1] == "." {
+		return false
+	}
+	if strings.Contains(info.Name(), ".json") {
+		return true
+	}
+	return false
+}
+
 func getSpecs(specsDirectory string) ([]*models.Spec, error) {
 	ret := make([]*models.Spec, 0)
 	err := filepath.Walk(specsDirectory,
@@ -37,15 +51,16 @@ func getSpecs(specsDirectory string) ([]*models.Spec, error) {
 				return err
 			}
 
-			if strings.Contains(path, ".json") {
-				spec, err := readSpec(path)
-				if err != nil {
-					return err
-				}
-
-				spec.Name = path
-				ret = append(ret, spec)
+			if !validFile(info) {
+				return nil
 			}
+			spec, err := readSpec(path)
+			if err != nil {
+				return err
+			}
+
+			spec.Name = path
+			ret = append(ret, spec)
 			fmt.Println(path, info.Size())
 			return nil
 		})
