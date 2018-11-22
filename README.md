@@ -43,7 +43,7 @@ run the server from testing example
 make run-testing-server
 ```
 
-Now, it's supposed to be a pitaya server running in one terminal.
+Now a pitaya server should be running in one terminal
 In another terminal, you can use pitaya-bot testing example:
 ```
 $ pitaya-bot -d ./testing/specs/ --config ./testing/config/config.yaml
@@ -51,12 +51,6 @@ testing/specs/default.json 1755
 INFO[0000] Found 1 specs to be executed                  function=launch source=pitaya-bot
 ...
 ```
-
-## Running the tests
-```
-make test
-```
-This command will run both unit and e2e tests.
 
 ## Contributing
 #TODO

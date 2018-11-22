@@ -22,10 +22,6 @@ run-testing-bots:
 kill-testing-deps:
 	@docker-compose -f ./testing/docker-compose.yml down; true
 
-build:
-	@mkdir -p out
-	@go build -o ./out/pitaya-bot-darwin ./main.go
-
 build-linux:
 	@mkdir -p out
 	@GOOS=linux GOARCH=amd64 go build -o ./out/pitaya-bot-linux ./main.go

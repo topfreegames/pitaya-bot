@@ -17,7 +17,7 @@ const (
 )
 
 // PClient is a wrapper arund pitaya/client.
-// The ideia is to be able to separeta request/responses
+// The ideia is to be able to separate request/responses
 // from server pushes
 type PClient struct {
 	client         *client.Client
