@@ -13,19 +13,15 @@ setup-protobuf-macos:
 	@brew install protobuf
 	@go get -u github.com/gogo/protobuf/protoc-gen-gogofaster
 
-ensure-bin:
-	@[ -f ./testing/server ] || go build -o ./testing/server ./testing/main.go
+run-testing-server:
+	@docker-compose -f ./testing/docker-compose.yml up -d etcd nats && go run ./testing/main.go
 
-run-server:
-	@go run ./testing/main.go
+run-testing-bots:
+	@go run *.go run -d ./testing/specs/ --config ./testing/config/config.yaml
 
-run-bots:
-	@go run *.go run
+kill-testing-deps:
+	@docker-compose -f ./testing/docker-compose.yml down; true
 
-ensure-deps:
-	@cd ./testing && docker-compose up -d
-
-kill-deps:
-	@cd ./testing && docker-compose down; true
-
-dev-deps: ensure-deps ensure-bin
+build-linux:
+	@mkdir -p out
+	@GOOS=linux GOARCH=amd64 go build -o ./out/pitaya-bot-linux ./main.go
