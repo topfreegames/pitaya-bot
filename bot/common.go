@@ -271,8 +271,6 @@ func equals(lhs interface{}, rhs interface{}) bool {
 		fmt.Printf("Unknown type %s\n", t.Kind().String())
 		return false
 	}
-
-	return false
 }
 
 func storeData(storeSpec models.StoreSpec, store *storage, resp Response) error {
