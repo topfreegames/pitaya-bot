@@ -115,22 +115,24 @@ func TestStoreData(t *testing.T) {
 	var equalsTable = map[string]struct {
 		storeSpec models.StoreSpec
 		store     *storage
-		resp      Response
+		response  interface{}
 		err       error
 	}{
-		"store_success":     {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, map[string]interface{}{"val": "value"}, nil},
-		"store_error_token": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, nil, errors.New("token 'val' not found")},
-		"store_error_type":  {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, map[string]interface{}{"val": 1}, errors.New("String type assertion failed for field: 1")},
+		"store_value_success": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, map[string]interface{}{"val": "value"}, nil},
+		"store_map_success":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "$response.val[\"valMap\"]"}}, &storage{}, map[string]interface{}{"val": map[string]interface{}{"valMap": "value"}}, nil},
+		"store_slice_success": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "$response.val[0]"}}, &storage{}, map[string]interface{}{"val": []interface{}{"value"}}, nil},
+		"store_error_token":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, nil, errors.New("String type assertion failed for field: <nil>")},
+		"store_error_type":    {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, map[string]interface{}{"val": 1}, errors.New("String type assertion failed for field: 1")},
 	}
 
 	for name, table := range equalsTable {
 		t.Run(name, func(t *testing.T) {
-			fmt.Printf("table resp's type: %T\n", table.resp)
+			fmt.Printf("table response's type: %T\n", table.response)
 
-			var container interface{} = table.resp
+			var container interface{} = table.response
 
 			fmt.Printf("container's type: %T\n", container)
-			err := storeData(table.storeSpec, table.store, table.resp)
+			err := storeData(table.storeSpec, table.store, table.response)
 			assert.Equal(t, table.err, err)
 			if err == nil {
 				val, ok := table.store.Get("storeVal")

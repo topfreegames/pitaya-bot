@@ -167,7 +167,7 @@ func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]inter
 	return r, nil
 }
 
-func sendRequest(args map[string]interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter) (Response, []byte, error) {
+func sendRequest(args map[string]interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter) (interface{}, []byte, error) {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return nil, nil, err
@@ -217,14 +217,14 @@ func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{},
 	return value, nil
 }
 
-func validateExpectations(expectations models.ExpectSpec, resp Response, store *storage) error {
+func validateExpectations(expectations models.ExpectSpec, response interface{}, store *storage) error {
 	for propertyExpr, spec := range expectations {
 		expectedValue, err := getValueFromSpec(spec, store)
 		if err != nil {
 			return err
 		}
 
-		gotValue, err := resp.tryExtractValue(Expr(propertyExpr), spec.Type)
+		gotValue, err := tryExtractValue(response, Expr(propertyExpr), spec.Type)
 		if err != nil {
 			return err
 		}
@@ -273,9 +273,9 @@ func equals(lhs interface{}, rhs interface{}) bool {
 	}
 }
 
-func storeData(storeSpec models.StoreSpec, store *storage, resp Response) error {
+func storeData(storeSpec models.StoreSpec, store *storage, response interface{}) error {
 	for name, spec := range storeSpec {
-		valueFromResponse, err := resp.tryExtractValue(Expr(spec.Value), spec.Type)
+		valueFromResponse, err := tryExtractValue(response, Expr(spec.Value), spec.Type)
 		if err != nil {
 			return err
 		}

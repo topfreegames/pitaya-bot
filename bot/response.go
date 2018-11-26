@@ -2,14 +2,10 @@ package bot
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 )
-
-// Response ...
-type Response map[string]interface{}
 
 // Expr ...
 type Expr string
@@ -57,9 +53,11 @@ func mapAccess(term string) (string, string) {
 	return "", ""
 }
 
-func extractValue(src map[string]interface{}, expr Expr, exprType string) (interface{}, error) {
+func tryExtractValue(resp interface{}, expr Expr, exprType string) (interface{}, error) {
 	tokens := expr.tokenize()
-	var container interface{} = src
+	var container interface{} = resp
+	fmt.Printf("container's type: %T\n", container)
+	fmt.Printf("tokens: %v\n", tokens)
 	for i, token := range tokens {
 		// Is literal
 		if isLiteral(container) {
@@ -80,6 +78,7 @@ func extractValue(src map[string]interface{}, expr Expr, exprType string) (inter
 		// Is map
 		key, exprWithoutBracket := mapAccess(string(token))
 		if key != "" {
+			fmt.Printf("key: %v\n", key)
 			container = (container.(map[string]interface{})[exprWithoutBracket]).(map[string]interface{})[key]
 			continue
 		}
@@ -105,21 +104,11 @@ func extractValue(src map[string]interface{}, expr Expr, exprType string) (inter
 	return finalValue, nil
 }
 
-func (r Response) tryExtractValue(expr Expr, exprType string) (interface{}, error) {
-	return r.extractValue(expr, exprType)
-}
-
-func (r Response) extractValue(expr Expr, exprType string) (interface{}, error) {
-	return extractValue(r, expr, exprType)
-}
-
 func isLiteral(i interface{}) bool {
-	t := reflect.TypeOf(i)
-
-	switch t.Kind() {
-	case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice, reflect.Struct:
+	fmt.Printf("container's type: %T\n", i)
+	switch i.(type) {
+	case []interface{}, map[string]interface{}:
 		return false
-
 	default:
 		return true
 	}
