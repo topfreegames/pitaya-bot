@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -11,88 +10,54 @@ import (
 type Expr string
 
 func (e Expr) tokenize() []string {
-	tokens := strings.Split(string(e), ".")
-
-	if tokens[0] == "$response" {
-		return tokens[1:]
+	if strings.HasPrefix(string(e), "$response") {
+		return tokenSplit(string(e)[9:])
 	}
-	return tokens
+	return []string{string(e)}
 }
 
-// TODO - handle slice token
-func visitToken(container map[string]interface{}, token string) (interface{}, error) {
-	value, ok := container[token]
-	if !ok {
-		return nil, fmt.Errorf("token '%s' not found", token)
+func tokenSplit(str string) []string {
+	isQuote := false
+	f := func(c rune) bool {
+		if c == '"' {
+			isQuote = !isQuote
+			return true
+		}
+		if !isQuote {
+			return c == '[' || c == ']' || c == '.' || c == ' '
+		}
+		return false
 	}
 
-	return value, nil
-}
-
-func sliceAccess(term string) (int, string) {
-	r := regexp.MustCompile(`\[([0-9]+)\]`)
-	ssubmatch := r.FindStringSubmatch(term)
-
-	if len(ssubmatch) == 2 {
-		idx, _ := strconv.Atoi(ssubmatch[1])
-		return idx, term[0:strings.Index(term, "[")]
-	}
-
-	return -1, ""
-}
-
-func mapAccess(term string) (string, string) {
-	r := regexp.MustCompile(`\[(.*?)\]`)
-	ssubmatch := r.FindStringSubmatch(term)
-
-	if len(ssubmatch) == 2 {
-		key := ssubmatch[1][1 : len(ssubmatch[1])-1]
-		return key, term[0:strings.Index(term, "[")]
-	}
-
-	return "", ""
+	result := strings.FieldsFunc(str, f)
+	return result
 }
 
 func tryExtractValue(resp interface{}, expr Expr, exprType string) (interface{}, error) {
 	tokens := expr.tokenize()
 	var container interface{} = resp
-	fmt.Printf("container's type: %T\n", container)
-	fmt.Printf("tokens: %v\n", tokens)
+	var ok bool
 	for i, token := range tokens {
-		// Is literal
-		if isLiteral(container) {
+		switch container.(type) {
+		case []interface{}:
+			if index, err := strconv.Atoi(token); err == nil {
+				if len(container.([]interface{})) <= index {
+					return nil, fmt.Errorf("token index %v not available with expr %s", index, expr)
+				}
+				container = container.([]interface{})[index]
+			} else {
+				return nil, fmt.Errorf("malformed spec file. expr %s, in %s token, must be an index", expr, token)
+			}
+		case map[string]interface{}:
+			if container, ok = container.(map[string]interface{})[token]; !ok {
+				return nil, fmt.Errorf("token '%s' not found with expr %s", token, expr)
+			}
+		default:
 			if i == len(tokens)-1 {
 				break // Found value. Exit loop
 			}
 
 			return nil, fmt.Errorf("malformed spec file. expr %s doesn't match the object received", expr)
-		}
-
-		// Is slice
-		idx, exprWithoutBracket := sliceAccess(string(token))
-		if idx != -1 {
-			container = (container.(map[string]interface{})[exprWithoutBracket]).([]interface{})[idx]
-			continue
-		}
-
-		// Is map
-		key, exprWithoutBracket := mapAccess(string(token))
-		if key != "" {
-			fmt.Printf("key: %v\n", key)
-			container = (container.(map[string]interface{})[exprWithoutBracket]).(map[string]interface{})[key]
-			continue
-		}
-
-		// Is object
-		parsedContainer, ok := container.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("Unable to parse container to Response")
-		}
-
-		var err error
-		container, err = visitToken(parsedContainer, token)
-		if err != nil {
-			return nil, err
 		}
 	}
 
@@ -102,14 +67,4 @@ func tryExtractValue(resp interface{}, expr Expr, exprType string) (interface{},
 	}
 
 	return finalValue, nil
-}
-
-func isLiteral(i interface{}) bool {
-	fmt.Printf("container's type: %T\n", i)
-	switch i.(type) {
-	case []interface{}, map[string]interface{}:
-		return false
-	default:
-		return true
-	}
 }
