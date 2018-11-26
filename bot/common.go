@@ -53,13 +53,13 @@ func assertType(value interface{}, typ string) (interface{}, error) {
 		if val, ok := ret.(string); ok {
 			ret = val
 		} else {
-			return nil, fmt.Errorf("String type assetion failed for filed: %v", ret)
+			return nil, fmt.Errorf("String type assertion failed for field: %v", ret)
 		}
 	case "bool":
 		if val, ok := ret.(bool); ok {
 			ret = val
 		} else {
-			return nil, fmt.Errorf("Boolean type assetion failed for filed: %v", ret)
+			return nil, fmt.Errorf("Boolean type assertion failed for field: %v", ret)
 		}
 	case "int":
 		t := reflect.TypeOf(ret)
@@ -224,7 +224,7 @@ func validateExpectations(expectations models.ExpectSpec, resp Response, store *
 			return err
 		}
 
-		gotValue, err := Response(resp).extractValue(Expr(propertyExpr), spec.Type)
+		gotValue, err := resp.tryExtractValue(Expr(propertyExpr), spec.Type)
 		if err != nil {
 			return err
 		}
