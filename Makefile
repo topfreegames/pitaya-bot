@@ -1,4 +1,4 @@
-TESTABLE_PACKAGES = `go list ./... | grep -v testing | grep -v constants`
+TESTABLE_PACKAGES = `go list ./... | grep -v 'testing|constants|models'`
 
 setup:
 	@dep ensure

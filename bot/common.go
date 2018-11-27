@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/topfreegames/pitaya-bot/constants"
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/storage"
@@ -175,7 +176,7 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 	if err != nil {
 		metricsReporterTags := map[string]string{"route": route}
 		for _, mr := range metricsReporter {
-			mr.ReportCount(metrics.ErrorCount, metricsReporterTags, 1)
+			mr.ReportCount(constants.ErrorCount, metricsReporterTags, 1)
 		}
 	}
 
@@ -183,7 +184,7 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 
 	metricsReporterTags := map[string]string{"route": route}
 	for _, mr := range metricsReporter {
-		mr.ReportSummary(metrics.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/1e6))
+		mr.ReportSummary(constants.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/1e6))
 	}
 
 	return response, b, err

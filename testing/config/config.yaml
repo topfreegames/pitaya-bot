@@ -1,5 +1,8 @@
 game: ""
 
+storage:
+  type: "memory"
+
 server:
   host: "localhost:30123"
 

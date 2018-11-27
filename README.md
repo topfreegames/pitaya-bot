@@ -51,6 +51,11 @@ INFO[0000] Found 1 specs to be executed                  function=launch source=
 ...
 ```
 
+## Running the tests
+```
+make test
+```
+
 ## Contributing
 #TODO
 
