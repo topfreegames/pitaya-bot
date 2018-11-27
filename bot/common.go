@@ -11,9 +11,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
+	"github.com/topfreegames/pitaya-bot/storage"
 )
 
-func initializeDb(store *storage) error {
+func initializeDb(store storage.Storage) error {
 	return nil
 }
 
@@ -26,15 +27,11 @@ func valueFromUtil(fName string) (interface{}, error) {
 	}
 }
 
-func tryGetValue(expr interface{}, store *storage) (interface{}, error) {
+func tryGetValue(expr interface{}, store storage.Storage) (interface{}, error) {
 	if val, ok := expr.(string); ok {
 		if strings.HasPrefix(val, "$store") {
 			variable := val[7:]
-			if val, ok := store.Get(variable); ok {
-				return val, nil
-			}
-
-			return nil, fmt.Errorf("Variable %s not found", variable)
+			return store.Get(variable)
 		}
 
 		if strings.HasPrefix(val, "$util") {
@@ -87,7 +84,7 @@ func assertType(value interface{}, typ string) (interface{}, error) {
 	return ret, nil
 }
 
-func parseArg(params interface{}, store *storage) (interface{}, error) {
+func parseArg(params interface{}, store storage.Storage) (interface{}, error) {
 	p := params.(map[string]interface{})
 
 	valueFromStorage, err := tryGetValue(p["value"], store)
@@ -112,7 +109,7 @@ func parseArg(params interface{}, store *storage) (interface{}, error) {
 	return builtParam, nil
 }
 
-func buildArgByType(value interface{}, valueType string, store *storage) (interface{}, error) {
+func buildArgByType(value interface{}, valueType string, store storage.Storage) (interface{}, error) {
 	var err error
 	switch valueType {
 	case "object":
@@ -157,7 +154,7 @@ func buildArgByType(value interface{}, valueType string, store *storage) (interf
 	return value, nil
 }
 
-func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]interface{}, error) {
+func buildArgs(rawArgs map[string]interface{}, store storage.Storage) (map[string]interface{}, error) {
 	args, err := buildArgByType(rawArgs, "object", store)
 	if err != nil {
 		return nil, err
@@ -201,7 +198,7 @@ func sendNotify(args map[string]interface{}, route string, pclient *PClient) err
 	return pclient.Notify(route, encodedData)
 }
 
-func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{}, error) {
+func getValueFromSpec(spec models.ExpectSpecEntry, store storage.Storage) (interface{}, error) {
 	value, err := tryGetValue(spec.Value, store)
 	if err != nil {
 		return nil, err
@@ -217,7 +214,7 @@ func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{},
 	return value, nil
 }
 
-func validateExpectations(expectations models.ExpectSpec, response interface{}, store *storage) error {
+func validateExpectations(expectations models.ExpectSpec, response interface{}, store storage.Storage) error {
 	for propertyExpr, spec := range expectations {
 		expectedValue, err := getValueFromSpec(spec, store)
 		if err != nil {
@@ -273,7 +270,7 @@ func equals(lhs interface{}, rhs interface{}) bool {
 	}
 }
 
-func storeData(storeSpec models.StoreSpec, store *storage, response interface{}) error {
+func storeData(storeSpec models.StoreSpec, store storage.Storage, response interface{}) error {
 	for name, spec := range storeSpec {
 		valueFromResponse, err := tryExtractValue(response, Expr(spec.Value), spec.Type)
 		if err != nil {

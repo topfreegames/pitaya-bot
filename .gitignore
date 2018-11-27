@@ -1,3 +1,5 @@
 vendor
 testing/server
 *.swp
+
+coverprofile.out

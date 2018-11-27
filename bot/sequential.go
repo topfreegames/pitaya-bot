@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
+	"github.com/topfreegames/pitaya-bot/storage"
 )
 
 // SequentialBot defines the struct for the sequential bot that is going to run
@@ -15,7 +16,7 @@ type SequentialBot struct {
 	config          *viper.Viper
 	id              int
 	spec            *models.Spec
-	storage         *storage
+	storage         storage.Storage
 	logger          logrus.FieldLogger
 	host            string
 	metricsReporter []metrics.Reporter
@@ -23,17 +24,22 @@ type SequentialBot struct {
 
 // NewSequentialBot returns a new sequantial bot instance
 func NewSequentialBot(config *viper.Viper, spec *models.Spec, id int, mr []metrics.Reporter, logger logrus.FieldLogger) (Bot, error) {
+	store, err := storage.NewStorage(config)
+	if err != nil {
+		return nil, err
+	}
+
 	bot := &SequentialBot{
 		config:          config,
 		spec:            spec,
 		id:              id,
-		storage:         newStorage(config),
+		storage:         store,
 		logger:          logger,
 		host:            config.GetString("server.host"),
 		metricsReporter: mr,
 	}
 
-	if err := bot.Connect(); err != nil {
+	if err = bot.Connect(); err != nil {
 		return nil, err
 	}
 

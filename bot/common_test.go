@@ -2,12 +2,12 @@ package bot
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/topfreegames/pitaya-bot/models"
+	"github.com/topfreegames/pitaya-bot/storage"
 )
 
 func TestAssertType(t *testing.T) {
@@ -39,16 +39,16 @@ func TestAssertType(t *testing.T) {
 func TestBuildArgsWithStorage(t *testing.T) {
 	var buildArgsWithStorageTable = map[string]struct {
 		rawArgs map[string]interface{}
-		store   *storage
+		store   storage.Storage
 		result  map[string]interface{}
 		err     error
 	}{
-		"success_one": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId"}}, &storage{"playerId": "123456"}, map[string]interface{}{"playerId": "123456"}, nil},
+		"success_one": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId"}}, &storage.MemoryStorage{"playerId": "123456"}, map[string]interface{}{"playerId": "123456"}, nil},
 		"success_multiple": {map[string]interface{}{
 			"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId"},
 			"gold":     map[string]interface{}{"type": "int", "value": 10},
-		}, &storage{"playerId": "123456"}, map[string]interface{}{"playerId": "123456", "gold": 10}, nil},
-		"error_one": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId2"}}, &storage{"playerId": "123456"}, nil, errors.New("Variable playerId2 not found")},
+		}, &storage.MemoryStorage{"playerId": "123456"}, map[string]interface{}{"playerId": "123456", "gold": 10}, nil},
+		"error_one": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId2"}}, &storage.MemoryStorage{"playerId": "123456"}, nil, errors.New("storage key not found")},
 	}
 
 	for name, table := range buildArgsWithStorageTable {
@@ -114,29 +114,24 @@ func TestEquals(t *testing.T) {
 func TestStoreData(t *testing.T) {
 	var equalsTable = map[string]struct {
 		storeSpec models.StoreSpec
-		store     *storage
+		store     storage.Storage
 		response  interface{}
 		err       error
 	}{
-		"store_value_success": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, map[string]interface{}{"val": "value"}, nil},
-		"store_map_success":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "$response.val[\"valMap\"]"}}, &storage{}, map[string]interface{}{"val": map[string]interface{}{"valMap": "value"}}, nil},
-		"store_slice_success": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "$response.val[0]"}}, &storage{}, map[string]interface{}{"val": []interface{}{"value"}}, nil},
-		"store_error_token":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, nil, errors.New("String type assertion failed for field: <nil>")},
-		"store_error_type":    {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage{}, map[string]interface{}{"val": 1}, errors.New("String type assertion failed for field: 1")},
+		"store_value_success": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": "value"}, nil},
+		"store_map_success":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "$response.val[\"valMap\"]"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": map[string]interface{}{"valMap": "value"}}, nil},
+		"store_slice_success": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "$response.val[0]"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": []interface{}{"value"}}, nil},
+		"store_error_token":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage.MemoryStorage{}, nil, errors.New("String type assertion failed for field: <nil>")},
+		"store_error_type":    {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": 1}, errors.New("String type assertion failed for field: 1")},
 	}
 
 	for name, table := range equalsTable {
 		t.Run(name, func(t *testing.T) {
-			fmt.Printf("table response's type: %T\n", table.response)
-
-			var container interface{} = table.response
-
-			fmt.Printf("container's type: %T\n", container)
 			err := storeData(table.storeSpec, table.store, table.response)
 			assert.Equal(t, table.err, err)
 			if err == nil {
-				val, ok := table.store.Get("storeVal")
-				assert.True(t, ok)
+				val, err := table.store.Get("storeVal")
+				assert.NoError(t, err)
 				assert.Equal(t, val, "value")
 			}
 		})
