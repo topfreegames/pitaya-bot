@@ -42,15 +42,15 @@ func tryExtractValue(resp interface{}, expr Expr, exprType string) (interface{},
 		case []interface{}:
 			if index, err := strconv.Atoi(token); err == nil {
 				if len(container.([]interface{})) <= index {
-					return nil, fmt.Errorf("token index %v not available with expr %s", index, expr)
+					return nil, fmt.Errorf("token index %v not available within expr %s", index, expr)
 				}
 				container = container.([]interface{})[index]
 			} else {
-				return nil, fmt.Errorf("malformed spec file. expr %s, in %s token, must be an index", expr, token)
+				return nil, fmt.Errorf("malformed spec file. expr %s, '%s' token must be an index", expr, token)
 			}
 		case map[string]interface{}:
 			if container, ok = container.(map[string]interface{})[token]; !ok {
-				return nil, fmt.Errorf("token '%s' not found with expr %s", token, expr)
+				return nil, fmt.Errorf("token '%s' not found within expr %s", token, expr)
 			}
 		default:
 			if i == len(tokens)-1 {
