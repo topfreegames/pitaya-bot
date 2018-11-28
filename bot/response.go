@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Expr ...
+// Expr is the expression which contains the tokens to access the object value
 type Expr string
 
 // Response is the response received from the pitaya server beign tested
