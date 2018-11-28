@@ -2,8 +2,10 @@ package bot
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSequentialImplementsBot(t *testing.T) {
-	var _ Bot = (*SequentialBot)(nil)
+	assert.Implements(t, (*Bot)(nil), new(SequentialBot))
 }
