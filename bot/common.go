@@ -133,7 +133,7 @@ func parseArray(arg []interface{}, argType string, store storage.Storage) (inter
 	return preparedArgs, nil
 }
 
-func sendRequest(args interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter, logger logrus.FieldLogger) (interface{}, []byte, error) {
+func sendRequest(args interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter, logger logrus.FieldLogger) (Response, []byte, error) {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return nil, nil, err
@@ -189,7 +189,7 @@ func getValueFromSpec(spec models.ExpectSpecEntry, store storage.Storage) (inter
 	return value, nil
 }
 
-func validateExpectations(expectations models.ExpectSpec, response interface{}, store storage.Storage) error {
+func validateExpectations(expectations models.ExpectSpec, response Response, store storage.Storage) error {
 	for propertyExpr, spec := range expectations {
 		expectedValue, err := getValueFromSpec(spec, store)
 		if err != nil {
@@ -245,7 +245,7 @@ func equals(lhs interface{}, rhs interface{}) bool {
 	}
 }
 
-func storeData(storeSpec models.StoreSpec, store storage.Storage, response interface{}) error {
+func storeData(storeSpec models.StoreSpec, store storage.Storage, response Response) error {
 	for name, spec := range storeSpec {
 		valueFromResponse, err := tryExtractValue(response, Expr(spec.Value), spec.Type)
 		if err != nil {

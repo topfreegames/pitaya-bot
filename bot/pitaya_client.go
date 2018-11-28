@@ -91,7 +91,7 @@ func (c *PClient) getPushChannelForRoute(route string) chan []byte {
 }
 
 // Request ...
-func (c *PClient) Request(route string, data []byte) (interface{}, []byte, error) {
+func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 	messageID, err := c.client.SendRequest(route, data)
 	if err != nil {
 		return nil, nil, err
@@ -101,7 +101,7 @@ func (c *PClient) Request(route string, data []byte) (interface{}, []byte, error
 
 	select {
 	case responseData := <-ch:
-		var ret interface{}
+		var ret Response
 		if err := json.Unmarshal(responseData, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
 			return nil, nil, err
@@ -120,12 +120,12 @@ func (c *PClient) Notify(route string, data []byte) error {
 }
 
 // ReceivePush ...
-func (c *PClient) ReceivePush(route string, timeout int) (interface{}, error) {
+func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
 	ch := c.getPushChannelForRoute(route)
 
 	select {
 	case data := <-ch:
-		var ret interface{}
+		var ret Response
 		if err := json.Unmarshal(data, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
 			return nil, err

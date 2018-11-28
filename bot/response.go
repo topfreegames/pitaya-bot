@@ -9,6 +9,9 @@ import (
 // Expr ...
 type Expr string
 
+// Response is the response received from the pitaya server beign tested
+type Response interface{}
+
 func (e Expr) tokenize() []string {
 	if strings.HasPrefix(string(e), "$response") {
 		return tokenSplit(string(e)[9:])
@@ -33,7 +36,7 @@ func tokenSplit(str string) []string {
 	return result
 }
 
-func tryExtractValue(resp interface{}, expr Expr, exprType string) (interface{}, error) {
+func tryExtractValue(resp Response, expr Expr, exprType string) (interface{}, error) {
 	tokens := expr.tokenize()
 	var container interface{} = resp
 	var ok bool
