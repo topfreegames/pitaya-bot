@@ -1,4 +1,4 @@
-TESTABLE_PACKAGES = `go list ./... | grep -v 'testing|constants|models'`
+TESTABLE_PACKAGES = `go list ./... | egrep -v 'testing|constants|models|cmd' | grep 'pitaya-bot/'`
 
 setup:
 	@dep ensure

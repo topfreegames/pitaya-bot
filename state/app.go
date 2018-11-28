@@ -19,9 +19,6 @@ type App struct {
 
 // NewApp is the NewApp constructor
 func NewApp(config *viper.Viper, shouldReportMetrics bool) *App {
-	game := config.GetString("game")
-	prometheusPort := config.GetInt("prometheus.port")
-
 	app := &App{
 		FinishedExecition: false,
 		DieChan:           make(chan struct{}),
@@ -29,17 +26,19 @@ func NewApp(config *viper.Viper, shouldReportMetrics bool) *App {
 
 	if shouldReportMetrics {
 		fmt.Println("[INFO] Will report metrics")
-		mr := []metrics.Reporter{
-			metrics.GetPrometheusReporter(game, prometheusPort, map[string]string{}, func() {
-				defer app.Mu.Unlock()
-				app.Mu.Lock()
-				if app.FinishedExecition && !app.ChannelClosed {
-					app.ChannelClosed = true
-					close(app.DieChan)
-				}
-			}),
-		}
-		app.MetricsReporter = mr
+		app.MetricsReporter = []metrics.Reporter{
+			metrics.GetPrometheusReporter(config.GetString("game"),
+				config.GetInt("prometheus.port"),
+				map[string]string{},
+				func() {
+					defer app.Mu.Unlock()
+					app.Mu.Lock()
+					if app.FinishedExecition && !app.ChannelClosed {
+						app.ChannelClosed = true
+						close(app.DieChan)
+					}
+				},
+			)}
 	}
 
 	return app
