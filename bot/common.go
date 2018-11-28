@@ -2,7 +2,6 @@ package bot
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -42,44 +41,26 @@ func tryGetValue(expr interface{}, store storage.Storage) (interface{}, error) {
 }
 
 func assertType(value interface{}, typ string) (interface{}, error) {
-	ret := value
-	switch typ {
-	case "string":
-		if val, ok := ret.(string); ok {
-			ret = val
-		} else {
-			return nil, fmt.Errorf("String type assertion failed for field: %v", ret)
-		}
-	case "bool":
-		if val, ok := ret.(bool); ok {
-			ret = val
-		} else {
-			return nil, fmt.Errorf("Boolean type assertion failed for field: %v", ret)
-		}
-	case "int":
-		t := reflect.TypeOf(ret)
-		switch t.Kind() {
-		case reflect.Int:
-			if val, ok := ret.(int); ok {
-				ret = val
-			} else {
-				return nil, fmt.Errorf("Int type assetion failed for filed: %v", ret)
-			}
-
-		case reflect.Float64:
-			if val, ok := ret.(float64); ok {
-				ret = int(val)
-			} else {
-				return nil, fmt.Errorf("Int type assetion failed for filed: %v", ret)
-			}
-		default:
-			return nil, fmt.Errorf("Int type assertion failed for field: %v", ret)
-		}
-	default:
+	allowedTypes := map[string]bool{"string": true, "bool": true, "int": true, "<nil>": true}
+	if _, ok := allowedTypes[typ]; !ok {
 		return nil, fmt.Errorf("Unknown type %s", typ)
 	}
 
-	return ret, nil
+	switch v := value.(type) {
+	case string, bool, int, nil:
+		return assertCastedType(v, fmt.Sprintf("%T", v), typ)
+	case float64:
+		return assertCastedType(int(v), "int", typ)
+	default:
+		return nil, fmt.Errorf("Unknown value type %T", v)
+	}
+}
+
+func assertCastedType(ret interface{}, givenType, expectedType string) (interface{}, error) {
+	if givenType == expectedType {
+		return ret, nil
+	}
+	return nil, fmt.Errorf("%s type assertion failed for field: %v", expectedType, ret)
 }
 
 func parseArg(params interface{}, store storage.Storage) (interface{}, error) {
@@ -108,61 +89,51 @@ func parseArg(params interface{}, store storage.Storage) (interface{}, error) {
 }
 
 func buildArgByType(value interface{}, valueType string, store storage.Storage) (interface{}, error) {
-	var err error
-	switch valueType {
-	case "object":
-		arg, ok := value.(map[string]interface{})
-		if !ok {
-			return nil, errors.New("Malformed object type argument")
-		}
-
-		preparedArgs := map[string]interface{}{}
-		for key, params := range arg {
-			builtParam, err := parseArg(params, store)
-			if err != nil {
-				return nil, err
-			}
-			preparedArgs[key] = builtParam
-		}
-
-		return preparedArgs, nil
-	case "array":
-		arg, ok := value.([]interface{})
-		if !ok {
-			return nil, errors.New("Malformed object type argument")
-		}
-
-		preparedArgs := make([]interface{}, len(arg))
-		for idx, params := range arg {
-			builtParam, err := parseArg(params, store)
-			if err != nil {
-				return nil, err
-			}
-			preparedArgs[idx] = builtParam
-		}
-
-		return preparedArgs, nil
+	switch arg := value.(type) {
+	case map[string]interface{}:
+		return parseObject(arg, valueType, store)
+	case []interface{}:
+		return parseArray(arg, valueType, store)
 	default:
-		value, err = assertType(value, valueType)
+		return assertType(value, valueType)
+	}
+}
+
+func parseObject(arg map[string]interface{}, argType string, store storage.Storage) (interface{}, error) {
+	if argType != "object" {
+		return nil, constants.ErrMalformedObject
+	}
+
+	preparedArgs := make(map[string]interface{}, len(arg))
+	for key, params := range arg {
+		builtParam, err := parseArg(params, store)
 		if err != nil {
 			return nil, err
 		}
+		preparedArgs[key] = builtParam
 	}
 
-	return value, nil
+	return preparedArgs, nil
 }
 
-func buildArgs(rawArgs map[string]interface{}, store storage.Storage) (map[string]interface{}, error) {
-	args, err := buildArgByType(rawArgs, "object", store)
-	if err != nil {
-		return nil, err
+func parseArray(arg []interface{}, argType string, store storage.Storage) (interface{}, error) {
+	if argType != "array" {
+		return nil, constants.ErrMalformedObject
 	}
 
-	r := args.(map[string]interface{})
-	return r, nil
+	preparedArgs := make([]interface{}, len(arg))
+	for key, params := range arg {
+		builtParam, err := parseArg(params, store)
+		if err != nil {
+			return nil, err
+		}
+		preparedArgs[key] = builtParam
+	}
+
+	return preparedArgs, nil
 }
 
-func sendRequest(args map[string]interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter, logger logrus.FieldLogger) (interface{}, []byte, error) {
+func sendRequest(args interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter, logger logrus.FieldLogger) (interface{}, []byte, error) {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return nil, nil, err
@@ -193,7 +164,7 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 	return response, b, err
 }
 
-func sendNotify(args map[string]interface{}, route string, pclient *PClient) error {
+func sendNotify(args interface{}, route string, pclient *PClient) error {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return err

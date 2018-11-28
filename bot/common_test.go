@@ -20,11 +20,11 @@ func TestAssertType(t *testing.T) {
 		"success_int":       {1, "int", 1, nil},
 		"success_string":    {"2", "string", "2", nil},
 		"success_bool":      {true, "bool", true, nil},
-		"err_int":           {"$", "int", nil, errors.New("Int type assertion failed for field: $")},
-		"err_bool":          {"$", "bool", nil, errors.New("Boolean type assertion failed for field: $")},
-		"err_string":        {1, "string", nil, errors.New("String type assertion failed for field: 1")},
+		"err_int":           {"$", "int", nil, errors.New("int type assertion failed for field: $")},
+		"err_bool":          {"$", "bool", nil, errors.New("bool type assertion failed for field: $")},
+		"err_string":        {1, "string", nil, errors.New("string type assertion failed for field: 1")},
 		"err_unknown_type":  {"5", "rand", nil, errors.New("Unknown type rand")},
-		"err_string_to_int": {"6", "int", nil, errors.New("Int type assertion failed for field: 6")},
+		"err_string_to_int": {"6", "int", nil, errors.New("int type assertion failed for field: 6")},
 	}
 
 	for name, table := range assertTypeTable {
@@ -36,52 +36,39 @@ func TestAssertType(t *testing.T) {
 	}
 }
 
-func TestBuildArgsWithStorage(t *testing.T) {
+func TestBuildArgsByType(t *testing.T) {
 	var buildArgsWithStorageTable = map[string]struct {
-		rawArgs map[string]interface{}
-		store   storage.Storage
-		result  map[string]interface{}
-		err     error
+		value     interface{}
+		valueType string
+		store     storage.Storage
+		result    interface{}
+		err       error
 	}{
-		"success_one": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId"}}, &storage.MemoryStorage{"playerId": "123456"}, map[string]interface{}{"playerId": "123456"}, nil},
+		"success_one": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId"}}, "object", &storage.MemoryStorage{"playerId": "123456"}, map[string]interface{}{"playerId": "123456"}, nil},
 		"success_multiple": {map[string]interface{}{
 			"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId"},
 			"gold":     map[string]interface{}{"type": "int", "value": 10},
-		}, &storage.MemoryStorage{"playerId": "123456"}, map[string]interface{}{"playerId": "123456", "gold": 10}, nil},
-		"error_one": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId2"}}, &storage.MemoryStorage{"playerId": "123456"}, nil, errors.New("storage key not found")},
+		}, "object", &storage.MemoryStorage{"playerId": "123456"}, map[string]interface{}{"playerId": "123456", "gold": 10}, nil},
+		"error_one":            {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$store.playerId2"}}, "object", &storage.MemoryStorage{"playerId": "123456"}, nil, errors.New("storage key not found")},
+		"error_undefined_util": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$util.unknown"}}, "object", nil, nil, errors.New("util.unknown undefined")},
 	}
 
 	for name, table := range buildArgsWithStorageTable {
 		t.Run(name, func(t *testing.T) {
-			val, err := buildArgs(table.rawArgs, table.store)
+			val, err := buildArgByType(table.value, table.valueType, table.store)
 			assert.Equal(t, table.result, val)
 			assert.Equal(t, table.err, err)
 		})
 	}
 }
 
-func TestBuildArgsUtils(t *testing.T) {
-	var buildArgsUtilTable = map[string]struct {
-		rawArgs   map[string]interface{}
-		resultKey string
-		regex     string
-		err       error
-	}{
-		"success_util_uuid":    {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$util.uuid"}}, "playerId", "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$", nil},
-		"error_undefined_util": {map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$util.unknown"}}, "", "", errors.New("util.unknown undefined")},
-	}
-
-	for name, table := range buildArgsUtilTable {
-		t.Run(name, func(t *testing.T) {
-			val, err := buildArgs(table.rawArgs, nil)
-			assert.Equal(t, table.err, err)
-			if table.err == nil {
-				resultVal := val[table.resultKey].(string)
-				valid := regexp.MustCompile(table.regex).MatchString(resultVal)
-				assert.True(t, valid)
-			}
-		})
-	}
+func TestUUIDValueFromUtil(t *testing.T) {
+	regex := "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"
+	rawArgs := map[string]interface{}{"playerId": map[string]interface{}{"type": "string", "value": "$util.uuid"}}
+	val, err := buildArgByType(rawArgs, "object", nil)
+	assert.NoError(t, err)
+	resultVal := val.(map[string]interface{})["playerId"].(string)
+	assert.True(t, regexp.MustCompile(regex).MatchString(resultVal))
 }
 
 func TestEquals(t *testing.T) {
@@ -121,8 +108,8 @@ func TestStoreData(t *testing.T) {
 		"store_value_success": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": "value"}, nil},
 		"store_map_success":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "$response.val[\"valMap\"]"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": map[string]interface{}{"valMap": "value"}}, nil},
 		"store_slice_success": {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "$response.val[0]"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": []interface{}{"value"}}, nil},
-		"store_error_token":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage.MemoryStorage{}, nil, errors.New("String type assertion failed for field: <nil>")},
-		"store_error_type":    {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": 1}, errors.New("String type assertion failed for field: 1")},
+		"store_error_token":   {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage.MemoryStorage{}, nil, errors.New("string type assertion failed for field: <nil>")},
+		"store_error_type":    {models.StoreSpec{"storeVal": models.StoreSpecEntry{Type: "string", Value: "val"}}, &storage.MemoryStorage{}, map[string]interface{}{"val": 1}, errors.New("string type assertion failed for field: 1")},
 	}
 
 	for name, table := range equalsTable {

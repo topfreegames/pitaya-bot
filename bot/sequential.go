@@ -5,6 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/topfreegames/pitaya-bot/constants"
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/storage"
@@ -71,7 +72,7 @@ func (b *SequentialBot) Run() error {
 func (b *SequentialBot) runRequest(op *models.Operation) error {
 	b.logger.Debug("Executing request to: " + op.URI)
 	route := op.URI
-	args, err := buildArgs(op.Args, b.storage)
+	args, err := buildArgByType(op.Args, "object", b.storage)
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,7 @@ func (b *SequentialBot) runRequest(op *models.Operation) error {
 func (b *SequentialBot) runNotify(op *models.Operation) error {
 	b.logger.Debug("Executing notify to: " + op.URI)
 	route := op.URI
-	args, err := buildArgs(op.Args, b.storage)
+	args, err := buildArgByType(op.Args, "object", b.storage)
 	if err != nil {
 		return err
 	}
@@ -124,11 +125,15 @@ func (b *SequentialBot) runFunction(op *models.Operation) error {
 		b.Disconnect()
 	case "connect":
 		host := b.host
-		args, err := buildArgs(op.Args, b.storage)
+		args, err := buildArgByType(op.Args, "object", b.storage)
 		if err != nil {
 			return err
 		}
-		if val, ok := args["host"]; ok {
+		mapArgs, ok := args.(map[string]interface{})
+		if !ok {
+			return constants.ErrMalformedObject
+		}
+		if val, ok := mapArgs["host"]; ok {
 			b.logger.Debug("Connecting to custom host")
 			if h, ok := val.(string); ok {
 				host = h
