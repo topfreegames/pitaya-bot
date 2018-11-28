@@ -76,7 +76,7 @@ func (b *SequentialBot) runRequest(op *models.Operation) error {
 		return err
 	}
 
-	resp, rawResp, err := sendRequest(args, route, b.client, b.metricsReporter)
+	resp, rawResp, err := sendRequest(args, route, b.client, b.metricsReporter, b.logger)
 	if err != nil {
 		return err
 	}

@@ -9,15 +9,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"github.com/topfreegames/pitaya-bot/constants"
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/storage"
 )
-
-func initializeDb(store storage.Storage) error {
-	return nil
-}
 
 func valueFromUtil(fName string) (interface{}, error) {
 	switch fName {
@@ -165,7 +162,7 @@ func buildArgs(rawArgs map[string]interface{}, store storage.Storage) (map[strin
 	return r, nil
 }
 
-func sendRequest(args map[string]interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter) (interface{}, []byte, error) {
+func sendRequest(args map[string]interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter, logger logrus.FieldLogger) (interface{}, []byte, error) {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return nil, nil, err
@@ -176,7 +173,10 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 	if err != nil {
 		metricsReporterTags := map[string]string{"route": route}
 		for _, mr := range metricsReporter {
-			mr.ReportCount(constants.ErrorCount, metricsReporterTags, 1)
+			reportErr := mr.ReportCount(constants.ErrorCount, metricsReporterTags, 1)
+			if reportErr != nil {
+				logger.WithError(reportErr).Error("Failed to Report Count")
+			}
 		}
 	}
 
@@ -184,7 +184,10 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 
 	metricsReporterTags := map[string]string{"route": route}
 	for _, mr := range metricsReporter {
-		mr.ReportSummary(constants.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/1e6))
+		reportErr := mr.ReportSummary(constants.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/1e6))
+		if reportErr != nil {
+			logger.WithError(reportErr).Error("Failed to Report Summary")
+		}
 	}
 
 	return response, b, err
