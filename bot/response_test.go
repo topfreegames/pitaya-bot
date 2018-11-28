@@ -28,7 +28,7 @@ func TestTokenize(t *testing.T) {
 
 func TestTryExtractValue(t *testing.T) {
 	var assertTypeTable = map[string]struct {
-		resp     interface{}
+		resp     Response
 		expr     Expr
 		exprType string
 		result   interface{}
@@ -46,7 +46,7 @@ func TestTryExtractValue(t *testing.T) {
 
 	for name, table := range assertTypeTable {
 		t.Run(name, func(t *testing.T) {
-			result, err := tryExtractValue(table.resp, table.expr, table.exprType)
+			result, err := tryExtractValue(&table.resp, table.expr, table.exprType)
 			assert.Equal(t, table.result, result)
 			assert.Equal(t, table.err, err)
 		})

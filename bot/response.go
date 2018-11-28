@@ -36,9 +36,9 @@ func tokenSplit(str string) []string {
 	return result
 }
 
-func tryExtractValue(resp Response, expr Expr, exprType string) (interface{}, error) {
+func tryExtractValue(resp *Response, expr Expr, exprType string) (interface{}, error) {
 	tokens := expr.tokenize()
-	var container interface{} = resp
+	var container interface{} = (interface{})(*resp)
 	var ok bool
 	for i, token := range tokens {
 		switch container.(type) {

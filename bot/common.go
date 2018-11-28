@@ -196,7 +196,7 @@ func validateExpectations(expectations models.ExpectSpec, response Response, sto
 			return err
 		}
 
-		gotValue, err := tryExtractValue(response, Expr(propertyExpr), spec.Type)
+		gotValue, err := tryExtractValue(&response, Expr(propertyExpr), spec.Type)
 		if err != nil {
 			return err
 		}
@@ -247,7 +247,7 @@ func equals(lhs interface{}, rhs interface{}) bool {
 
 func storeData(storeSpec models.StoreSpec, store storage.Storage, response Response) error {
 	for name, spec := range storeSpec {
-		valueFromResponse, err := tryExtractValue(response, Expr(spec.Value), spec.Type)
+		valueFromResponse, err := tryExtractValue(&response, Expr(spec.Value), spec.Type)
 		if err != nil {
 			return err
 		}
