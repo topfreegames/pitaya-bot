@@ -9,7 +9,7 @@ import (
 // Expr is the expression which contains the tokens to access the object value
 type Expr string
 
-// Response is the response received from the pitaya server beign tested
+// Response is the response received from the pitaya server being tested
 type Response interface{}
 
 func (e Expr) tokenize() []string {
