@@ -5,8 +5,10 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/topfreegames/pitaya-bot/constants"
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
+	"github.com/topfreegames/pitaya-bot/storage"
 )
 
 // SequentialBot defines the struct for the sequential bot that is going to run
@@ -15,7 +17,7 @@ type SequentialBot struct {
 	config          *viper.Viper
 	id              int
 	spec            *models.Spec
-	storage         *storage
+	storage         storage.Storage
 	logger          logrus.FieldLogger
 	host            string
 	metricsReporter []metrics.Reporter
@@ -23,17 +25,22 @@ type SequentialBot struct {
 
 // NewSequentialBot returns a new sequantial bot instance
 func NewSequentialBot(config *viper.Viper, spec *models.Spec, id int, mr []metrics.Reporter, logger logrus.FieldLogger) (Bot, error) {
+	store, err := storage.NewStorage(config)
+	if err != nil {
+		return nil, err
+	}
+
 	bot := &SequentialBot{
 		config:          config,
 		spec:            spec,
 		id:              id,
-		storage:         newStorage(config),
+		storage:         store,
 		logger:          logger,
 		host:            config.GetString("server.host"),
 		metricsReporter: mr,
 	}
 
-	if err := bot.Connect(); err != nil {
+	if err = bot.Connect(); err != nil {
 		return nil, err
 	}
 
@@ -65,12 +72,12 @@ func (b *SequentialBot) Run() error {
 func (b *SequentialBot) runRequest(op *models.Operation) error {
 	b.logger.Debug("Executing request to: " + op.URI)
 	route := op.URI
-	args, err := buildArgs(op.Args, b.storage)
+	args, err := buildArgByType(op.Args, "object", b.storage)
 	if err != nil {
 		return err
 	}
 
-	resp, rawResp, err := sendRequest(args, route, b.client, b.metricsReporter)
+	resp, rawResp, err := sendRequest(args, route, b.client, b.metricsReporter, b.logger)
 	if err != nil {
 		return err
 	}
@@ -95,7 +102,7 @@ func (b *SequentialBot) runRequest(op *models.Operation) error {
 func (b *SequentialBot) runNotify(op *models.Operation) error {
 	b.logger.Debug("Executing notify to: " + op.URI)
 	route := op.URI
-	args, err := buildArgs(op.Args, b.storage)
+	args, err := buildArgByType(op.Args, "object", b.storage)
 	if err != nil {
 		return err
 	}
@@ -118,11 +125,15 @@ func (b *SequentialBot) runFunction(op *models.Operation) error {
 		b.Disconnect()
 	case "connect":
 		host := b.host
-		args, err := buildArgs(op.Args, b.storage)
+		args, err := buildArgByType(op.Args, "object", b.storage)
 		if err != nil {
 			return err
 		}
-		if val, ok := args["host"]; ok {
+		mapArgs, ok := args.(map[string]interface{})
+		if !ok {
+			return constants.ErrMalformedObject
+		}
+		if val, ok := mapArgs["host"]; ok {
 			b.logger.Debug("Connecting to custom host")
 			if h, ok := val.(string); ok {
 				host = h

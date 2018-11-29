@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
+	pbConstants "github.com/topfreegames/pitaya-bot/constants"
 	"github.com/topfreegames/pitaya/constants"
 )
 
@@ -29,11 +30,11 @@ func (p *PrometheusReporter) registerMetrics(constLabels map[string]string) {
 	constLabels["clientType"] = "pitaya-bot"
 
 	// HandlerResponseTimeMs summary
-	p.summaryReportersMap[ResponseTime] = prometheus.NewSummaryVec(
+	p.summaryReportersMap[pbConstants.ResponseTime] = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace:   fmt.Sprintf("pitaya_bot_%s", p.game),
 			Subsystem:   "handler",
-			Name:        ResponseTime,
+			Name:        pbConstants.ResponseTime,
 			Help:        "the time to process a msg in milliseconds",
 			Objectives:  map[float64]float64{0.7: 0.02, 0.95: 0.005, 0.99: 0.001},
 			ConstLabels: constLabels,
@@ -41,22 +42,22 @@ func (p *PrometheusReporter) registerMetrics(constLabels map[string]string) {
 		[]string{"route"},
 	)
 
-	p.histogramReportersMap[ResponseTimeHistogram] = prometheus.NewHistogramVec(
+	p.histogramReportersMap[pbConstants.ResponseTimeHistogram] = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace:   fmt.Sprintf("pitaya_bot_%s", p.game),
 			Subsystem:   "handler",
-			Name:        ResponseTimeHistogram,
+			Name:        pbConstants.ResponseTimeHistogram,
 			Help:        "histogram of the time to process a msg in nanoseconds",
 			ConstLabels: constLabels,
 		},
 		[]string{"route"},
 	)
 
-	p.countReportersMap[ErrorCount] = prometheus.NewCounterVec(
+	p.countReportersMap[pbConstants.ErrorCount] = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace:   fmt.Sprintf("pitaya_bot_%s", p.game),
 			Subsystem:   "handler",
-			Name:        ErrorCount,
+			Name:        pbConstants.ErrorCount,
 			Help:        "the error count",
 			ConstLabels: constLabels,
 		},

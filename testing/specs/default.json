@@ -63,6 +63,7 @@
     {
       "type": "listen",
       "uri": "connector.playerHandler.matchfound",
+      "timeout": 1000,
       "expect": {
         "$response.code": {
           "type": "string",

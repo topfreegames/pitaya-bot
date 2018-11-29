@@ -1,4 +1,4 @@
-TESTABLE_PACKAGES = `go list ./... | grep -v examples | grep -v constants | grep -v mocks | grep -v helpers | grep -v interfaces | grep -v protos | grep -v e2e | grep -v benchmark`
+TESTABLE_PACKAGES = `go list ./... | egrep -v 'testing|constants|models|cmd' | grep 'pitaya-bot/'`
 
 setup:
 	@dep ensure
@@ -25,3 +25,11 @@ kill-testing-deps:
 build-linux:
 	@mkdir -p out
 	@GOOS=linux GOARCH=amd64 go build -o ./out/pitaya-bot-linux ./main.go
+
+test: unit-test-coverage
+
+unit-test-coverage:
+	@echo "===============RUNNING UNIT TESTS==============="
+	@go test $(TESTABLE_PACKAGES) -coverprofile coverprofile.out
+
+

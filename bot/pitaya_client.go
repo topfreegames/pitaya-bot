@@ -16,7 +16,7 @@ const (
 	MsgPushType     byte = 0x03
 )
 
-// PClient is a wrapper arund pitaya/client.
+// PClient is a wrapper around pitaya/client.
 // The ideia is to be able to separate request/responses
 // from server pushes
 type PClient struct {
@@ -101,7 +101,7 @@ func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 
 	select {
 	case responseData := <-ch:
-		ret := make(Response)
+		var ret Response
 		if err := json.Unmarshal(responseData, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
 			return nil, nil, err
@@ -111,8 +111,6 @@ func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 	case <-time.After(5 * time.Second): // TODO - pass timeout as config
 		return nil, nil, fmt.Errorf("Timeout waiting for response on route %s", route)
 	}
-
-	return nil, nil, nil
 }
 
 // Notify sends a notify to the server
@@ -127,7 +125,7 @@ func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
 
 	select {
 	case data := <-ch:
-		ret := make(Response)
+		var ret Response
 		if err := json.Unmarshal(data, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
 			return nil, err

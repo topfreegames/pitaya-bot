@@ -1,4 +1,4 @@
-package metrics
+package constants
 
 var (
 	// ResponseTime reports the response time of handlers and rpc

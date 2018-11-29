@@ -2,20 +2,18 @@ package bot
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+	"github.com/topfreegames/pitaya-bot/constants"
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
+	"github.com/topfreegames/pitaya-bot/storage"
 )
-
-func initializeDb(store *storage) error {
-	return nil
-}
 
 func valueFromUtil(fName string) (interface{}, error) {
 	switch fName {
@@ -26,15 +24,11 @@ func valueFromUtil(fName string) (interface{}, error) {
 	}
 }
 
-func tryGetValue(expr interface{}, store *storage) (interface{}, error) {
+func tryGetValue(expr interface{}, store storage.Storage) (interface{}, error) {
 	if val, ok := expr.(string); ok {
 		if strings.HasPrefix(val, "$store") {
 			variable := val[7:]
-			if val, ok := store.Get(variable); ok {
-				return val, nil
-			}
-
-			return nil, fmt.Errorf("Variable %s not found", variable)
+			return store.Get(variable)
 		}
 
 		if strings.HasPrefix(val, "$util") {
@@ -47,47 +41,29 @@ func tryGetValue(expr interface{}, store *storage) (interface{}, error) {
 }
 
 func assertType(value interface{}, typ string) (interface{}, error) {
-	ret := value
-	switch typ {
-	case "string":
-		if val, ok := ret.(string); ok {
-			ret = val
-		} else {
-			return nil, fmt.Errorf("String type assetion failed for filed: %v", ret)
-		}
-	case "bool":
-		if val, ok := ret.(bool); ok {
-			ret = val
-		} else {
-			return nil, fmt.Errorf("Boolean type assetion failed for filed: %v", ret)
-		}
-	case "int":
-		t := reflect.TypeOf(ret)
-		switch t.Kind() {
-		case reflect.Int:
-			if val, ok := ret.(int); ok {
-				ret = val
-			} else {
-				return nil, fmt.Errorf("Int type assetion failed for filed: %v", ret)
-			}
-
-		case reflect.Float64:
-			if val, ok := ret.(float64); ok {
-				ret = int(val)
-			} else {
-				return nil, fmt.Errorf("Int type assetion failed for filed: %v", ret)
-			}
-		default:
-			return nil, fmt.Errorf("Int type assertion failed for field: %v", ret)
-		}
-	default:
+	allowedTypes := map[string]bool{"string": true, "bool": true, "int": true, "<nil>": true}
+	if _, ok := allowedTypes[typ]; !ok {
 		return nil, fmt.Errorf("Unknown type %s", typ)
 	}
 
-	return ret, nil
+	switch v := value.(type) {
+	case string, bool, int, nil:
+		return assertCastedType(v, fmt.Sprintf("%T", v), typ)
+	case float64:
+		return assertCastedType(int(v), "int", typ)
+	default:
+		return nil, fmt.Errorf("Unknown value type %T", v)
+	}
 }
 
-func parseArg(params interface{}, store *storage) (interface{}, error) {
+func assertCastedType(ret interface{}, givenType, expectedType string) (interface{}, error) {
+	if givenType == expectedType {
+		return ret, nil
+	}
+	return nil, fmt.Errorf("%s type assertion failed for field: %v", expectedType, ret)
+}
+
+func parseArg(params interface{}, store storage.Storage) (interface{}, error) {
 	p := params.(map[string]interface{})
 
 	valueFromStorage, err := tryGetValue(p["value"], store)
@@ -112,62 +88,52 @@ func parseArg(params interface{}, store *storage) (interface{}, error) {
 	return builtParam, nil
 }
 
-func buildArgByType(value interface{}, valueType string, store *storage) (interface{}, error) {
-	var err error
-	switch valueType {
-	case "object":
-		arg, ok := value.(map[string]interface{})
-		if !ok {
-			return nil, errors.New("Malformed object type argument")
-		}
-
-		preparedArgs := map[string]interface{}{}
-		for key, params := range arg {
-			builtParam, err := parseArg(params, store)
-			if err != nil {
-				return nil, err
-			}
-			preparedArgs[key] = builtParam
-		}
-
-		return preparedArgs, nil
-	case "array":
-		arg, ok := value.([]interface{})
-		if !ok {
-			return nil, errors.New("Malformed object type argument")
-		}
-
-		preparedArgs := make([]interface{}, len(arg))
-		for idx, params := range arg {
-			builtParam, err := parseArg(params, store)
-			if err != nil {
-				return nil, err
-			}
-			preparedArgs[idx] = builtParam
-		}
-
-		return preparedArgs, nil
+func buildArgByType(value interface{}, valueType string, store storage.Storage) (interface{}, error) {
+	switch arg := value.(type) {
+	case map[string]interface{}:
+		return parseObject(arg, valueType, store)
+	case []interface{}:
+		return parseArray(arg, valueType, store)
 	default:
-		value, err = assertType(value, valueType)
+		return assertType(value, valueType)
+	}
+}
+
+func parseObject(arg map[string]interface{}, argType string, store storage.Storage) (interface{}, error) {
+	if argType != "object" {
+		return nil, constants.ErrMalformedObject
+	}
+
+	preparedArgs := make(map[string]interface{}, len(arg))
+	for key, params := range arg {
+		builtParam, err := parseArg(params, store)
 		if err != nil {
 			return nil, err
 		}
+		preparedArgs[key] = builtParam
 	}
 
-	return value, nil
+	return preparedArgs, nil
 }
 
-func buildArgs(rawArgs map[string]interface{}, store *storage) (map[string]interface{}, error) {
-	args, err := buildArgByType(rawArgs, "object", store)
-	if err != nil {
-		return nil, err
+func parseArray(arg []interface{}, argType string, store storage.Storage) (interface{}, error) {
+	if argType != "array" {
+		return nil, constants.ErrMalformedObject
 	}
 
-	r := args.(map[string]interface{})
-	return r, nil
+	preparedArgs := make([]interface{}, len(arg))
+	for key, params := range arg {
+		builtParam, err := parseArg(params, store)
+		if err != nil {
+			return nil, err
+		}
+		preparedArgs[key] = builtParam
+	}
+
+	return preparedArgs, nil
 }
 
-func sendRequest(args map[string]interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter) (Response, []byte, error) {
+func sendRequest(args interface{}, route string, pclient *PClient, metricsReporter []metrics.Reporter, logger logrus.FieldLogger) (Response, []byte, error) {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return nil, nil, err
@@ -178,7 +144,10 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 	if err != nil {
 		metricsReporterTags := map[string]string{"route": route}
 		for _, mr := range metricsReporter {
-			mr.ReportCount(metrics.ErrorCount, metricsReporterTags, 1)
+			reportErr := mr.ReportCount(constants.ErrorCount, metricsReporterTags, 1)
+			if reportErr != nil {
+				logger.WithError(reportErr).Error("Failed to Report Count")
+			}
 		}
 	}
 
@@ -186,13 +155,16 @@ func sendRequest(args map[string]interface{}, route string, pclient *PClient, me
 
 	metricsReporterTags := map[string]string{"route": route}
 	for _, mr := range metricsReporter {
-		mr.ReportSummary(metrics.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/1e6))
+		reportErr := mr.ReportSummary(constants.ResponseTime, metricsReporterTags, float64(elapsed.Nanoseconds()/1e6))
+		if reportErr != nil {
+			logger.WithError(reportErr).Error("Failed to Report Summary")
+		}
 	}
 
 	return response, b, err
 }
 
-func sendNotify(args map[string]interface{}, route string, pclient *PClient) error {
+func sendNotify(args interface{}, route string, pclient *PClient) error {
 	encodedData, err := json.Marshal(args)
 	if err != nil {
 		return err
@@ -201,7 +173,7 @@ func sendNotify(args map[string]interface{}, route string, pclient *PClient) err
 	return pclient.Notify(route, encodedData)
 }
 
-func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{}, error) {
+func getValueFromSpec(spec models.ExpectSpecEntry, store storage.Storage) (interface{}, error) {
 	value, err := tryGetValue(spec.Value, store)
 	if err != nil {
 		return nil, err
@@ -217,14 +189,14 @@ func getValueFromSpec(spec models.ExpectSpecEntry, store *storage) (interface{},
 	return value, nil
 }
 
-func validateExpectations(expectations models.ExpectSpec, resp Response, store *storage) error {
+func validateExpectations(expectations models.ExpectSpec, response Response, store storage.Storage) error {
 	for propertyExpr, spec := range expectations {
 		expectedValue, err := getValueFromSpec(spec, store)
 		if err != nil {
 			return err
 		}
 
-		gotValue, err := Response(resp).extractValue(Expr(propertyExpr), spec.Type)
+		gotValue, err := tryExtractValue(&response, Expr(propertyExpr), spec.Type)
 		if err != nil {
 			return err
 		}
@@ -271,13 +243,11 @@ func equals(lhs interface{}, rhs interface{}) bool {
 		fmt.Printf("Unknown type %s\n", t.Kind().String())
 		return false
 	}
-
-	return false
 }
 
-func storeData(storeSpec models.StoreSpec, store *storage, resp Response) error {
+func storeData(storeSpec models.StoreSpec, store storage.Storage, response Response) error {
 	for name, spec := range storeSpec {
-		valueFromResponse, err := resp.tryExtractValue(Expr(spec.Value), spec.Type)
+		valueFromResponse, err := tryExtractValue(&response, Expr(spec.Value), spec.Type)
 		if err != nil {
 			return err
 		}
