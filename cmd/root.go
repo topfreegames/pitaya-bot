@@ -75,4 +75,21 @@ func initConfig() {
 		fmt.Printf("Config file %s failed to load: %s.\n", cfgFile, err.Error())
 		panic("Failed to load config file")
 	}
+	fillDefaultValues(config)
+}
+
+func fillDefaultValues(config *viper.Viper) {
+	defaultsMap := map[string]interface{}{
+		"game":            "",
+		"prometheus.port": 9191,
+		"server.host":     "localhost",
+		"server.tls":      false,
+		"storage.type":    "memory",
+	}
+
+	for param := range defaultsMap {
+		if !config.IsSet(param) {
+			config.SetDefault(param, defaultsMap[param])
+		}
+	}
 }
