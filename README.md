@@ -1,11 +1,13 @@
-# pitaya-bot [![GoDoc][1]][2] [![Go Report Card][3]][4] [![MIT licensed][5]][6]
+# pitaya-bot [![GoDoc][1]][2] [![Docs][3]][4] [![Go Report Card][5]][6] [![MIT licensed][7]][8]
 
 [1]: https://godoc.org/github.com/topfreegames/pitaya-bot?status.svg
 [2]: https://godoc.org/github.com/topfreegames/pitaya-bot
-[3]: https://goreportcard.com/badge/github.com/topfreegames/pitaya-bot
-[4]: https://goreportcard.com/report/github.com/topfreegames/pitaya-bot
-[5]: https://img.shields.io/badge/license-MIT-blue.svg
-[6]: LICENSE
+[3]: https://readthedocs.org/projects/pitaya-bot/badge/?version=latest
+[4]: https://pitaya-bot.readthedocs.io/en/latest/?badge=latest
+[5]: https://goreportcard.com/badge/github.com/topfreegames/pitaya-bot
+[6]: https://goreportcard.com/report/github.com/topfreegames/pitaya-bot
+[7]: https://img.shields.io/badge/license-MIT-blue.svg
+[8]: LICENSE
 
 Pitaya-Bot is an easy to use, fast and lightweight test server framework for [Pitaya](https://github.com/topfreegames/pitaya).
 The goal of pitaya-bot is to provide a basic development framework for testing pitaya servers via integration tests or stress tests.
