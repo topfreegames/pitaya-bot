@@ -1,10 +1,2 @@
-game: ""
-
-storage:
-  type: "memory"
-
 server:
   host: "localhost:30123"
-
-prometheus:
-  port: 9191
