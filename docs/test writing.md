@@ -49,7 +49,7 @@ These are fields that when used will fetch the information from given structure:
 
 Below is a simple example of a config file, for another one which is being used, check: [config](https://github.com/topfreegames/pitaya-bot/blob/master/testing/config/config.yaml)
 
-```yaml
+```
 game: "example"
 
 storage:
@@ -67,7 +67,7 @@ prometheus:
 
 Below is a base example of a spec file, for a working example, check: [spec](https://github.com/topfreegames/pitaya-bot/blob/master/testing/specs/default.json)
 
-```json
+```
 {
 	"numberOfInstances": 1,
 	"sequentialOperations": [
