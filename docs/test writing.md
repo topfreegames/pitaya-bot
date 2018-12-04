@@ -22,9 +22,9 @@ This bot will follow the orders contained inside a spec file sequentially and ch
 * `Request`: Requests pitaya server being tested
 * `Notify`: Notifies pitaya server being tested
 * `Function`: Internal operations for the bot, such as:
-** `Disconnect`: Disconnect from pitaya server
-** `Connect`: Connect to pitaya server
-** `Reconnect`: Reconnects to pitaya server
+	* `Disconnect`: Disconnect from pitaya server
+	* `Connect`: Connect to pitaya server
+	* `Reconnect`: Reconnects to pitaya server
 * `Listen`: Listen to push notifications from pitaya server
 
 ## Operation
