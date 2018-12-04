@@ -112,8 +112,8 @@ func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration fl
 			compoundError = append(compoundError, err...)
 		}
 
-		elaspsed := time.Now().UTC().Sub(start)
-		if elaspsed.Seconds() > duration {
+		elapsed := time.Now().UTC().Sub(start)
+		if elapsed.Seconds() > duration {
 			break
 		}
 	}
