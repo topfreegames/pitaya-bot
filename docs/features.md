@@ -7,7 +7,7 @@ Some of its core features are described below.
 
 ## No code writing
 
-The tests which will be run don't need the knowledge of Go lang. The writting of JSON specs and configuration are more than enough.
+The tests which will be run don't need the knowledge of Golang. The writting of JSON specs and configuration are more than enough.
 
 ## Handler Support
 

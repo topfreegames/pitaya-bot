@@ -88,8 +88,6 @@ func fillDefaultValues(config *viper.Viper) {
 	}
 
 	for param := range defaultsMap {
-		if !config.IsSet(param) {
-			config.SetDefault(param, defaultsMap[param])
-		}
+		config.SetDefault(param, defaultsMap[param])
 	}
 }
