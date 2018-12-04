@@ -1,9 +1,9 @@
-.. Pitaya Bot documentation master file, created by
+.. Pitaya-Bot documentation master file, created by
    sphinx-quickstart on Mon Dec  3 11:40:03 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Pitaya Bot's documentation!
+Welcome to Pitaya-Bot's documentation!
 ======================================
 
 .. toctree::

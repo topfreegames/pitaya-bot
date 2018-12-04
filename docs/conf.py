@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u'Pitaya Bot'
+project = u'Pitaya-Bot'
 copyright = u'2018, TFGCo'
 author = u'TFGCo'
 
@@ -101,7 +101,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PitayaBotdoc'
+htmlhelp_basename = 'Pitaya-Botdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -128,7 +128,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'PitayaBot.tex', u'Pitaya Bot Documentation',
+    (master_doc, 'Pitaya-Bot.tex', u'Pitaya-Bot Documentation',
      u'TFGCo', 'manual'),
 ]
 
@@ -138,7 +138,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pitayabot', u'Pitaya Bot Documentation',
+    (master_doc, 'pitaya-bot', u'Pitaya-Bot Documentation',
      [author], 1)
 ]
 
@@ -149,8 +149,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'PitayaBot', u'Pitaya Bot Documentation',
-     author, 'PitayaBot', 'One line description of project.',
+    (master_doc, 'Pitaya-Bot', u'Pitaya-Bot Documentation',
+     author, 'Pitaya-Bot', 'One line description of project.',
      'Miscellaneous'),
 ]
 
