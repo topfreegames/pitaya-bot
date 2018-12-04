@@ -31,8 +31,8 @@ This bot will follow the orders contained inside a spec file sequentially and ch
 
 Operation is the generalistic struct which contains the action that the specified bot will do. The fields are:
 
-* `Type`: Type of operation which the bot will do. Each bot has diffent types
-* `Timeout`: Time that the bot has to realize given operation
+* `Type`: Type of operation which the bot will do. Each bot has different types
+* `Timeout`: Time that the bot has to execute given operation
 * `Uri`: URI which the bot will use to make request, notification, listen, ...
 * `Args`: Arguments that will be used in given operation
 * `Expect`: Expected result from operation
@@ -75,13 +75,13 @@ Below is a base example of a spec file, for a working example, check: [spec](htt
       			"type": "request",
       			"uri": "connector.gameHandler.create",
       			"expect": {
-        			"$response["code"]: {
+					"$response["code"]: {
           				"type": "string",
           				"value": "200"
         			} 
       			},
       			"store": {
-        			"playerAccessToken": {
+				"playerAccessToken": {
           				"type": "string",
           				"value": "$response["game"]["roomCode"]"
         			}
