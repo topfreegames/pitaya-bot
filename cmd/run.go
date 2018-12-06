@@ -30,6 +30,7 @@ import (
 
 var (
 	specsDirectory string
+	pitayaBotType  string
 	testDuration   time.Duration
 	reportMetrics  bool
 )
@@ -40,8 +41,14 @@ var runCmd = &cobra.Command{
 	Short: "Runs the pitaya bot",
 	Long:  `Runs the pitaya bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := state.NewApp(config, reportMetrics)
-		launcher.Launch(app, config, specsDirectory, testDuration.Seconds(), reportMetrics)
+		switch pitayaBotType {
+		case "kubernetes":
+			app := state.NewApp(config, reportMetrics)
+			launcher.LaunchKubernetes(app, config, specsDirectory, testDuration.Seconds(), reportMetrics)
+		default:
+			app := state.NewApp(config, reportMetrics)
+			launcher.Launch(app, config, specsDirectory, testDuration.Seconds(), reportMetrics)
+		}
 	},
 }
 
@@ -53,4 +60,5 @@ func init() {
 	runCmd.PersistentFlags().StringVarP(&specsDirectory, "dir", "d", "./specs/", "Spec to run")
 	runCmd.PersistentFlags().DurationVar(&testDuration, "duration", 1*time.Minute, "how long should the test take")
 	runCmd.PersistentFlags().BoolVar(&reportMetrics, "report-metrics", false, "Should metrics be reported")
+	runCmd.PersistentFlags().StringVarP(&pitayaBotType, "pitaya-bot-type", "t", "local", "Pitaya-Bot Type which will be run")
 }

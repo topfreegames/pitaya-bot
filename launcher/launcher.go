@@ -17,6 +17,11 @@ import (
 	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/runner"
 	"github.com/topfreegames/pitaya-bot/state"
+	appsv1 "k8s.io/api/batch/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 func readSpec(specPath string) (*models.Spec, error) {
@@ -173,3 +178,141 @@ func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration
 		os.Exit(1)
 	}
 }
+
+// LaunchKubernetes launches the manager to create the pods to run specs
+func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool) {
+	log := logrus.New()
+	log.Formatter = new(logrus.TextFormatter)
+	log.Out = os.Stdout
+	logger := log.WithFields(logrus.Fields{
+		"source":   "pitaya-bot",
+		"function": "launchKubernetes",
+	})
+
+	specs, err := getSpecs(specsDirectory)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	logger.Infof("Found %d specs to be executed", len(specs))
+
+	clusterConfig, err := rest.InClusterConfig()
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(clusterConfig)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	logger.Infof("Kubernetes In Cluster Client created")
+
+	namespaces := make([]string, len(specs))
+	for i := 0; i < len(specs); i++ {
+		namespaces[i] = fmt.Sprintf("pitaya-bot-%v", i)
+	}
+
+	for index, spec := range specs {
+		configMapClient := clientset.CoreV1().ConfigMaps(namespaces[index])
+		specBinary, err := ioutil.ReadFile(spec.Name)
+		if err != nil {
+			logger.Fatal(err)
+		}
+
+		configMap := &apiv1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespaces[index],
+				Labels: map[string]string{
+					"app":  "pitaya-bot-pod",
+					"game": config.GetString("game"),
+				},
+			},
+			BinaryData: map[string][]byte{spec.Name: specBinary},
+		}
+
+		if _, err = configMapClient.Create(configMap); err != nil {
+			logger.Fatal(err)
+		}
+		logger.Infof("Created config map %s", namespaces[index])
+
+		deploymentsClient := clientset.BatchV1().Jobs(namespaces[index])
+		deployment := &appsv1.Job{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "pitaya-bot-pod",
+			},
+			Spec: appsv1.JobSpec{
+				//Parallelism: int32Ptr(1), TODO: Via config file, see how many bots are to be instantiated
+				Template: apiv1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"app":  "pitaya-bot",
+							"game": config.GetString("game"),
+						},
+					},
+					Spec: apiv1.PodSpec{
+						Containers: []apiv1.Container{
+							{
+								Name:    "pitaya-bot-pod",
+								Image:   "pitaya-bot",
+								Command: []string{"ptaya-bot"},
+								Args:    []string{"run", "-t", "kubernetes"},
+							},
+						},
+						Volumes: []apiv1.Volume{
+							{
+								Name: "spec",
+								VolumeSource: apiv1.VolumeSource{
+									ConfigMap: &apiv1.ConfigMapVolumeSource{
+										LocalObjectReference: apiv1.LocalObjectReference{Name: namespaces[index]},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		if _, err := deploymentsClient.Create(deployment); err != nil {
+			logger.Fatal(err)
+		}
+		logger.Infof("Created pod %s", namespaces[index])
+	}
+
+	var wg sync.WaitGroup
+	errmutex := sync.Mutex{}
+	compoundError := []error{}
+	for _, spec := range specs {
+		wg.Add(1)
+		go func(spec *models.Spec) {
+			err := runSpec(app, spec, config, duration, logger)
+			if err != nil {
+				errmutex.Lock()
+				compoundError = append(compoundError, err...)
+				errmutex.Unlock()
+			}
+			wg.Done()
+		}(spec)
+	}
+
+	wg.Wait()
+
+	logger.Info("Finished running bots")
+	app.FinishedExecition = true
+
+	if shouldReportMetrics {
+		logger.Info("Waiting for metrics to be collected...")
+		select {
+		case <-app.DieChan: // when dieChan is closed the application can quit
+			<-time.After(10 * time.Second)
+			logger.Info("DieChan closed - All done. Application will close")
+		}
+	}
+
+	if len(compoundError) > 0 {
+		logger.Error("Spec execution failed")
+		logger.Error(compoundError)
+		os.Exit(1)
+	}
+}
+
+func int32Ptr(i int32) *int32 { return &i }
