@@ -8,8 +8,8 @@
 [6]: https://goreportcard.com/report/github.com/topfreegames/pitaya-bot
 [7]: https://img.shields.io/badge/license-MIT-blue.svg
 [8]: LICENSE
-[9]: https://travis-ci.org/topfreegames/pitaya-bot.svg?branch=master
-[10]: https://travis-ci.org/topfreegames/pitaya-bot
+[9]: https://travis-ci.com/topfreegames/pitaya-bot.svg?branch=master
+[10]: https://travis-ci.com/topfreegames/pitaya-bot
 
 Pitaya-Bot is an easy to use, fast and lightweight test server framework for [Pitaya](https://github.com/topfreegames/pitaya).
 The goal of pitaya-bot is to provide a basic development framework for testing pitaya servers via integration tests or stress tests.
