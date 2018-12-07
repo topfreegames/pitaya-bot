@@ -211,14 +211,37 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 		namespaces[i] = fmt.Sprintf("pitaya-bot-%v", i)
 	}
 
+	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
+	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
+
+	configBinary, err := ioutil.ReadFile(config.ConfigFileUsed())
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	configMap := &apiv1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "config",
+			Labels: map[string]string{
+				"app":  "pitaya-bot-pod",
+				"game": config.GetString("game"),
+			},
+		},
+		BinaryData: map[string][]byte{"config.yaml": configBinary},
+	}
+
+	if _, err = configMapClient.Create(configMap); err != nil {
+		logger.Fatal(err)
+	}
+	logger.Infof("Created configMap config.yaml")
+
 	for index, spec := range specs {
-		configMapClient := clientset.CoreV1().ConfigMaps(namespaces[index])
 		specBinary, err := ioutil.ReadFile(spec.Name)
 		if err != nil {
 			logger.Fatal(err)
 		}
 
-		configMap := &apiv1.ConfigMap{
+		configMap = &apiv1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: namespaces[index],
 				Labels: map[string]string{
@@ -226,7 +249,7 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 					"game": config.GetString("game"),
 				},
 			},
-			BinaryData: map[string][]byte{spec.Name: specBinary},
+			BinaryData: map[string][]byte{"spec.json": specBinary},
 		}
 
 		if _, err = configMapClient.Create(configMap); err != nil {
@@ -234,13 +257,13 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 		}
 		logger.Infof("Created config map %s", namespaces[index])
 
-		deploymentsClient := clientset.BatchV1().Jobs(namespaces[index])
 		deployment := &appsv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "pitaya-bot-pod",
 			},
 			Spec: appsv1.JobSpec{
 				//Parallelism: int32Ptr(1), TODO: Via config file, see how many bots are to be instantiated
+				Completions: int32Ptr(1),
 				Template: apiv1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
@@ -249,12 +272,13 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 						},
 					},
 					Spec: apiv1.PodSpec{
+						RestartPolicy: apiv1.RestartPolicyOnFailure,
 						Containers: []apiv1.Container{
 							{
 								Name:    "pitaya-bot-pod",
 								Image:   "pitaya-bot",
-								Command: []string{"ptaya-bot"},
-								Args:    []string{"run", "-t", "kubernetes"},
+								Command: []string{"pitaya-bot"},
+								Args:    []string{"run"},
 							},
 						},
 						Volumes: []apiv1.Volume{
@@ -263,6 +287,14 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 								VolumeSource: apiv1.VolumeSource{
 									ConfigMap: &apiv1.ConfigMapVolumeSource{
 										LocalObjectReference: apiv1.LocalObjectReference{Name: namespaces[index]},
+									},
+								},
+							},
+							{
+								Name: "config",
+								VolumeSource: apiv1.VolumeSource{
+									ConfigMap: &apiv1.ConfigMapVolumeSource{
+										LocalObjectReference: apiv1.LocalObjectReference{Name: "config"},
 									},
 								},
 							},
@@ -278,41 +310,8 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 		logger.Infof("Created pod %s", namespaces[index])
 	}
 
-	var wg sync.WaitGroup
-	errmutex := sync.Mutex{}
-	compoundError := []error{}
-	for _, spec := range specs {
-		wg.Add(1)
-		go func(spec *models.Spec) {
-			err := runSpec(app, spec, config, duration, logger)
-			if err != nil {
-				errmutex.Lock()
-				compoundError = append(compoundError, err...)
-				errmutex.Unlock()
-			}
-			wg.Done()
-		}(spec)
-	}
-
-	wg.Wait()
-
-	logger.Info("Finished running bots")
+	logger.Info("Finished instantiating bots")
 	app.FinishedExecition = true
-
-	if shouldReportMetrics {
-		logger.Info("Waiting for metrics to be collected...")
-		select {
-		case <-app.DieChan: // when dieChan is closed the application can quit
-			<-time.After(10 * time.Second)
-			logger.Info("DieChan closed - All done. Application will close")
-		}
-	}
-
-	if len(compoundError) > 0 {
-		logger.Error("Spec execution failed")
-		logger.Error(compoundError)
-		os.Exit(1)
-	}
 }
 
 func int32Ptr(i int32) *int32 { return &i }

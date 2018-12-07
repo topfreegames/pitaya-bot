@@ -27,6 +27,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	apiv1 "k8s.io/api/core/v1"
 )
 
 var config *viper.Viper
@@ -80,11 +81,12 @@ func initConfig() {
 
 func fillDefaultValues(config *viper.Viper) {
 	defaultsMap := map[string]interface{}{
-		"game":            "",
-		"prometheus.port": 9191,
-		"server.host":     "localhost",
-		"server.tls":      false,
-		"storage.type":    "memory",
+		"game":                 "",
+		"prometheus.port":      9191,
+		"server.host":          "localhost",
+		"server.tls":           false,
+		"storage.type":         "memory",
+		"kubernetes.namespace": apiv1.NamespaceDefault,
 	}
 
 	for param := range defaultsMap {
