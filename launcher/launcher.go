@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"flag"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya-bot/models"
@@ -21,7 +22,8 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 func readSpec(specPath string) (*models.Spec, error) {
@@ -195,16 +197,22 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 	}
 	logger.Infof("Found %d specs to be executed", len(specs))
 
-	clusterConfig, err := rest.InClusterConfig()
-	if err != nil {
-		logger.Fatal(err)
+	var kubeconfig *string
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
+	flag.Parse()
 
-	clientset, err := kubernetes.NewForConfig(clusterConfig)
+	kubeConfig, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	logger.Infof("Kubernetes In Cluster Client created")
+	clientset, err := kubernetes.NewForConfig(kubeConfig)
+	if err != nil {
+		logger.Fatal(err)
+	}
 
 	namespaces := make([]string, len(specs))
 	for i := 0; i < len(specs); i++ {
@@ -272,13 +280,21 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 						},
 					},
 					Spec: apiv1.PodSpec{
-						RestartPolicy: apiv1.RestartPolicyOnFailure,
+						RestartPolicy: apiv1.RestartPolicyNever,
 						Containers: []apiv1.Container{
 							{
-								Name:    "pitaya-bot-pod",
-								Image:   "pitaya-bot",
-								Command: []string{"pitaya-bot"},
-								Args:    []string{"run"},
+								Name:  "pitaya-bot-pod",
+								Image: "tfgco/pitaya-bot:latest",
+								VolumeMounts: []apiv1.VolumeMount{
+									{
+										Name:      "spec",
+										MountPath: "/etc/pitaya-bot/specs",
+									},
+									{
+										Name:      "config",
+										MountPath: "/etc/pitaya-bot",
+									},
+								},
 							},
 						},
 						Volumes: []apiv1.Volume{
