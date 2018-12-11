@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"flag"
 	"github.com/sirupsen/logrus"
@@ -214,11 +215,6 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 		logger.Fatal(err)
 	}
 
-	namespaces := make([]string, len(specs))
-	for i := 0; i < len(specs); i++ {
-		namespaces[i] = fmt.Sprintf("pitaya-bot-%v", i)
-	}
-
 	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
 
@@ -231,7 +227,7 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "config",
 			Labels: map[string]string{
-				"app":  "pitaya-bot-pod",
+				"app":  "pitaya-bot",
 				"game": config.GetString("game"),
 			},
 		},
@@ -243,17 +239,18 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 	}
 	logger.Infof("Created configMap config.yaml")
 
-	for index, spec := range specs {
+	for _, spec := range specs {
 		specBinary, err := ioutil.ReadFile(spec.Name)
 		if err != nil {
 			logger.Fatal(err)
 		}
+		specName := kubernetesAcceptedNamespace(filepath.Base(spec.Name))
 
 		configMap = &apiv1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: namespaces[index],
+				Name: specName,
 				Labels: map[string]string{
-					"app":  "pitaya-bot-pod",
+					"app":  "pitaya-bot",
 					"game": config.GetString("game"),
 				},
 			},
@@ -263,11 +260,11 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 		if _, err = configMapClient.Create(configMap); err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infof("Created config map %s", namespaces[index])
+		logger.Infof("Created spec configMap %s", specName)
 
 		deployment := &appsv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "pitaya-bot-pod",
+				Name: specName,
 			},
 			Spec: appsv1.JobSpec{
 				//Parallelism: int32Ptr(1), TODO: Via config file, see how many bots are to be instantiated
@@ -283,7 +280,7 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 						RestartPolicy: apiv1.RestartPolicyNever,
 						Containers: []apiv1.Container{
 							{
-								Name:  "pitaya-bot-pod",
+								Name:  "pitaya-bot",
 								Image: "tfgco/pitaya-bot:latest",
 								VolumeMounts: []apiv1.VolumeMount{
 									{
@@ -302,7 +299,7 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 								Name: "spec",
 								VolumeSource: apiv1.VolumeSource{
 									ConfigMap: &apiv1.ConfigMapVolumeSource{
-										LocalObjectReference: apiv1.LocalObjectReference{Name: namespaces[index]},
+										LocalObjectReference: apiv1.LocalObjectReference{Name: specName},
 									},
 								},
 							},
@@ -323,7 +320,7 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 		if _, err := deploymentsClient.Create(deployment); err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infof("Created pod %s", namespaces[index])
+		logger.Infof("Created pod %s", specName)
 	}
 
 	logger.Info("Finished instantiating bots")
@@ -331,3 +328,13 @@ func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string
 }
 
 func int32Ptr(i int32) *int32 { return &i }
+
+func kubernetesAcceptedNamespace(s string) string {
+	rs := make([]rune, 0, len(s))
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) || r == '.' || r == '-' {
+			rs = append(rs, unicode.ToLower(r))
+		}
+	}
+	return string(rs)
+}
