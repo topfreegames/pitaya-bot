@@ -87,6 +87,9 @@ func (c *managerController) verifyJobs(key string) error {
 func (c *managerController) finishedAllJobs() bool {
 	for _, obj := range c.indexer.List() {
 		job := obj.(*batchv1.Job)
+		if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
+			continue
+		}
 		if job.Status.Active > 0 || (job.Status.Failed <= *job.Spec.BackoffLimit && job.Status.Succeeded < *job.Spec.Completions) {
 			return false
 		}
@@ -127,20 +130,24 @@ func (c *managerController) run(threadiness int) {
 		go wait.Until(c.runWorker, time.Second, c.stopCh)
 	}
 
+	if c.finishedAllJobs() {
+		close(c.stopCh)
+	}
+
 	<-c.stopCh
 	c.logger.Infof("Stopping Pod controller")
 
-	err := c.clientset.CoreV1().ConfigMaps(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	err := c.clientset.CoreV1().ConfigMaps(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
 	if err != nil {
 		c.logger.WithError(err).Error("Failed to delete configMaps")
 	}
 	c.logger.Infof("Deleted configMaps")
-	err = c.clientset.BatchV1().Jobs(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	err = c.clientset.BatchV1().Jobs(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
 	if err != nil {
 		c.logger.WithError(err).Error("Failed to delete jobs")
 	}
 	c.logger.Infof("Deleted jobs")
-	err = c.clientset.CoreV1().Pods(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	err = c.clientset.CoreV1().Pods(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
 	if err != nil {
 		c.logger.WithError(err).Error("Failed to delete pods")
 	}
@@ -152,10 +159,10 @@ func (c *managerController) runWorker() {
 	}
 }
 
-// LaunchManager launches the manager to create the pods to run specs
-func LaunchManager(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool, logger logrus.FieldLogger) {
+// LaunchLocalManager launches the manager locally, that will instantiate jobs and manage them until the end
+func LaunchLocalManager(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool, logger logrus.FieldLogger) {
 	logger = logger.WithFields(logrus.Fields{
-		"function": "LaunchManager",
+		"function": "LaunchLocalManager",
 	})
 
 	specs, err := getSpecs(specsDirectory)
@@ -181,7 +188,7 @@ func LaunchManager(app *state.App, config *viper.Viper, specsDirectory string, d
 		logger.Fatal(err)
 	}
 
-	configMaps, err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	configMaps, err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
 	if err != nil {
 		logger.Fatal(err)
 	}
