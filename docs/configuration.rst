@@ -82,3 +82,31 @@ Storage
     - string
     - Type of storage which the bot will use
 
+Kubernetes
+==========
+
+.. list-table::
+  :widths: 15 10 10 50
+  :header-rows: 1
+  :stub-columns: 1
+
+  * - Configuration
+    - Default value
+    - Type
+    - Description
+  * - kubernetes.config
+    - $HOME/.kube/config
+    - string
+    - Path where kubernetes config file is located
+  * - kubernetes.masterurl
+    - 
+    - string
+    - Master URL for Kubernetes
+  * - kubernetes.namespace
+    - default
+    - string
+    - Kubernetes namespace that will be used to deploy the jobs
+  * - kubernetes.job.retry
+    - 0
+    - int
+    - Backoff limit from the jobs that will run each spec file
