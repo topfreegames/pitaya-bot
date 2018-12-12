@@ -73,12 +73,11 @@ func (c *managerController) verifyJobs(key string) error {
 	} else {
 		job := obj.(*batchv1.Job)
 		c.logger.Infof("Update for Job %s", job.GetName())
+	}
 
-		if c.finishedAllJobs() {
-			c.logger.Infof("All jobs finished")
-			close(c.stopCh)
-			return nil
-		}
+	if c.finishedAllJobs() {
+		c.logger.Infof("All jobs finished")
+		close(c.stopCh)
 	}
 	return nil
 }
