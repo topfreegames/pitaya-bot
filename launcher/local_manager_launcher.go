@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"time"
 	"unicode"
@@ -135,23 +134,28 @@ func (c *managerController) run(threadiness int) {
 	}
 
 	<-c.stopCh
-	c.logger.Infof("Stopping Pod controller")
+	c.logger.Infof("Stopping Local Manager Controller")
+	deleteAllKubernetesResources(c.logger, c.config, c.clientset)
+}
 
-	err := c.clientset.CoreV1().ConfigMaps(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
+func deleteAllKubernetesResources(logger logrus.FieldLogger, config *viper.Viper, clientset *kubernetes.Clientset) {
+	err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
 	if err != nil {
-		c.logger.WithError(err).Error("Failed to delete configMaps")
+		logger.WithError(err).Error("Failed to delete configMaps")
 	}
-	c.logger.Infof("Deleted configMaps")
-	err = c.clientset.BatchV1().Jobs(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
+	logger.Infof("Deleted configMaps")
+
+	err = clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
 	if err != nil {
-		c.logger.WithError(err).Error("Failed to delete jobs")
+		logger.WithError(err).Error("Failed to delete jobs")
 	}
-	c.logger.Infof("Deleted jobs")
-	err = c.clientset.CoreV1().Pods(c.config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
+	logger.Infof("Deleted jobs")
+
+	err = clientset.CoreV1().Pods(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
 	if err != nil {
-		c.logger.WithError(err).Error("Failed to delete pods")
+		logger.WithError(err).Error("Failed to delete pods")
 	}
-	c.logger.Infof("Deleted pods")
+	logger.Infof("Deleted pods")
 }
 
 func (c *managerController) runWorker() {
@@ -160,7 +164,7 @@ func (c *managerController) runWorker() {
 }
 
 // LaunchLocalManager launches the manager locally, that will instantiate jobs and manage them until the end
-func LaunchLocalManager(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool, logger logrus.FieldLogger) {
+func LaunchLocalManager(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics, shouldDeleteAllResources bool, logger logrus.FieldLogger) {
 	logger = logger.WithFields(logrus.Fields{
 		"function": "LaunchLocalManager",
 	})
@@ -188,6 +192,11 @@ func LaunchLocalManager(app *state.App, config *viper.Viper, specsDirectory stri
 		logger.Fatal(err)
 	}
 
+	if shouldDeleteAllResources {
+		deleteAllKubernetesResources(logger, config, clientset)
+		return
+	}
+
 	configMaps, err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
 	if err != nil {
 		logger.Fatal(err)
@@ -199,7 +208,7 @@ func LaunchLocalManager(app *state.App, config *viper.Viper, specsDirectory stri
 	controller := createManagerController(logger, clientset, config)
 	controller.run(1)
 
-	os.Exit(0)
+	return
 }
 
 func instantiateKubernetesJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
