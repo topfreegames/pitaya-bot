@@ -1,7 +1,6 @@
 package launcher
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -11,7 +10,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya-bot/models"
-	"github.com/topfreegames/pitaya-bot/state"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -163,7 +161,7 @@ func (c *managerController) runWorker() {
 }
 
 // LaunchLocalManager launches the manager locally, that will instantiate jobs and manage them until the end
-func LaunchLocalManager(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics, shouldDeleteAllResources bool, logger logrus.FieldLogger) {
+func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics, shouldDeleteAllResources bool, logger logrus.FieldLogger) {
 	logger = logger.WithFields(logrus.Fields{
 		"function": "LaunchLocalManager",
 	})
@@ -174,15 +172,7 @@ func LaunchLocalManager(app *state.App, config *viper.Viper, specsDirectory stri
 	}
 	logger.Infof("Found %d specs to be executed", len(specs))
 
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	kubeConfig, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	kubeConfig, err := clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), ".kube", "config"))
 	if err != nil {
 		logger.Fatal(err)
 	}
