@@ -47,6 +47,10 @@ func getSpecs(specsDirectory string) ([]*models.Spec, error) {
 	ret := make([]*models.Spec, 0)
 	err := filepath.Walk(specsDirectory,
 		func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() && strings.HasPrefix(info.Name(), "..") {
+				return filepath.SkipDir
+			}
+
 			if err != nil {
 				return err
 			}
