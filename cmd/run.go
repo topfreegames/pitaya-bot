@@ -41,13 +41,14 @@ var runCmd = &cobra.Command{
 	Short: "Runs the pitaya bot",
 	Long:  `Runs the pitaya bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := getLogger()
 		switch pitayaBotType {
-		case "kubernetes":
+		case "manager":
 			app := state.NewApp(config, reportMetrics)
-			launcher.LaunchKubernetes(app, config, specsDirectory, testDuration.Seconds(), reportMetrics)
+			launcher.LaunchManager(app, config, specsDirectory, testDuration.Seconds(), reportMetrics, logger)
 		default:
 			app := state.NewApp(config, reportMetrics)
-			launcher.Launch(app, config, specsDirectory, testDuration.Seconds(), reportMetrics)
+			launcher.Launch(app, config, specsDirectory, testDuration.Seconds(), reportMetrics, logger)
 		}
 	},
 }

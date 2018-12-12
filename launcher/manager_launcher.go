@@ -11,6 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/state"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -35,7 +36,7 @@ type managerController struct {
 	stopCh    chan struct{}
 }
 
-func newManagerController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller, logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, stopCh chan struct{}) *managerController {
+func newManagerController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller, logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) *managerController {
 	return &managerController{
 		informer:  informer,
 		indexer:   indexer,
@@ -43,7 +44,7 @@ func newManagerController(queue workqueue.RateLimitingInterface, indexer cache.I
 		logger:    logger,
 		clientset: clientset,
 		config:    config,
-		stopCh:    stopCh,
+		stopCh:    make(chan struct{}),
 	}
 }
 
@@ -202,6 +203,21 @@ func LaunchManager(app *state.App, config *viper.Viper, specsDirectory string, d
 		logger.Fatal(err)
 	}
 
+	configMaps, err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	if err != nil {
+		logger.Fatal(err)
+	}
+	if len(configMaps.Items) <= 0 {
+		instantiateKubernetesJobs(logger, clientset, config, specs)
+	}
+
+	controller := createManagerController(logger, clientset, config)
+	controller.run(1)
+
+	os.Exit(0)
+}
+
+func instantiateKubernetesJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
 	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
 
@@ -308,9 +324,11 @@ func LaunchManager(app *state.App, config *viper.Viper, specsDirectory string, d
 		if _, err := deploymentsClient.Create(deployment); err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infof("Created pod %s", specName)
+		logger.Infof("Created job %s", specName)
 	}
+}
 
+func createManagerController(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) *managerController {
 	jobListWatcher := cache.NewListWatchFromClient(clientset.BatchV1().RESTClient(), "jobs", config.GetString("kubernetes.namespace"), fields.Everything())
 
 	// create the workqueue
@@ -337,12 +355,7 @@ func LaunchManager(app *state.App, config *viper.Viper, specsDirectory string, d
 		},
 	}, cache.Indexers{})
 
-	stop := make(chan struct{})
-	controller := newManagerController(queue, indexer, informer, logger, clientset, config, stop)
-
-	controller.run(1)
-
-	os.Exit(0)
+	return newManagerController(queue, indexer, informer, logger, clientset, config)
 }
 
 func int32Ptr(i int32) *int32 { return &i }
