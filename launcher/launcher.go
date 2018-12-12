@@ -11,20 +11,12 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode"
 
-	"flag"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/runner"
 	"github.com/topfreegames/pitaya-bot/state"
-	appsv1 "k8s.io/api/batch/v1"
-	apiv1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 func readSpec(specPath string) (*models.Spec, error) {
@@ -130,13 +122,9 @@ func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration fl
 }
 
 // Launch launches the bot spec
-func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool) {
-	log := logrus.New()
-	log.Formatter = new(logrus.TextFormatter)
-	log.Out = os.Stdout
-	logger := log.WithFields(logrus.Fields{
-		"source":   "pitaya-bot",
-		"function": "launch",
+func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool, logger logrus.FieldLogger) {
+	logger = logger.WithFields(logrus.Fields{
+		"function": "Launch",
 	})
 
 	specs, err := getSpecs(specsDirectory)
@@ -180,161 +168,4 @@ func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration
 		logger.Error(compoundError)
 		os.Exit(1)
 	}
-}
-
-// LaunchKubernetes launches the manager to create the pods to run specs
-func LaunchKubernetes(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool) {
-	log := logrus.New()
-	log.Formatter = new(logrus.TextFormatter)
-	log.Out = os.Stdout
-	logger := log.WithFields(logrus.Fields{
-		"source":   "pitaya-bot",
-		"function": "launchKubernetes",
-	})
-
-	specs, err := getSpecs(specsDirectory)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	logger.Infof("Found %d specs to be executed", len(specs))
-
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	kubeConfig, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	clientset, err := kubernetes.NewForConfig(kubeConfig)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
-	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
-
-	configBinary, err := ioutil.ReadFile(config.ConfigFileUsed())
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	configMap := &apiv1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "config",
-			Labels: map[string]string{
-				"app":  "pitaya-bot",
-				"game": config.GetString("game"),
-			},
-		},
-		BinaryData: map[string][]byte{"config.yaml": configBinary},
-	}
-
-	if _, err = configMapClient.Create(configMap); err != nil {
-		logger.Fatal(err)
-	}
-	logger.Infof("Created configMap config.yaml")
-
-	for _, spec := range specs {
-		specBinary, err := ioutil.ReadFile(spec.Name)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		specName := kubernetesAcceptedNamespace(filepath.Base(spec.Name))
-
-		configMap = &apiv1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: specName,
-				Labels: map[string]string{
-					"app":  "pitaya-bot",
-					"game": config.GetString("game"),
-				},
-			},
-			BinaryData: map[string][]byte{"spec.json": specBinary},
-		}
-
-		if _, err = configMapClient.Create(configMap); err != nil {
-			logger.Fatal(err)
-		}
-		logger.Infof("Created spec configMap %s", specName)
-
-		deployment := &appsv1.Job{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: specName,
-			},
-			Spec: appsv1.JobSpec{
-				//Parallelism: int32Ptr(1), TODO: Via config file, see how many bots are to be instantiated
-				Completions: int32Ptr(1),
-				Template: apiv1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Labels: map[string]string{
-							"app":  "pitaya-bot",
-							"game": config.GetString("game"),
-						},
-					},
-					Spec: apiv1.PodSpec{
-						RestartPolicy: apiv1.RestartPolicyNever,
-						Containers: []apiv1.Container{
-							{
-								Name:  "pitaya-bot",
-								Image: "tfgco/pitaya-bot:latest",
-								VolumeMounts: []apiv1.VolumeMount{
-									{
-										Name:      "spec",
-										MountPath: "/etc/pitaya-bot/specs",
-									},
-									{
-										Name:      "config",
-										MountPath: "/etc/pitaya-bot",
-									},
-								},
-							},
-						},
-						Volumes: []apiv1.Volume{
-							{
-								Name: "spec",
-								VolumeSource: apiv1.VolumeSource{
-									ConfigMap: &apiv1.ConfigMapVolumeSource{
-										LocalObjectReference: apiv1.LocalObjectReference{Name: specName},
-									},
-								},
-							},
-							{
-								Name: "config",
-								VolumeSource: apiv1.VolumeSource{
-									ConfigMap: &apiv1.ConfigMapVolumeSource{
-										LocalObjectReference: apiv1.LocalObjectReference{Name: "config"},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-
-		if _, err := deploymentsClient.Create(deployment); err != nil {
-			logger.Fatal(err)
-		}
-		logger.Infof("Created pod %s", specName)
-	}
-
-	logger.Info("Finished instantiating bots")
-	app.FinishedExecition = true
-}
-
-func int32Ptr(i int32) *int32 { return &i }
-
-func kubernetesAcceptedNamespace(s string) string {
-	rs := make([]rune, 0, len(s))
-	for _, r := range s {
-		if unicode.IsLetter(r) || unicode.IsNumber(r) || r == '.' || r == '-' {
-			rs = append(rs, unicode.ToLower(r))
-		}
-	}
-	return string(rs)
 }

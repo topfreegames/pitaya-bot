@@ -30,9 +30,12 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 )
 
-var config *viper.Viper
-
-var cfgFile string
+var (
+	config  *viper.Viper
+	cfgFile string
+	verbose int
+	logJSON bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -57,6 +60,11 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./config/config.yaml", "config file")
+	rootCmd.PersistentFlags().IntVarP(
+		&verbose, "verbose", "v", 0,
+		"Verbosity level => v0: Error, v1=Warning, v2=Info, v3=Debug",
+	)
+	rootCmd.PersistentFlags().BoolVarP(&logJSON, "logJSON", "j", false, "logJSON output mode")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -87,6 +95,7 @@ func fillDefaultValues(config *viper.Viper) {
 		"server.tls":           false,
 		"storage.type":         "memory",
 		"kubernetes.namespace": apiv1.NamespaceDefault,
+		"kubernetes.job.retry": 0,
 	}
 
 	for param := range defaultsMap {
