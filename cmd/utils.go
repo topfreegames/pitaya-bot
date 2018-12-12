@@ -10,13 +10,15 @@ func getLogger() logrus.FieldLogger {
 
 	switch verbose {
 	case 0:
-		log.Level = logrus.InfoLevel
+		log.Level = logrus.ErrorLevel
 	case 1:
 		log.Level = logrus.WarnLevel
+	case 2:
+		log.Level = logrus.InfoLevel
 	case 3:
 		log.Level = logrus.DebugLevel
 	default:
-		log.Level = logrus.InfoLevel
+		log.Level = logrus.DebugLevel
 	}
 
 	if logJSON {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"time"
 	"unicode"
 
 	"github.com/sirupsen/logrus"
@@ -98,7 +97,7 @@ func (c *managerController) handleErr(err error, key interface{}) {
 		return
 	}
 
-	if c.queue.NumRequeues(key) < 5 {
+	if c.queue.NumRequeues(key) < c.config.GetInt("manager.maxrequeues") {
 		c.logger.Infof("Error syncing job %v: %v", key, err)
 		c.queue.AddRateLimited(key)
 		return
@@ -122,7 +121,7 @@ func (c *managerController) run(threadiness int) {
 	}
 
 	for i := 0; i < threadiness; i++ {
-		go wait.Until(c.runWorker, time.Second, c.stopCh)
+		go wait.Until(c.runWorker, c.config.GetDuration("manager.wait"), c.stopCh)
 	}
 
 	if c.finishedAllJobs() {

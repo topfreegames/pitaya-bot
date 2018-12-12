@@ -63,7 +63,7 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./config/config.yaml", "config file")
 	rootCmd.PersistentFlags().IntVarP(
-		&verbose, "verbose", "v", 0,
+		&verbose, "verbose", "v", 3,
 		"Verbosity level => v0: Error, v1=Warning, v2=Info, v3=Debug",
 	)
 	rootCmd.PersistentFlags().BoolVarP(&logJSON, "logJSON", "j", false, "logJSON output mode")
@@ -100,6 +100,8 @@ func fillDefaultValues(config *viper.Viper) {
 		"kubernetes.masterurl": "",
 		"kubernetes.namespace": apiv1.NamespaceDefault,
 		"kubernetes.job.retry": 0,
+		"manager.maxrequeues":  5,
+		"manager.wait":         "1s",
 	}
 
 	for param := range defaultsMap {

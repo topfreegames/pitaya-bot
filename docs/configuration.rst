@@ -110,3 +110,24 @@ Kubernetes
     - 0
     - int
     - Backoff limit from the jobs that will run each spec file
+
+Manager
+==========
+
+.. list-table::
+  :widths: 15 10 10 50
+  :header-rows: 1
+  :stub-columns: 1
+
+  * - Configuration
+    - Default value
+    - Type
+    - Description
+  * - manager.maxrequeues
+    - 5
+    - int
+    - Maximum number of requeues that will be done, if some error occurs while processing a job
+  * - manager.wait
+    - 1s
+    - time.Period
+    - Waiting time between each job process
