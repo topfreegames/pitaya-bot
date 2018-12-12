@@ -196,8 +196,6 @@ func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration flo
 
 	controller := createManagerController(logger, clientset, config)
 	controller.run(1)
-
-	return
 }
 
 func instantiateKubernetesJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
