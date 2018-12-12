@@ -23,11 +23,13 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/homedir"
 )
 
 var (
@@ -94,6 +96,8 @@ func fillDefaultValues(config *viper.Viper) {
 		"server.host":          "localhost",
 		"server.tls":           false,
 		"storage.type":         "memory",
+		"kubernetes.config":    filepath.Join(homedir.HomeDir(), ".kube", "config"),
+		"kubernetes.masterurl": "",
 		"kubernetes.namespace": apiv1.NamespaceDefault,
 		"kubernetes.job.retry": 0,
 	}

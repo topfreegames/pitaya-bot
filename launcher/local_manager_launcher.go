@@ -19,7 +19,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/client-go/util/workqueue"
 )
 
@@ -172,7 +171,7 @@ func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration flo
 	}
 	logger.Infof("Found %d specs to be executed", len(specs))
 
-	kubeConfig, err := clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), ".kube", "config"))
+	kubeConfig, err := clientcmd.BuildConfigFromFlags(config.GetString("kubernetes.masterurl"), config.GetString("kubernetes.config"))
 	if err != nil {
 		logger.Fatal(err)
 	}
