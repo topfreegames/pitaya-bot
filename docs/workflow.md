@@ -51,20 +51,20 @@ After all specs have been run, it will gather all the results obtained and retur
 
 There is the listing of all possible workflows:
 
-* Local - Pitaya-bot will be instantiated locally and will request the server from current location
-* Local Manager - A Pitaya-Bot manager will be instantiated locally and will create the Kubernetes Jobs inside kubernetes cluster from given config
+1. [Local](#Local): Pitaya-bot will be instantiated locally and will request the server from current location
+2. [Local Manager](#Local Manager): A Pitaya-Bot manager will be instantiated locally and will create the Kubernetes Jobs inside kubernetes cluster from given config
 
 ### Local
 
 It will instantiate an unit of pitaya-bot, which will run all specs located inside given directory. Each spec file will be run in a distinct go routine and also, each operation from the spec will be run in another distinct go routine.
 
 The local architecture is represented below:
-![local](./LocalWorkflow.png "Local Pitaya-Bot")
+![local](./_static/LocalWorkflow.png "Local Pitaya-Bot")
 
 ### Local Manager
 
 It will instantiate a pitaya-bot manager, which will create all configmaps, containing all specs and the config.yaml, to be used by each kubernetes job, that will also be created by the manager. After creating all configmaps and jobs, it will start a controller, that will be watching all the jobs created and after all of them finish their work or times out, it will clean everything that was created inside the kubernetes cluster.
 
 The local manager architecture is represented below:
-![local manager](./LocalManagerWorkflow.png "Local Manager Pitaya-Bot")
+![local manager](./_static/LocalManagerWorkflow.png "Local Manager Pitaya-Bot")
 

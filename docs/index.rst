@@ -14,6 +14,7 @@ Welcome to Pitaya-Bot's documentation!
    features
    workflow
    configuration
+   command_options
    test_writing
    examples
 
