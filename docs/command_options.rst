@@ -2,7 +2,7 @@
 Command Options
 ****************
 
-Pitaya-Bot uses Cobra to create its CLI application. Below we describe the command options split by topic. We judge the default values are good for most cases, but might need to be changed for some use cases. The default verbosity for the application logger is Debug.
+Pitaya-Bot is a CLI application, that has many command options, which will be described below by topic. We judge the default values are good for most cases, but might need to be changed for some use cases. The default verbosity for the application logger is Debug.
 
 Pitaya-Bot
 =================
@@ -33,7 +33,7 @@ Base configuration needed to run pitaya-bot
     - 
     - 1m
     - time.Duration
-    - Overall time that tests will take
+    - Minimum total duration of tests
   * - report-metrics
     - 
     - false
@@ -48,7 +48,7 @@ Base configuration needed to run pitaya-bot
     - k
     - false
     - bool
-    - Should delete all pitaya-bot instances inside kubernetes
+    - Should delete all pitaya-bot instances from game(configuration parameter) inside kubernetes
 
 Logger
 =================

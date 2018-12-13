@@ -63,7 +63,7 @@ The local architecture is represented below:
 
 ### Local Manager
 
-It will instantiate a pitaya-bot manager, which will create all configmaps, containing all specs and the config.yaml, to be used by each kubernetes job, that will also be created by the manager. After creating all configmaps and jobs, it will start a controller, that will be watching all the jobs created and after all of them finish their work or times out, it will clean everything that was created inside the kubernetes cluster.
+It will instantiate a pitaya-bot manager, which will create all configmaps, containing all specs and the config.yaml, to be used by each kubernetes job, that will also be created by the manager. After creating all configmaps and jobs, it will start a controller, that will be watching all the jobs created and after all of them finish their work or time out, it will clean everything that was created inside the kubernetes cluster.
 
 The local manager architecture is represented below:
 ![local manager](./_static/LocalManagerWorkflow.png "Local Manager Pitaya-Bot")
