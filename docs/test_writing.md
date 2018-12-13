@@ -1,4 +1,4 @@
-Pitaya Bot test writing
+Test Writing
 ==========
 
 ## Configuration
