@@ -1,5 +1,6 @@
 vendor
 testing/server
+docs/_build
 *.swp
 
 coverprofile.out

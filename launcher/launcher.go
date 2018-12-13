@@ -47,6 +47,10 @@ func getSpecs(specsDirectory string) ([]*models.Spec, error) {
 	ret := make([]*models.Spec, 0)
 	err := filepath.Walk(specsDirectory,
 		func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() && strings.HasPrefix(info.Name(), "..") {
+				return filepath.SkipDir
+			}
+
 			if err != nil {
 				return err
 			}
@@ -122,13 +126,9 @@ func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration fl
 }
 
 // Launch launches the bot spec
-func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool) {
-	log := logrus.New()
-	log.Formatter = new(logrus.TextFormatter)
-	log.Out = os.Stdout
-	logger := log.WithFields(logrus.Fields{
-		"source":   "pitaya-bot",
-		"function": "launch",
+func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool, logger logrus.FieldLogger) {
+	logger = logger.WithFields(logrus.Fields{
+		"function": "Launch",
 	})
 
 	specs, err := getSpecs(specsDirectory)
