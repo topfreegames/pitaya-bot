@@ -1,12 +1,9 @@
 package launcher
 
 import (
-	"fmt"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	pbKubernetes "github.com/topfreegames/pitaya-bot/kubernetes"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -37,14 +34,7 @@ func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration flo
 		return
 	}
 
-	configMaps, err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
-	if err != nil {
-		logger.Fatal(err)
-	}
-	if len(configMaps.Items) <= 0 {
-		pbKubernetes.DeployJobs(logger, clientset, config, specs)
-	}
-
+	pbKubernetes.DeployJobs(logger, clientset, config, specs)
 	controller := pbKubernetes.NewManagerController(logger, clientset, config)
 	controller.Run(1)
 	pbKubernetes.DeleteAll(logger, clientset, config)

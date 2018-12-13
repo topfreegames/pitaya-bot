@@ -19,6 +19,14 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
 
+	configMaps, err := configMapClient.List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
+	if err != nil {
+		logger.Fatal(err)
+	}
+	if len(configMaps.Items) > 0 {
+		return
+	}
+
 	configBinary, err := ioutil.ReadFile(config.ConfigFileUsed())
 	if err != nil {
 		logger.Fatal(err)
