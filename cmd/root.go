@@ -84,6 +84,7 @@ func fillDefaultValues(config *viper.Viper) {
 		"prometheus.port": 9191,
 		"server.host":     "localhost",
 		"server.tls":      false,
+		"server.docs":     "",
 		"storage.type":    "memory",
 	}
 

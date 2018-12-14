@@ -126,7 +126,7 @@ func (p *PlayerHandler) FindMatch(ctx context.Context, arg *findMatchArg) (*Find
 			IP:   "127.0.0.1",
 			Port: 9090,
 		}
-		if err := pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, []string{player.PrivateID.String()}, "connector"); err != nil {
+		if _, err := pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, []string{player.PrivateID.String()}, "connector"); err != nil {
 			panic(err)
 		}
 	}()

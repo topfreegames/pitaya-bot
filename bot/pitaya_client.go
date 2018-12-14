@@ -10,6 +10,10 @@ import (
 	"github.com/topfreegames/pitaya/client"
 )
 
+// information for the singleton
+var instance *client.ProtoBufferInfo
+var once sync.Once
+
 // FIXME - constants from internal pitaya package
 const (
 	MsgResponseType byte = 0x02
@@ -20,7 +24,7 @@ const (
 // The ideia is to be able to separate request/responses
 // from server pushes
 type PClient struct {
-	client         *client.Client
+	client         client.ClientInterface
 	responsesMutex sync.Mutex
 	responses      map[uint]chan []byte
 
@@ -28,9 +32,37 @@ type PClient struct {
 	pushes      map[string]chan []byte
 }
 
+func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.ProtoBufferInfo {
+	once.Do(func() {
+		if instance == nil {
+			cli := client.NewProto(docs, logrus.InfoLevel)
+			for k, v := range pushinfo {
+				cli.AddPushResponse(k, v)
+			}
+			err := cli.LoadServoInfo(host)
+			if err != nil {
+				fmt.Println("Unable to load server documentation.")
+				fmt.Println(err)
+			} else {
+				instance = cli.ExportInformation()
+			}
+		}
+	})
+	return instance
+}
+
 // NewPClient is the PCLient constructor
-func NewPClient(host string, useTLS bool) (*PClient, error) {
-	pclient := client.New(logrus.InfoLevel)
+func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]string) (*PClient, error) {
+
+	var pclient client.ClientInterface
+	if docs != "" {
+		cli := client.NewProto(docs, logrus.InfoLevel)
+		pclient = cli
+		cli.LoadInfo(getProtoInfo(host, docs, pushinfo))
+	} else {
+		pclient = client.New(logrus.InfoLevel)
+	}
+
 	if useTLS {
 		if err := pclient.ConnectToTLS(host, true); err != nil {
 			fmt.Println("Error connecting to server")
@@ -60,7 +92,7 @@ func (c *PClient) Disconnect() {
 
 // Connected returns if the given client is connected or not
 func (c *PClient) Connected() bool {
-	return c.client != nil && c.client.Connected
+	return c.client != nil && c.client.ConnectedStatus()
 }
 
 func (c *PClient) getResponseChannelForID(id uint) chan []byte {
@@ -139,8 +171,9 @@ func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
 
 // StartListening ...
 func (c *PClient) StartListening() {
+	channel := c.client.MsgChannel()
 	go func() {
-		for m := range c.client.IncomingMsgChan {
+		for m := range channel {
 			t := byte(m.Type)
 			switch t {
 			case MsgResponseType:

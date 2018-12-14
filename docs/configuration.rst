@@ -64,6 +64,12 @@ The configurations needed to access the Pitaya server being tested
     - false
     - bool
     - Boolean to enable/disable TLS to connect with Pitaya server
+  * - server.docs
+    - ""
+    - string
+    - Route for server documentation. Target server must implement remotes for protobuf descriptors and auto documentation.
+
+At the server is possible to insert two list of of parameters, server.pushinfo.routes and server.pushinfo.protos. This the the type of the protobufer for a especific route in a push response.
 
 Storage
 ==========
