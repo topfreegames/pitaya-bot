@@ -16,14 +16,8 @@ import (
 
 // CreateManagerPod will deploy a kubernetes pod containing a pitaya-bot manager
 func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
-	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
 	deploymentsClient := clientset.CoreV1().Pods(config.GetString("kubernetes.namespace"))
-
-	configMaps, err := configMapClient.List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot-manager,game=%s", config.GetString("game"))})
-	if err != nil {
-		logger.Fatal(err)
-	}
-	if len(configMaps.Items) > 0 {
+	if configMapExist("pitaya-bot-manager", logger, clientset, config) {
 		return
 	}
 
@@ -31,20 +25,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset
 	if err != nil {
 		logger.Fatal(err)
 	}
-	configMap := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "manager-config",
-			Labels: map[string]string{
-				"app":  "pitaya-bot-manager",
-				"game": config.GetString("game"),
-			},
-		},
-		BinaryData: map[string][]byte{"config.yaml": configBinary},
-	}
-	if _, err = configMapClient.Create(configMap); err != nil {
-		logger.Fatal(err)
-	}
-	logger.Infof("Created manager configMap config.yaml")
+	createConfigMap("manager-config", "pitaya-bot-manager", map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
 
 	binData := make(map[string][]byte, len(specs))
 	for _, spec := range specs {
@@ -55,22 +36,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset
 		specName := kubernetesAcceptedNamespace(filepath.Base(spec.Name))
 		binData[specName] = specBinary
 	}
-
-	configMap = &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "manager-specs",
-			Labels: map[string]string{
-				"app":  "pitaya-bot-manager",
-				"game": config.GetString("game"),
-			},
-		},
-		BinaryData: binData,
-	}
-
-	if _, err = configMapClient.Create(configMap); err != nil {
-		logger.Fatal(err)
-	}
-	logger.Infof("Created manager configMap specs")
+	createConfigMap("manager-specs", "pitaya-bot-manager", binData, logger, clientset, config)
 
 	deployment := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -129,14 +95,8 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset
 
 // DeployJobs will deploy as many kubernetes jobs as number of spec files
 func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
-	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
-
-	configMaps, err := configMapClient.List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
-	if err != nil {
-		logger.Fatal(err)
-	}
-	if len(configMaps.Items) > 0 {
+	if configMapExist("pitaya-bot", logger, clientset, config) {
 		return
 	}
 
@@ -145,21 +105,7 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 		logger.Fatal(err)
 	}
 
-	configMap := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "config",
-			Labels: map[string]string{
-				"app":  "pitaya-bot",
-				"game": config.GetString("game"),
-			},
-		},
-		BinaryData: map[string][]byte{"config.yaml": configBinary},
-	}
-
-	if _, err = configMapClient.Create(configMap); err != nil {
-		logger.Fatal(err)
-	}
-	logger.Infof("Created configMap config.yaml")
+	createConfigMap("config", "pitaya-bot", map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
 
 	for _, spec := range specs {
 		specBinary, err := ioutil.ReadFile(spec.Name)
@@ -167,22 +113,7 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 			logger.Fatal(err)
 		}
 		specName := kubernetesAcceptedNamespace(filepath.Base(spec.Name))
-
-		configMap = &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: specName,
-				Labels: map[string]string{
-					"app":  "pitaya-bot",
-					"game": config.GetString("game"),
-				},
-			},
-			BinaryData: map[string][]byte{"spec.json": specBinary},
-		}
-
-		if _, err = configMapClient.Create(configMap); err != nil {
-			logger.Fatal(err)
-		}
-		logger.Infof("Created spec configMap %s", specName)
+		createConfigMap(specName, "pitaya-bot", map[string][]byte{specName: specBinary}, logger, clientset, config)
 
 		deployment := &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
@@ -245,6 +176,32 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 		}
 		logger.Infof("Created job %s", specName)
 	}
+}
+
+func configMapExist(app string, logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) bool {
+	configMaps, err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
+	if err != nil {
+		logger.Fatal(err)
+	}
+	return len(configMaps.Items) > 0
+}
+
+func createConfigMap(name, app string, binData map[string][]byte, logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) {
+	configMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"app":  app,
+				"game": config.GetString("game"),
+			},
+		},
+		BinaryData: binData,
+	}
+
+	if _, err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).Create(configMap); err != nil {
+		logger.Fatal(err)
+	}
+	logger.Infof("Created spec configMap => name: %s, app: %s", name, app)
 }
 
 // DeleteAll will delete all kubernetes resources that have been allocated to make the jobs
