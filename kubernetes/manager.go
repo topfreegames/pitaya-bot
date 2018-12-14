@@ -47,12 +47,13 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset
 	logger.Infof("Created manager configMap config.yaml")
 
 	binData := make(map[string][]byte, len(specs))
-	for i, spec := range specs {
+	for _, spec := range specs {
 		specBinary, err := ioutil.ReadFile(spec.Name)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		binData[fmt.Sprintf("spec%d.json", i)] = specBinary
+		specName := kubernetesAcceptedNamespace(filepath.Base(spec.Name))
+		binData[specName] = specBinary
 	}
 
 	configMap = &corev1.ConfigMap{
