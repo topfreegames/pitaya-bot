@@ -2,6 +2,8 @@ package kubernetes
 
 import (
 	"fmt"
+	"math"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -58,7 +60,7 @@ func NewManagerController(logger logrus.FieldLogger, clientset *kubernetes.Clien
 }
 
 // Run is the main loop which the pitaya-bot kubernetes controller will executing
-func (c *ManagerController) Run(threadiness int) {
+func (c *ManagerController) Run(threadiness int, duration float64) {
 	defer runtime.HandleCrash()
 	defer c.queue.ShutDown()
 	c.logger.Infof("Starting pitaya-bot manager controller")
@@ -78,8 +80,38 @@ func (c *ManagerController) Run(threadiness int) {
 		close(c.stopCh)
 	}
 
+	fmt.Println(c.getPodElapsedTime())
+	go c.printManagerStatus(c.getPodElapsedTime(), duration)
+
 	<-c.stopCh
 	c.logger.Infof("Stopping Local Manager Controller")
+}
+
+func (c *ManagerController) printManagerStatus(elapsed, duration float64) {
+	ticker := time.Tick(500 * time.Millisecond)
+	for {
+		<-ticker
+		elapsed += 0.5
+		progress := int(math.Max(math.Min(100.0, (elapsed/duration)*100), 0.0))
+		managerStatus := fmt.Sprintf("\rProgress: [%d] [", progress)
+		for i := 0; i < 50; i++ {
+			if i < progress/2 {
+				managerStatus = fmt.Sprintf("%s#", managerStatus)
+			} else {
+				managerStatus = fmt.Sprintf("%s.", managerStatus)
+			}
+		}
+		managerStatus = fmt.Sprintf("%s]\n\n  JOB                                               | SUCCESS | FAILED\n+---------------------------------------------------+---------+--------+\n", managerStatus)
+		for _, obj := range c.indexer.List() {
+			job := obj.(*batchv1.Job)
+			if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
+				continue
+			}
+			managerStatus = fmt.Sprintf("%s  %-49s | %-7d | %d\n", managerStatus, job.Name, job.Status.Succeeded, job.Status.Failed)
+		}
+		managerStatus = fmt.Sprintf("%s+---------------------------------------------------+---------+--------+\n\n", managerStatus)
+		fmt.Printf(managerStatus)
+	}
 }
 
 func (c *ManagerController) processNextItem() bool {
@@ -128,6 +160,17 @@ func (c *ManagerController) finishedAllJobs() bool {
 		}
 	}
 	return true
+}
+
+func (c *ManagerController) getPodElapsedTime() float64 {
+	for _, obj := range c.indexer.List() {
+		job := obj.(*batchv1.Job)
+		if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
+			continue
+		}
+		return float64(time.Since(job.Status.StartTime.Local())) / float64(time.Second)
+	}
+	return 0
 }
 
 func (c *ManagerController) handleErr(err error, key interface{}) {

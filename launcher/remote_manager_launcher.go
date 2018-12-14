@@ -37,7 +37,7 @@ func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration fl
 
 	pbKubernetes.DeployJobs(logger, clientset, config, specs)
 	controller := pbKubernetes.NewManagerController(logger, clientset, config)
-	controller.Run(1)
+	controller.Run(1, duration)
 	pbKubernetes.DeleteAll(logger, clientset, config)
 	pbKubernetes.DeleteAllManager(logger, clientset, config)
 }
