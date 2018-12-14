@@ -14,6 +14,118 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// CreateManagerPod will deploy a kubernetes pod containing a pitaya-bot manager
+func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
+	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
+	deploymentsClient := clientset.CoreV1().Pods(config.GetString("kubernetes.namespace"))
+
+	configMaps, err := configMapClient.List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot-manager,game=%s", config.GetString("game"))})
+	if err != nil {
+		logger.Fatal(err)
+	}
+	if len(configMaps.Items) > 0 {
+		return
+	}
+
+	configBinary, err := ioutil.ReadFile(config.ConfigFileUsed())
+	if err != nil {
+		logger.Fatal(err)
+	}
+	configMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "manager-config",
+			Labels: map[string]string{
+				"app":  "pitaya-bot-manager",
+				"game": config.GetString("game"),
+			},
+		},
+		BinaryData: map[string][]byte{"config.yaml": configBinary},
+	}
+	if _, err = configMapClient.Create(configMap); err != nil {
+		logger.Fatal(err)
+	}
+	logger.Infof("Created manager configMap config.yaml")
+
+	binData := make(map[string][]byte, len(specs))
+	for i, spec := range specs {
+		specBinary, err := ioutil.ReadFile(spec.Name)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		binData[fmt.Sprintf("spec%d.json", i)] = specBinary
+	}
+
+	configMap = &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "manager-specs",
+			Labels: map[string]string{
+				"app":  "pitaya-bot-manager",
+				"game": config.GetString("game"),
+			},
+		},
+		BinaryData: binData,
+	}
+
+	if _, err = configMapClient.Create(configMap); err != nil {
+		logger.Fatal(err)
+	}
+	logger.Infof("Created manager configMap specs")
+
+	deployment := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "manager",
+			Labels: map[string]string{
+				"app":  "pitaya-bot-manager",
+				"game": config.GetString("game"),
+			},
+		},
+		Spec: corev1.PodSpec{
+			RestartPolicy: corev1.RestartPolicyOnFailure,
+			Containers: []corev1.Container{
+				{
+					Name:  "pitaya-bot-manager",
+					Image: "tfgco/pitaya-bot:latest",
+					VolumeMounts: []corev1.VolumeMount{
+						{
+							Name:      "manager-specs",
+							MountPath: "/etc/pitaya-bot/specs",
+						},
+						{
+							Name:      "manager-config",
+							MountPath: "/etc/pitaya-bot",
+						},
+					},
+					Command: []string{"./main"},
+					Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager"},
+				},
+			},
+			Volumes: []corev1.Volume{
+				{
+					Name: "manager-specs",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "manager-specs"},
+						},
+					},
+				},
+				{
+					Name: "manager-config",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "manager-config"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if _, err := deploymentsClient.Create(deployment); err != nil {
+		logger.Fatal(err)
+	}
+	logger.Infof("Created manager pod")
+}
+
 // DeployJobs will deploy as many kubernetes jobs as number of spec files
 func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
 	configMapClient := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace"))
@@ -136,19 +248,28 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 
 // DeleteAll will delete all kubernetes resources that have been allocated to make the jobs
 func DeleteAll(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) {
-	err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
+	deleteAll(fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game")), logger, clientset, config)
+}
+
+// DeleteAllManager will delete all pitaya-bot managers that have been allocated inside kubernetes cluster
+func DeleteAllManager(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) {
+	deleteAll(fmt.Sprintf("app=pitaya-bot-manager,game=%s", config.GetString("game")), logger, clientset, config)
+}
+
+func deleteAll(labelSelector string, logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) {
+	err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete configMaps")
 	}
 	logger.Infof("Deleted configMaps")
 
-	err = clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
+	err = clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete jobs")
 	}
 	logger.Infof("Deleted jobs")
 
-	err = clientset.CoreV1().Pods(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game"))})
+	err = clientset.CoreV1().Pods(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete pods")
 	}

@@ -44,6 +44,10 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := getLogger()
 		switch pitayaBotType {
+		case "deploy-manager":
+			launcher.LaunchManagerDeploy(config, specsDirectory, testDuration.Seconds(), reportMetrics, kill, logger)
+		case "remote-manager":
+			launcher.LaunchRemoteManager(config, specsDirectory, testDuration.Seconds(), reportMetrics, kill, logger)
 		case "local-manager":
 			launcher.LaunchLocalManager(config, specsDirectory, testDuration.Seconds(), reportMetrics, kill, logger)
 		default:
