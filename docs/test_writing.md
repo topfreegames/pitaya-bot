@@ -3,11 +3,11 @@ Test Writing
 
 ## Command Options
 
-The execution of pitaya-bot offers many command options, that enable/disable many functionalities and different types of workflows. The command options can be found in the [command section](doc:command_options).
+The execution of pitaya-bot offers many command options, that enable/disable many functionalities and different types of workflows. The command options can be found in the [command section](command_options.html).
 
 ## Configuration
 
-It is important to create the config.yaml file before running the tests, so that pitaya-bot knows which server to access and which report metrics to use. The configuration options can be found in the [configuration section](doc:configuration).
+It is important to create the config.yaml file before running the tests, so that pitaya-bot knows which server to access and which report metrics to use. The configuration options can be found in the [configuration section](configuration.html).
 
 ## Spec Configuration
 
