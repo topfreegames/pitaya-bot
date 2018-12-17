@@ -94,7 +94,7 @@ func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) 
 		spinner = spin(spinner)
 		elapsed += 500 * time.Millisecond
 		progress := int(math.Max(math.Min(100.0, float64(elapsed)/float64(duration)*100), 0.0))
-		managerStatus := fmt.Sprintf("\rProgress: [%d]%c[", progress, spinner)
+		managerStatus := fmt.Sprintf("\rProgress: [%3d%c]%c[", progress, '%', spinner)
 		for i := 0; i < 50; i++ {
 			if i < progress/2 {
 				managerStatus = fmt.Sprintf("%s#", managerStatus)
