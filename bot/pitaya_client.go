@@ -58,7 +58,9 @@ func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]strin
 	if docs != "" {
 		cli := client.NewProto(docs, logrus.InfoLevel)
 		pclient = cli
-		cli.LoadInfo(getProtoInfo(host, docs, pushinfo))
+		if err := cli.LoadInfo(getProtoInfo(host, docs, pushinfo)); err != nil {
+			return nil, err
+		}
 	} else {
 		pclient = client.New(logrus.InfoLevel)
 	}

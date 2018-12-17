@@ -216,7 +216,7 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 
 	pushinfoprotos := b.config.GetStringSlice("server.protobuffer.pushinfo.protos")
 	pushinforoutes := b.config.GetStringSlice("server.protobuffer.pushinfo.routes")
-	if len(pushinforoutes) != len(pushinforoutes) {
+	if len(pushinforoutes) != len(pushinfoprotos) {
 		b.logger.Fatal("Invalid number of protos routes or protos.")
 	}
 	pushinfo := make(map[string]string)
