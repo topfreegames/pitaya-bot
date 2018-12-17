@@ -88,11 +88,13 @@ func (c *ManagerController) Run(threadiness int, duration time.Duration) {
 
 func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) {
 	ticker := time.Tick(500 * time.Millisecond)
+	var spinner rune
 	for {
 		<-ticker
+		spinner = spin(spinner)
 		elapsed += 500 * time.Millisecond
 		progress := int(math.Max(math.Min(100.0, float64(elapsed)/float64(duration)*100), 0.0))
-		managerStatus := fmt.Sprintf("\rProgress: [%d] [", progress)
+		managerStatus := fmt.Sprintf("\rProgress: [%d]%c[", progress, spinner)
 		for i := 0; i < 50; i++ {
 			if i < progress/2 {
 				managerStatus = fmt.Sprintf("%s#", managerStatus)
@@ -100,7 +102,7 @@ func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) 
 				managerStatus = fmt.Sprintf("%s.", managerStatus)
 			}
 		}
-		managerStatus = fmt.Sprintf("%s]\n\n  JOB                                      | ACTIVE | SUCCESS | FAILED\n+------------------------------------------+--------+---------+--------+\n", managerStatus)
+		managerStatus = fmt.Sprintf("%s] %s\n\n  JOB                                      | ACTIVE | SUCCESS | FAILED\n+------------------------------------------+--------+---------+--------+\n", managerStatus, elapsed.String())
 		for _, obj := range c.indexer.List() {
 			job := obj.(*batchv1.Job)
 			if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
@@ -110,6 +112,19 @@ func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) 
 		}
 		managerStatus = fmt.Sprintf("%s+------------------------------------------+--------+---------+--------+\n\n", managerStatus)
 		fmt.Print(managerStatus)
+	}
+}
+
+func spin(spinner rune) rune {
+	switch spinner {
+	case '-':
+		return '\\'
+	case '\\':
+		return '|'
+	case '|':
+		return '/'
+	default:
+		return '-'
 	}
 }
 
