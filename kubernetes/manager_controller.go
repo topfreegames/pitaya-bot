@@ -60,7 +60,7 @@ func NewManagerController(logger logrus.FieldLogger, clientset *kubernetes.Clien
 }
 
 // Run is the main loop which the pitaya-bot kubernetes controller will executing
-func (c *ManagerController) Run(threadiness int, duration float64) {
+func (c *ManagerController) Run(threadiness int, duration time.Duration) {
 	defer runtime.HandleCrash()
 	defer c.queue.ShutDown()
 	c.logger.Infof("Starting pitaya-bot manager controller")
@@ -80,19 +80,18 @@ func (c *ManagerController) Run(threadiness int, duration float64) {
 		close(c.stopCh)
 	}
 
-	fmt.Println(c.getPodElapsedTime())
 	go c.printManagerStatus(c.getPodElapsedTime(), duration)
 
 	<-c.stopCh
 	c.logger.Infof("Stopping Local Manager Controller")
 }
 
-func (c *ManagerController) printManagerStatus(elapsed, duration float64) {
+func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) {
 	ticker := time.Tick(500 * time.Millisecond)
 	for {
 		<-ticker
-		elapsed += 0.5
-		progress := int(math.Max(math.Min(100.0, (elapsed/duration)*100), 0.0))
+		elapsed += 500 * time.Millisecond
+		progress := int(math.Max(math.Min(100.0, float64(elapsed)/float64(duration)*100), 0.0))
 		managerStatus := fmt.Sprintf("\rProgress: [%d] [", progress)
 		for i := 0; i < 50; i++ {
 			if i < progress/2 {
@@ -162,13 +161,13 @@ func (c *ManagerController) finishedAllJobs() bool {
 	return true
 }
 
-func (c *ManagerController) getPodElapsedTime() float64 {
+func (c *ManagerController) getPodElapsedTime() time.Duration {
 	for _, obj := range c.indexer.List() {
 		job := obj.(*batchv1.Job)
 		if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
 			continue
 		}
-		return float64(time.Since(job.Status.StartTime.Local())) / float64(time.Second)
+		return time.Since(job.Status.StartTime.Local())
 	}
 	return 0
 }

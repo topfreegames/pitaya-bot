@@ -1,6 +1,8 @@
 package launcher
 
 import (
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	pbKubernetes "github.com/topfreegames/pitaya-bot/kubernetes"
@@ -9,7 +11,7 @@ import (
 )
 
 // LaunchRemoteManager launches the manager in kubernetes cluster, that will instantiate jobs and manage them until the end
-func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics, shouldDeleteAllResources bool, logger logrus.FieldLogger) {
+func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration time.Duration, shouldReportMetrics, shouldDeleteAllResources bool, logger logrus.FieldLogger) {
 	logger = logger.WithFields(logrus.Fields{
 		"function": "LaunchRemoteManager",
 	})
@@ -35,7 +37,7 @@ func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration fl
 		return
 	}
 
-	pbKubernetes.DeployJobs(logger, clientset, config, specs)
+	pbKubernetes.DeployJobs(logger, clientset, config, specs, duration)
 	controller := pbKubernetes.NewManagerController(logger, clientset, config)
 	controller.Run(1, duration)
 	pbKubernetes.DeleteAll(logger, clientset, config)

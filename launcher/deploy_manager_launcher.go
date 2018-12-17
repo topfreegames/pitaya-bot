@@ -1,6 +1,8 @@
 package launcher
 
 import (
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	pbKubernetes "github.com/topfreegames/pitaya-bot/kubernetes"
@@ -9,7 +11,7 @@ import (
 )
 
 // LaunchManagerDeploy launches the deploy to instantiate a pitaya-bot manager pod inside kubernetes
-func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics, shouldDeleteAllResources bool, logger logrus.FieldLogger) {
+func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration time.Duration, shouldReportMetrics, shouldDeleteAllResources bool, logger logrus.FieldLogger) {
 	logger = logger.WithFields(logrus.Fields{
 		"function": "LaunchManagerDeploy",
 	})
@@ -34,5 +36,5 @@ func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration fl
 		return
 	}
 
-	pbKubernetes.CreateManagerPod(logger, clientset, config, specs)
+	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, duration)
 }

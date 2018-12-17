@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -15,7 +16,7 @@ import (
 )
 
 // CreateManagerPod will deploy a kubernetes pod containing a pitaya-bot manager
-func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
+func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
 	deploymentsClient := clientset.CoreV1().Pods(config.GetString("kubernetes.namespace"))
 	if configMapExist("pitaya-bot-manager", logger, clientset, config) {
 		return
@@ -63,7 +64,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset
 						},
 					},
 					Command: []string{"./main"},
-					Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager"},
+					Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager"},
 				},
 			},
 			Volumes: []corev1.Volume{
@@ -94,7 +95,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset
 }
 
 // DeployJobs will deploy as many kubernetes jobs as number of spec files
-func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec) {
+func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
 	if configMapExist("pitaya-bot", logger, clientset, config) {
 		return
@@ -146,6 +147,8 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 										MountPath: "/etc/pitaya-bot",
 									},
 								},
+								Command: []string{"./main"},
+								Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "local"},
 							},
 						},
 						Volumes: []corev1.Volume{
