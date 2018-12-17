@@ -95,7 +95,7 @@ func fillDefaultValues(config *viper.Viper) {
 		"prometheus.port":         9191,
 		"server.host":             "localhost",
 		"server.tls":              false,
-		"server.type":             "json",
+		"server.serializer":       "json",
 		"server.protobuffer.docs": "connector.docsHandler.docs",
 		"storage.type":            "memory",
 		"kubernetes.config":       filepath.Join(homedir.HomeDir(), ".kube", "config"),

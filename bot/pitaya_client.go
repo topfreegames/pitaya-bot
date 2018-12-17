@@ -34,18 +34,16 @@ type PClient struct {
 
 func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.ProtoBufferInfo {
 	once.Do(func() {
-		if instance == nil {
-			cli := client.NewProto(docs, logrus.InfoLevel)
-			for k, v := range pushinfo {
-				cli.AddPushResponse(k, v)
-			}
-			err := cli.LoadServerInfo(host)
-			if err != nil {
-				fmt.Println("Unable to load server documentation.")
-				fmt.Println(err)
-			} else {
-				instance = cli.ExportInformation()
-			}
+		cli := client.NewProto(docs, logrus.InfoLevel)
+		for k, v := range pushinfo {
+			cli.AddPushResponse(k, v)
+		}
+		err := cli.LoadServerInfo(host)
+		if err != nil {
+			fmt.Println("Unable to load server documentation.")
+			fmt.Println(err)
+		} else {
+			instance = cli.ExportInformation()
 		}
 	})
 	return instance

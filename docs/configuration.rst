@@ -64,7 +64,7 @@ The configurations needed to access the Pitaya server being tested
     - false
     - bool
     - Boolean to enable/disable TLS to connect with Pitaya server
-  * - server.type
+  * - server.serializer
     - json
     - string
     - must be json or protobuffer
@@ -73,7 +73,7 @@ The configurations needed to access the Pitaya server being tested
     - string
     - Route for server documentation. Target server must implement remotes for protobuf descriptors and auto documentation.
 
-If your application use probuffers, specifying docs is required. You can also add a list of routes and protobuffer types if your application sends push information to the bot. See :file:`testing/protobuffer/config/config.yaml` for example.
+If your application use protobuffers, specifying docs is required. You can also add a list of routes and protobuffer types if your application sends push information to the bot. See :file:`testing/protobuffer/config/config.yaml` for example.
 
 Storage
 ==========

@@ -224,7 +224,7 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 		pushinfo[pushinforoutes[i]] = pushinfoprotos[i]
 	}
 
-	servertype := b.config.GetString("server.type")
+	servertype := b.config.GetString("server.serializer")
 	docs := ""
 	if servertype == "protobuffer" {
 		docs = b.config.GetString("server.protobuffer.docs")

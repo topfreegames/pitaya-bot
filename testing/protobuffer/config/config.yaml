@@ -1,6 +1,6 @@
 server:
   host: "localhost:30124"
-  type: "protobuffer"
+  serializer: "protobuffer"
   protobuffer:
     docs: "connector.docsHandler.docs"
     pushinfo:
