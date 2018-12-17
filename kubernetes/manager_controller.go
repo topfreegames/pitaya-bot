@@ -110,7 +110,7 @@ func (c *ManagerController) printManagerStatus(elapsed, duration float64) {
 			managerStatus = fmt.Sprintf("%s  %-40s | %-6d | %-7d | %d\n", managerStatus, job.Name, job.Status.Active, job.Status.Succeeded, job.Status.Failed)
 		}
 		managerStatus = fmt.Sprintf("%s+------------------------------------------+--------+---------+--------+\n\n", managerStatus)
-		fmt.Printf(managerStatus)
+		fmt.Print(managerStatus)
 	}
 }
 

@@ -51,7 +51,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset
 			Containers: []corev1.Container{
 				{
 					Name:  "pitaya-bot-manager",
-					Image: "tfgco/pitaya-bot:latest",
+					Image: config.GetString("kubernetes.image"),
 					VolumeMounts: []corev1.VolumeMount{
 						{
 							Name:      "manager-specs",
@@ -135,7 +135,7 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 						Containers: []corev1.Container{
 							{
 								Name:  "pitaya-bot",
-								Image: "tfgco/pitaya-bot:latest",
+								Image: config.GetString("kubernetes.image"),
 								VolumeMounts: []corev1.VolumeMount{
 									{
 										Name:      "spec",

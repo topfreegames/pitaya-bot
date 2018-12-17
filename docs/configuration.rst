@@ -98,6 +98,10 @@ Kubernetes
     - $HOME/.kube/config
     - string
     - Path where kubernetes config file is located
+  * - kubernetes.image
+    - tfgco/pitaya-bot:latest
+    - string
+    - Pitaya-Bot docker image that kubernetes will use to deploy pods
   * - kubernetes.masterurl
     - 
     - string
