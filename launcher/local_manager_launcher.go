@@ -16,7 +16,7 @@ func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration tim
 		"function": "LaunchLocalManager",
 	})
 
-	specs, err := getSpecs(specsDirectory)
+	specs, err := GetSpecs(specsDirectory)
 	if err != nil {
 		logger.Fatal(err)
 	}

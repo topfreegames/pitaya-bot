@@ -16,7 +16,7 @@ func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration ti
 		"function": "LaunchRemoteManager",
 	})
 
-	specs, err := getSpecs(specsDirectory)
+	specs, err := GetSpecs(specsDirectory)
 	if err != nil {
 		logger.Fatal(err)
 	}

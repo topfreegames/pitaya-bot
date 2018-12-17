@@ -16,7 +16,7 @@ import (
 )
 
 // CreateManagerPod will deploy a kubernetes pod containing a pitaya-bot manager
-func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
+func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
 	deploymentsClient := clientset.CoreV1().Pods(config.GetString("kubernetes.namespace"))
 	if configMapExist("pitaya-bot-manager", logger, clientset, config) {
 		return
@@ -95,7 +95,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset *kubernetes.Clientset
 }
 
 // DeployJobs will deploy as many kubernetes jobs as number of spec files
-func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
+func DeployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
 	if configMapExist("pitaya-bot", logger, clientset, config) {
 		return
@@ -119,6 +119,10 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 		deployment := &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: specName,
+				Labels: map[string]string{
+					"app":  "pitaya-bot",
+					"game": config.GetString("game"),
+				},
 			},
 			Spec: batchv1.JobSpec{
 				//Parallelism: int32Ptr(1), TODO: Via config file, see how many bots are to be instantiated
@@ -181,7 +185,7 @@ func DeployJobs(logger logrus.FieldLogger, clientset *kubernetes.Clientset, conf
 	}
 }
 
-func configMapExist(app string, logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) bool {
+func configMapExist(app string, logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) bool {
 	configMaps, err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
 	if err != nil {
 		logger.Fatal(err)
@@ -189,7 +193,7 @@ func configMapExist(app string, logger logrus.FieldLogger, clientset *kubernetes
 	return len(configMaps.Items) > 0
 }
 
-func createConfigMap(name, app string, binData map[string][]byte, logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) {
+func createConfigMap(name, app string, binData map[string][]byte, logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) {
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,

@@ -43,16 +43,17 @@ func validFile(info os.FileInfo) bool {
 	return false
 }
 
-func getSpecs(specsDirectory string) ([]*models.Spec, error) {
+// GetSpecs will walk through specsDirectory and transform all spec JSONs into Spec objects
+func GetSpecs(specsDirectory string) ([]*models.Spec, error) {
 	ret := make([]*models.Spec, 0)
 	err := filepath.Walk(specsDirectory,
 		func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() && strings.HasPrefix(info.Name(), "..") {
-				return filepath.SkipDir
-			}
-
 			if err != nil {
 				return err
+			}
+
+			if info.IsDir() && strings.HasPrefix(info.Name(), "..") {
+				return filepath.SkipDir
 			}
 
 			if !validFile(info) {
@@ -131,7 +132,7 @@ func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration
 		"function": "Launch",
 	})
 
-	specs, err := getSpecs(specsDirectory)
+	specs, err := GetSpecs(specsDirectory)
 	if err != nil {
 		logger.Fatal(err)
 	}

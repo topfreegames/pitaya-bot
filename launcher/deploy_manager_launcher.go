@@ -16,7 +16,7 @@ func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration ti
 		"function": "LaunchManagerDeploy",
 	})
 
-	specs, err := getSpecs(specsDirectory)
+	specs, err := GetSpecs(specsDirectory)
 	if err != nil {
 		logger.Fatal(err)
 	}

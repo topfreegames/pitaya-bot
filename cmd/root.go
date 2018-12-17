@@ -28,7 +28,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -71,9 +71,14 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	config = viper.New()
-	if cfgFile != "" { // enable ability to specify config file via flag
-		config.SetConfigFile(cfgFile)
+	config = CreateConfig(cfgFile)
+}
+
+// CreateConfig returns the config file all set up and ready to use
+func CreateConfig(path string) *viper.Viper {
+	config := viper.New()
+	if path != "" { // enable ability to specify config file via flag
+		config.SetConfigFile(path)
 	}
 	config.SetConfigType("yaml")
 	config.SetEnvPrefix("pitayabot")
@@ -83,10 +88,11 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := config.ReadInConfig(); err != nil {
-		fmt.Printf("Config file %s failed to load: %s.\n", cfgFile, err.Error())
+		fmt.Printf("Config file %s failed to load: %s.\n", path, err.Error())
 		panic("Failed to load config file")
 	}
 	fillDefaultValues(config)
+	return config
 }
 
 func fillDefaultValues(config *viper.Viper) {
@@ -99,7 +105,7 @@ func fillDefaultValues(config *viper.Viper) {
 		"kubernetes.config":    filepath.Join(homedir.HomeDir(), ".kube", "config"),
 		"kubernetes.image":     "tfgco/pitaya-bot:latest",
 		"kubernetes.masterurl": "",
-		"kubernetes.namespace": apiv1.NamespaceDefault,
+		"kubernetes.namespace": corev1.NamespaceDefault,
 		"kubernetes.job.retry": 0,
 		"manager.maxrequeues":  5,
 		"manager.wait":         "1s",
