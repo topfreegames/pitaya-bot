@@ -24,7 +24,7 @@ const (
 // The ideia is to be able to separate request/responses
 // from server pushes
 type PClient struct {
-	client         client.ClientInterface
+	client         client.PitayaClient
 	responsesMutex sync.Mutex
 	responses      map[uint]chan []byte
 
@@ -39,7 +39,7 @@ func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.
 			for k, v := range pushinfo {
 				cli.AddPushResponse(k, v)
 			}
-			err := cli.LoadServoInfo(host)
+			err := cli.LoadServerInfo(host)
 			if err != nil {
 				fmt.Println("Unable to load server documentation.")
 				fmt.Println(err)
@@ -54,7 +54,7 @@ func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.
 // NewPClient is the PCLient constructor
 func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]string) (*PClient, error) {
 
-	var pclient client.ClientInterface
+	var pclient client.PitayaClient
 	if docs != "" {
 		cli := client.NewProto(docs, logrus.InfoLevel)
 		pclient = cli

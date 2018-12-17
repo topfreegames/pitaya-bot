@@ -214,8 +214,8 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 		b.logger.Fatal("Bot already connected")
 	}
 
-	pushinfoprotos := b.config.GetStringSlice("server.pushinfo.protos")
-	pushinforoutes := b.config.GetStringSlice("server.pushinfo.routes")
+	pushinfoprotos := b.config.GetStringSlice("server.protobuffer.pushinfo.protos")
+	pushinforoutes := b.config.GetStringSlice("server.protobuffer.pushinfo.routes")
 	if len(pushinforoutes) != len(pushinforoutes) {
 		b.logger.Fatal("Invalid number of protos routes or protos.")
 	}
@@ -224,7 +224,7 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 		pushinfo[pushinforoutes[i]] = pushinfoprotos[i]
 	}
 
-	docs := b.config.GetString("server.docs")
+	docs := b.config.GetString("server.protobuffer.docs")
 	tls := b.config.GetBool("server.tls")
 	client, err := NewPClient(b.host, tls, docs, pushinfo)
 	if err != nil {

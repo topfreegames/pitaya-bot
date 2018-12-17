@@ -39,7 +39,7 @@ import (
 	"github.com/topfreegames/pitaya/serialize/protobuf"
 )
 
-// ConnectorRemote is a remote that will receive rpc's
+// DocsHandler ...
 type DocsHandler struct {
 	component.Base
 }
@@ -68,8 +68,8 @@ var (
 	}
 )
 
-// transform Player in proto.Player
-func (p *Player) Proto() *protos.Player {
+// Proto transform Player in proto.Player
+func (p *Player) getProto() *protos.Player {
 	return &protos.Player{
 		PrivateID:    p.PrivateID.String(),
 		AccessToken:  p.AccessToken.String(),
@@ -87,7 +87,7 @@ func (p *PlayerHandler) Create(ctx context.Context) (*protos.AuthResponse, error
 
 	return &protos.AuthResponse{
 		Code:   "200",
-		Player: player.Proto(),
+		Player: player.getProto(),
 	}, nil
 }
 
@@ -102,7 +102,7 @@ func (p *PlayerHandler) Authenticate(ctx context.Context, arg *protos.AuthArg) (
 	}
 	return &protos.AuthResponse{
 		Code:   "200",
-		Player: player.Proto(),
+		Player: player.getProto(),
 	}, nil
 }
 
@@ -141,16 +141,20 @@ func (c *DocsHandler) Docs(ctx context.Context) (*pitayaprotos.Doc, error) {
 	return &pitayaprotos.Doc{Doc: string(doc)}, nil
 }
 
-func (c *DocsHandler) Proto(ctx context.Context, message *pitayaprotos.ProtoName) (*pitayaprotos.ProtoDescriptor, error) {
-	// fmt.Println(message.GetName())
-	protoDescriptor, err := pitaya.Descriptor(message.GetName())
+// Protos return protobuffers descriptors
+func (c *DocsHandler) Protos(ctx context.Context, message *pitayaprotos.ProtoNames) (*pitayaprotos.ProtoDescriptors, error) {
+	var descriptors [][]byte
 
-	if err != nil {
-		return nil, err
+	for _, name := range message.GetName() {
+		protoDescriptor, err := pitaya.Descriptor(name)
+		if err != nil {
+			return nil, err
+		}
+		descriptors = append(descriptors, protoDescriptor)
 	}
 
-	return &pitayaprotos.ProtoDescriptor{
-		Desc: protoDescriptor,
+	return &pitayaprotos.ProtoDescriptors{
+		Desc: descriptors,
 	}, nil
 }
 
