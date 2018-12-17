@@ -23,15 +23,21 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/homedir"
 )
 
-var config *viper.Viper
-
-var cfgFile string
+var (
+	config  *viper.Viper
+	cfgFile string
+	verbose int
+	logJSON bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -56,6 +62,11 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./config/config.yaml", "config file")
+	rootCmd.PersistentFlags().IntVarP(
+		&verbose, "verbose", "v", 3,
+		"Verbosity level => v0: Error, v1=Warning, v2=Info, v3=Debug",
+	)
+	rootCmd.PersistentFlags().BoolVarP(&logJSON, "logJSON", "j", false, "logJSON output mode")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -80,12 +91,18 @@ func initConfig() {
 
 func fillDefaultValues(config *viper.Viper) {
 	defaultsMap := map[string]interface{}{
-		"game":            "",
-		"prometheus.port": 9191,
-		"server.host":     "localhost",
-		"server.tls":      false,
-		"server.docs":     "",
-		"storage.type":    "memory",
+		"game":                 "",
+		"prometheus.port":      9191,
+		"server.host":          "localhost",
+		"server.tls":           false,
+		"storage.type":         "memory",
+		"kubernetes.config":    filepath.Join(homedir.HomeDir(), ".kube", "config"),
+		"kubernetes.masterurl": "",
+		"kubernetes.namespace": apiv1.NamespaceDefault,
+		"kubernetes.job.retry": 0,
+		"manager.maxrequeues":  5,
+		"manager.wait":         "1s",
+		"server.docs":          "",
 	}
 
 	for param := range defaultsMap {

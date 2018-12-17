@@ -1,18 +1,18 @@
 Workflow
 =============
 
-In this section we will describe in details the workflow process, since the setup until the end summary. The example is going to assume the usage of a sequential bot with TCP communication and JSON information format.
+In this section we will describe in details the available workflow processes, since the setup until the end summary. The following examples are going to assume the usage of a sequential bot with TCP communication and JSON information format.
 
-## Testing a scenario
+## Basic Workflow
 
-The overview of what happens when the pitaya-bot is started:
+The overview of what happens when pitaya-bot is started:
 
 * Initialization of app, configuration fetch, specs directory lookup and creation of metric reporters
 * Instantiation of many go routines, which are defined in spec files
 * Validation of selected bot and written specs
 * Execution of specs
 * Notification of the result to all of metrics reporter
-* Summarization of all results
+* Summarization of tests
 
 ### Initialization
 
@@ -41,8 +41,30 @@ In the moment that the bot is initialized, it will fetch all the information con
 
 ### Metric Reporter
 
-After each request to a pitaya server, the pitaya-bot will inform the metric reporter of the response time, which is important to see the overall QoS.
+After each request to a pitaya server, the pitaya-bot will inform the metric reporter of the response time, which is important to see the overall QoS(Quality of Service).
 
 ### Summary
 
-After all the specs have been run, it will gather all the results obtained and return in the screen, informing if it was a total success or if some errors occurred.
+After all specs have been run, it will gather all the results obtained and return in the terminal, informing if it was a total success or if some errors occurred.
+
+## Workflows
+
+There is the listing of all possible workflows:
+
+1. [Local](#Local): Pitaya-bot will be instantiated locally and will request the server from current location
+2. [Local Manager](#Local Manager): A Pitaya-Bot manager will be instantiated locally and will create the Kubernetes Jobs inside kubernetes cluster from given config
+
+### Local
+
+It will instantiate an unit of pitaya-bot, which will run all specs located inside given directory. Each spec file will be run in a distinct go routine and also, each operation from the spec will be run in another distinct go routine.
+
+The local architecture is represented below:
+![local](./_static/LocalWorkflow.png "Local Pitaya-Bot")
+
+### Local Manager
+
+It will instantiate a pitaya-bot manager, which will create all configmaps, containing all specs and the config.yaml, to be used by each kubernetes job, that will also be created by the manager. After creating all configmaps and jobs, it will start a controller, that will be watching all the jobs created and after all of them finish their work or time out, it will clean everything that was created inside the kubernetes cluster.
+
+The local manager architecture is represented below:
+![local manager](./_static/LocalManagerWorkflow.png "Local Manager Pitaya-Bot")
+
