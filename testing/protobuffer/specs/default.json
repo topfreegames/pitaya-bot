@@ -1,0 +1,86 @@
+{
+  "numberOfInstances": 1,
+  "preRun": {
+    "function": "initializeDb"
+  },
+  "sequentialOperations": [
+    {
+      "type": "request",
+      "uri": "connector.playerHandler.create",
+      "expect": {
+        "$response.Code": {
+          "type": "string",
+          "value": "200"
+        } 
+      },
+      "store": {
+        "PlayerAccessToken": {
+          "type": "string",
+          "value": "$response.Player.AccessToken"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "uri": "reconnect"
+    },
+    {
+      "type": "request",
+      "uri": "connector.playerHandler.authenticate",
+      "args": { 
+        "accessToken": { 
+          "type": "string",
+          "value": "$store.PlayerAccessToken"
+        } 
+      },
+      "expect": {
+        "$response.Code": {
+          "type": "string",
+          "value": "200" 
+        },
+        "$response.Player.AccessToken": {
+          "type": "string",
+          "value": "$store.PlayerAccessToken"
+        }
+      }
+    }, 
+    {
+      "type": "request",
+      "uri": "connector.playerHandler.findmatch",
+      "args": {
+        "RoomType": {
+          "type": "string",
+          "value": "default"
+        }
+      }, 
+      "expect": {
+        "$response.Code": {
+          "type": "string",
+          "value": "200"
+        }
+      }
+    },
+    {
+      "type": "listen",
+      "uri": "connector.playerHandler.matchfound",
+      "timeout": 1000,
+      "expect": {
+        "$response.Code": {
+          "type": "string",
+          "value": "200"
+        },
+        "$response.IP": {
+          "type": "string",
+          "value": "127.0.0.1"
+        },
+        "$response.Port": {
+          "type": "int",
+          "value": 9090
+        }
+      }
+    }
+  ],
+  "postRun": {
+    "function": "saveToFile"
+  }
+}

@@ -1,0 +1,10 @@
+server:
+  host: "localhost:30124"
+  serializer: "protobuffer"
+  protobuffer:
+    docs: "connector.docsHandler.docs"
+    pushinfo:
+      routes:
+        - "connector.playerHandler.matchfound"
+      protos:
+        - "protos.FindMatchPush"

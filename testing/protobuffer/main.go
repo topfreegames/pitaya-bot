@@ -22,6 +22,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"strings"
@@ -31,24 +32,21 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya"
+	"github.com/topfreegames/pitaya-bot/testing/protobuffer/protos"
 	"github.com/topfreegames/pitaya/acceptor"
 	"github.com/topfreegames/pitaya/component"
-	"github.com/topfreegames/pitaya/serialize/json"
+	pitayaprotos "github.com/topfreegames/pitaya/protos"
+	"github.com/topfreegames/pitaya/serialize/protobuf"
 )
+
+// DocsHandler ...
+type DocsHandler struct {
+	component.Base
+}
 
 // PlayerHandler ...
 type PlayerHandler struct {
 	component.Base
-}
-
-// AuthArg ...
-type AuthArg struct {
-	AccessToken uuid.UUID `json:"accessToken"`
-}
-
-// findMatchArg ...
-type findMatchArg struct {
-	RoomType string `json:"roomType"`
 }
 
 // Player ...
@@ -58,25 +56,6 @@ type Player struct {
 	Name         string    `json:"name"`
 	SoftCurrency int       `json:"softCurrency"`
 	Trophies     int       `json:"trophies"`
-}
-
-// AuthResponse ...
-type AuthResponse struct {
-	Code   string  `json:"code"`
-	Msg    string  `json:"msg"`
-	Player *Player `json:"player"`
-}
-
-// FindMatchResponse ...
-type FindMatchResponse struct {
-	Code string `json:"code"`
-	Msg  string `json:"msg"`
-}
-
-type findMatchPush struct {
-	Code string `json:"code"`
-	IP   string `json:"ip"`
-	Port int    `json:"port"`
 }
 
 var (
@@ -89,15 +68,26 @@ var (
 	}
 )
 
+// Proto transform Player in proto.Player
+func (p *Player) getProto() *protos.Player {
+	return &protos.Player{
+		PrivateID:    p.PrivateID.String(),
+		AccessToken:  p.AccessToken.String(),
+		Name:         p.Name,
+		SoftCurrency: int32(p.SoftCurrency),
+		Trophies:     int32(p.Trophies),
+	}
+}
+
 // Create ...
-func (p *PlayerHandler) Create(ctx context.Context) (*AuthResponse, error) {
+func (p *PlayerHandler) Create(ctx context.Context) (*protos.AuthResponse, error) {
 	if err := bindSession(ctx, player.PrivateID); err != nil {
 		panic(err)
 	}
 
-	return &AuthResponse{
+	return &protos.AuthResponse{
 		Code:   "200",
-		Player: player,
+		Player: player.getProto(),
 	}, nil
 }
 
@@ -106,38 +96,70 @@ func bindSession(ctx context.Context, uid uuid.UUID) error {
 }
 
 // Authenticate ...
-func (p *PlayerHandler) Authenticate(ctx context.Context, arg *AuthArg) (*AuthResponse, error) {
+func (p *PlayerHandler) Authenticate(ctx context.Context, arg *protos.AuthArg) (*protos.AuthResponse, error) {
 	if err := bindSession(ctx, player.PrivateID); err != nil {
 		panic(err)
 	}
-
-	return &AuthResponse{
+	return &protos.AuthResponse{
 		Code:   "200",
-		Player: player,
+		Player: player.getProto(),
 	}, nil
 }
 
 // FindMatch ...
-func (p *PlayerHandler) FindMatch(ctx context.Context, arg *findMatchArg) (*FindMatchResponse, error) {
+func (p *PlayerHandler) FindMatch(ctx context.Context, arg *protos.FindMatchArg) (*protos.FindMatchResponse, error) {
 	go func() {
 		time.Sleep(200 * time.Millisecond)
-		response := findMatchPush{
+		response := &protos.FindMatchPush{
 			Code: "200",
 			IP:   "127.0.0.1",
 			Port: 9090,
 		}
-		if err := pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, []string{player.PrivateID.String()}, "connector"); err != nil {
+		uuids := []string{player.PrivateID.String()}
+		if _, err := pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, uuids, "connector"); err != nil {
 			panic(err)
 		}
 	}()
 
-	return &FindMatchResponse{
+	return &protos.FindMatchResponse{
 		Code: "200",
 	}, nil
 }
 
+// Docs returns documentation
+func (c *DocsHandler) Docs(ctx context.Context) (*pitayaprotos.Doc, error) {
+	d, err := pitaya.Documentation(true)
+	if err != nil {
+		return nil, err
+	}
+	doc, err := json.Marshal(d)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pitayaprotos.Doc{Doc: string(doc)}, nil
+}
+
+// Protos return protobuffers descriptors
+func (c *DocsHandler) Protos(ctx context.Context, message *pitayaprotos.ProtoNames) (*pitayaprotos.ProtoDescriptors, error) {
+	var descriptors [][]byte
+
+	for _, name := range message.GetName() {
+		protoDescriptor, err := pitaya.Descriptor(name)
+		if err != nil {
+			return nil, err
+		}
+		descriptors = append(descriptors, protoDescriptor)
+	}
+
+	return &pitayaprotos.ProtoDescriptors{
+		Desc: descriptors,
+	}, nil
+}
+
 func main() {
-	port := flag.Int("port", 30123, "the port to listen")
+	port := flag.Int("port", 30124, "the port to listen")
 	svType := flag.String("type", "connector", "the server type")
 	sdPrefix := flag.String("sdprefix", "pitaya/", "prefix to discover other servers")
 	debug := flag.Bool("debug", true, "turn on debug logging")
@@ -161,7 +183,13 @@ func main() {
 		component.WithNameFunc(strings.ToLower),
 	)
 
-	pitaya.SetSerializer(json.NewSerializer())
+	pitaya.Register(
+		&DocsHandler{},
+		component.WithName("docsHandler"),
+		component.WithNameFunc(strings.ToLower),
+	)
+
+	pitaya.SetSerializer(protobuf.NewSerializer())
 
 	l.Infof("Port: %d", *port)
 	pitaya.AddAcceptor(tcp)

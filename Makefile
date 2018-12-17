@@ -14,13 +14,23 @@ setup-protobuf-macos:
 	@go get -u github.com/gogo/protobuf/protoc-gen-gogofaster
 
 run-testing-server:
-	@docker-compose -f ./testing/docker-compose.yml up -d etcd nats && go run ./testing/main.go
+	@docker-compose -f ./testing/json/docker-compose.yml up -d etcd nats && go run ./testing/json/main.go
 
 run-testing-bots:
-	@go run *.go run -d ./testing/specs/ --config ./testing/config/config.yaml
+	@go run *.go run -d ./testing/json/specs/ --config ./testing/json/config/config.yaml
 
 kill-testing-deps:
-	@docker-compose -f ./testing/docker-compose.yml down; true
+	@docker-compose -f ./testing/json/docker-compose.yml down; true
+
+run-testing-proto-server:
+	@(cd ./testing/protobuffer/ && make protos-compile)
+	@docker-compose -f ./testing/protobuffer/docker-compose.yml up -d etcd nats && go run ./testing/protobuffer/main.go
+
+run-testing-proto-bots:
+	@go run *.go run --duration 10s -d ./testing/protobuffer/specs/ --config ./testing/protobuffer/config/config.yaml
+
+kill-testing-proto-deps:
+	@docker-compose -f ./testing/protobuffer/docker-compose.yml down; true
 
 build-linux:
 	@mkdir -p out
