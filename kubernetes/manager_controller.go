@@ -101,15 +101,15 @@ func (c *ManagerController) printManagerStatus(elapsed, duration float64) {
 				managerStatus = fmt.Sprintf("%s.", managerStatus)
 			}
 		}
-		managerStatus = fmt.Sprintf("%s]\n\n  JOB                                               | SUCCESS | FAILED\n+---------------------------------------------------+---------+--------+\n", managerStatus)
+		managerStatus = fmt.Sprintf("%s]\n\n  JOB                                      | ACTIVE | SUCCESS | FAILED\n+------------------------------------------+--------+---------+--------+\n", managerStatus)
 		for _, obj := range c.indexer.List() {
 			job := obj.(*batchv1.Job)
 			if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
 				continue
 			}
-			managerStatus = fmt.Sprintf("%s  %-49s | %-7d | %d\n", managerStatus, job.Name, job.Status.Succeeded, job.Status.Failed)
+			managerStatus = fmt.Sprintf("%s  %-40s | %-6d | %-7d | %d\n", managerStatus, job.Name, job.Status.Active, job.Status.Succeeded, job.Status.Failed)
 		}
-		managerStatus = fmt.Sprintf("%s+---------------------------------------------------+---------+--------+\n\n", managerStatus)
+		managerStatus = fmt.Sprintf("%s+------------------------------------------+--------+---------+--------+\n\n", managerStatus)
 		fmt.Printf(managerStatus)
 	}
 }
