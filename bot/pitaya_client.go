@@ -56,9 +56,9 @@ func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]strin
 
 	var pclient client.PitayaClient
 	if docs != "" {
-		cli := client.NewProto(docs, logrus.InfoLevel)
-		pclient = cli
-		if err := cli.LoadInfo(getProtoInfo(host, docs, pushinfo)); err != nil {
+		protoclient := client.NewProto(docs, logrus.InfoLevel)
+		pclient = protoclient
+		if err := protoclient.LoadInfo(getProtoInfo(host, docs, pushinfo)); err != nil {
 			return nil, err
 		}
 	} else {

@@ -64,6 +64,10 @@ The configurations needed to access the Pitaya server being tested
     - false
     - bool
     - Boolean to enable/disable TLS to connect with Pitaya server
+  * - server.type
+    - json
+    - string
+    - must be json or protobuffer
   * - server.protobuffer.docs
     - ""
     - string

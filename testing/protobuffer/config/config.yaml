@@ -1,7 +1,7 @@
 server:
   host: "localhost:30124"
+  type: "protobuffer"
   protobuffer:
-    # docs is required for protobuffer
     docs: "connector.docsHandler.docs"
     pushinfo:
       routes:

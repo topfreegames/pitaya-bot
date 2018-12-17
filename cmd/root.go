@@ -91,18 +91,19 @@ func initConfig() {
 
 func fillDefaultValues(config *viper.Viper) {
 	defaultsMap := map[string]interface{}{
-		"game":                 "",
-		"prometheus.port":      9191,
-		"server.host":          "localhost",
-		"server.tls":           false,
-		"storage.type":         "memory",
-		"kubernetes.config":    filepath.Join(homedir.HomeDir(), ".kube", "config"),
-		"kubernetes.masterurl": "",
-		"kubernetes.namespace": apiv1.NamespaceDefault,
-		"kubernetes.job.retry": 0,
-		"manager.maxrequeues":  5,
-		"manager.wait":         "1s",
-		"server.docs":          "",
+		"game":                    "",
+		"prometheus.port":         9191,
+		"server.host":             "localhost",
+		"server.tls":              false,
+		"server.type":             "json",
+		"server.protobuffer.docs": "connector.docsHandler.docs",
+		"storage.type":            "memory",
+		"kubernetes.config":       filepath.Join(homedir.HomeDir(), ".kube", "config"),
+		"kubernetes.masterurl":    "",
+		"kubernetes.namespace":    apiv1.NamespaceDefault,
+		"kubernetes.job.retry":    0,
+		"manager.maxrequeues":     5,
+		"manager.wait":            "1s",
 	}
 
 	for param := range defaultsMap {
