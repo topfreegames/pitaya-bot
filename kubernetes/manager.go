@@ -212,29 +212,29 @@ func createConfigMap(name, app string, binData map[string][]byte, logger logrus.
 }
 
 // DeleteAll will delete all kubernetes resources that have been allocated to make the jobs
-func DeleteAll(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) {
-	deleteAll(fmt.Sprintf("app=pitaya-bot,game=%s", config.GetString("game")), logger, clientset, config)
+func DeleteAll(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) {
+	deleteAll("pitaya-bot", logger, clientset, config)
 }
 
 // DeleteAllManager will delete all pitaya-bot managers that have been allocated inside kubernetes cluster
-func DeleteAllManager(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) {
-	deleteAll(fmt.Sprintf("app=pitaya-bot-manager,game=%s", config.GetString("game")), logger, clientset, config)
+func DeleteAllManager(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) {
+	deleteAll("pitaya-bot-manager", logger, clientset, config)
 }
 
-func deleteAll(labelSelector string, logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) {
-	err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: labelSelector})
+func deleteAll(app string, logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) {
+	err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete configMaps")
 	}
 	logger.Infof("Deleted configMaps")
 
-	err = clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: labelSelector})
+	err = clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete jobs")
 	}
 	logger.Infof("Deleted jobs")
 
-	err = clientset.CoreV1().Pods(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: labelSelector})
+	err = clientset.CoreV1().Pods(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete pods")
 	}

@@ -41,3 +41,49 @@ func TestDeployJobs(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(specs), len(jobs.Items))
 }
+
+func TestDeleteAllManager(t *testing.T) {
+	clientset := fake.NewSimpleClientset()
+	specs, err := launcher.GetSpecs("../testing/specs/")
+	assert.NoError(t, err)
+	config := cmd.CreateConfig("../testing/config/config.yaml")
+	pbKubernetes.CreateManagerPod(logrus.New(), clientset, config, specs, time.Minute)
+	configMaps, err := clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(configMaps.Items))
+	pods, err := clientset.CoreV1().Pods(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(pods.Items))
+	pbKubernetes.DeleteAllManager(logrus.New(), clientset, config)
+	configMaps, err = clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
+	assert.NoError(t, err)
+	for _, cm := range configMaps.Items {
+		assert.NotNil(t, cm.DeletionTimestamp)
+	}
+	pods, err = clientset.CoreV1().Pods(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
+	assert.NoError(t, err)
+	for _, po := range pods.Items {
+		assert.NotNil(t, po.DeletionTimestamp)
+	}
+}
+
+func TestDeleteAll(t *testing.T) {
+	clientset := fake.NewSimpleClientset()
+	specs, err := launcher.GetSpecs("../testing/specs/")
+	assert.NoError(t, err)
+	config := cmd.CreateConfig("../testing/config/config.yaml")
+	pbKubernetes.DeployJobs(logrus.New(), clientset, config, specs, time.Minute)
+	configMaps, err := clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, len(specs)+1, len(configMaps.Items))
+	jobs, err := clientset.BatchV1().Jobs(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, len(specs), len(jobs.Items))
+	pbKubernetes.DeleteAll(logrus.New(), clientset, config)
+	configMaps, err = clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, len(specs)+1, len(configMaps.Items))
+	jobs, err = clientset.BatchV1().Jobs(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, len(specs), len(jobs.Items))
+}

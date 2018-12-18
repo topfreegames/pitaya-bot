@@ -22,13 +22,13 @@ type ManagerController struct {
 	queue     workqueue.RateLimitingInterface
 	informer  cache.Controller
 	logger    logrus.FieldLogger
-	clientset *kubernetes.Clientset
+	clientset kubernetes.Interface
 	config    *viper.Viper
 	stopCh    chan struct{}
 }
 
 // NewManagerController is the ManagerController constructor
-func NewManagerController(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) *ManagerController {
+func NewManagerController(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) *ManagerController {
 	jobListWatcher := cache.NewListWatchFromClient(clientset.BatchV1().RESTClient(), "jobs", config.GetString("kubernetes.namespace"), fields.Everything())
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	indexer, informer := cache.NewIndexerInformer(jobListWatcher, &batchv1.Job{}, 0, cache.ResourceEventHandlerFuncs{
