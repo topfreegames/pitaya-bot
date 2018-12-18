@@ -30,14 +30,14 @@ func TestCreateManagerPod(t *testing.T) {
 	assert.Equal(t, 1, len(pods.Items))
 }
 
-func TestDeployJobs(t *testing.T) {
+func TestDeployJobsRemote(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
 	specs, err := launcher.GetSpecs("../testing/specs/")
 	assert.NoError(t, err)
 	config := cmd.CreateConfig("../testing/config/config.yaml")
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
-	pbKubernetes.DeployJobs(logger, clientset, config, specs, time.Minute)
+	pbKubernetes.DeployJobsRemote(logger, clientset, config, specs, time.Minute)
 	configMaps, err := clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
 	assert.NoError(t, err)
 	assert.Equal(t, len(specs)+1, len(configMaps.Items))
@@ -46,7 +46,7 @@ func TestDeployJobs(t *testing.T) {
 	assert.Equal(t, len(specs), len(jobs.Items))
 }
 
-func TestNotDeployJobsWithManager(t *testing.T) {
+func TestNotDeployJobsLocal(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
 	specs, err := launcher.GetSpecs("../testing/specs/")
 	assert.NoError(t, err)
@@ -54,7 +54,7 @@ func TestNotDeployJobsWithManager(t *testing.T) {
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
 	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, time.Minute)
-	pbKubernetes.DeployJobs(logger, clientset, config, specs, time.Minute)
+	pbKubernetes.DeployJobsLocal(logger, clientset, config, specs, time.Minute)
 	configMaps, err := clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(configMaps.Items))

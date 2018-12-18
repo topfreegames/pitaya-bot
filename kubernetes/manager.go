@@ -39,10 +39,11 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 		binData[specName] = specBinary
 	}
 	createConfigMap("manager-specs", "pitaya-bot-manager", binData, logger, clientset, config)
+	managerName := kubernetesAcceptedNamespace(fmt.Sprintf("manager-%s", config.GetString("game")))
 
 	deployment := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("manager-%s", config.GetString("game")),
+			Name: managerName,
 			Labels: map[string]string{
 				"app":  "pitaya-bot-manager",
 				"game": config.GetString("game"),
@@ -105,13 +106,26 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 	logger.Infof("Created manager pod")
 }
 
-// DeployJobs will deploy as many kubernetes jobs as number of spec files
-func DeployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
-	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
+// DeployJobsRemote will deploy as many kubernetes jobs as number of spec files from remote
+func DeployJobsRemote(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
+	if configMapExist("pitaya-bot", logger, clientset, config) {
+		return
+	}
+
+	deployJobs(logger, clientset, config, specs, duration)
+}
+
+// DeployJobsLocal will deploy as many kubernetes jobs as number of spec files from local
+func DeployJobsLocal(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
 	if configMapExist("pitaya-bot", logger, clientset, config) || configMapExist("pitaya-bot-manager", logger, clientset, config) {
 		return
 	}
 
+	deployJobs(logger, clientset, config, specs, duration)
+}
+
+func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
+	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
 	configBinary, err := ioutil.ReadFile(config.ConfigFileUsed())
 	if err != nil {
 		logger.Fatal(err)
