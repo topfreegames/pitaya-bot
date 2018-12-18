@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"fmt"
 	"math"
+	"sort"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -103,12 +104,17 @@ func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) 
 			}
 		}
 		managerStatus = fmt.Sprintf("%s] %s\n\n  JOB                                      | ACTIVE | SUCCESS | FAILED\n+------------------------------------------+--------+---------+--------+\n", managerStatus, elapsed.String())
+		jobList := make([]string, 0, len(c.indexer.List()))
 		for _, obj := range c.indexer.List() {
 			job := obj.(*batchv1.Job)
 			if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
 				continue
 			}
-			managerStatus = fmt.Sprintf("%s  %-40s | %-6d | %-7d | %d\n", managerStatus, job.Name, job.Status.Active, job.Status.Succeeded, job.Status.Failed)
+			jobList = append(jobList, fmt.Sprintf("  %-40s | %-6d | %-7d | %d\n", job.Name, job.Status.Active, job.Status.Succeeded, job.Status.Failed))
+		}
+		sort.Strings(jobList)
+		for _, job := range jobList {
+			managerStatus = fmt.Sprintf("%s%s", managerStatus, job)
 		}
 		managerStatus = fmt.Sprintf("%s+------------------------------------------+--------+---------+--------+\n\n", managerStatus)
 		fmt.Print(managerStatus)
