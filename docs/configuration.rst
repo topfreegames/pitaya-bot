@@ -97,7 +97,11 @@ Kubernetes
   * - kubernetes.config
     - $HOME/.kube/config
     - string
-    - Path where kubernetes config file is located
+    - Path where kubernetes configuration file is located
+  * - kubernetes.context
+    - 
+    - string
+    - Kubernetes configuration file context
   * - kubernetes.image
     - tfgco/pitaya-bot:latest
     - string

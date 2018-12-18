@@ -103,6 +103,7 @@ func fillDefaultValues(config *viper.Viper) {
 		"server.tls":           false,
 		"storage.type":         "memory",
 		"kubernetes.config":    filepath.Join(homedir.HomeDir(), ".kube", "config"),
+		"kubernetes.context":   "",
 		"kubernetes.image":     "tfgco/pitaya-bot:latest",
 		"kubernetes.masterurl": "",
 		"kubernetes.namespace": corev1.NamespaceDefault,

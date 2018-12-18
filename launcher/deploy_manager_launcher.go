@@ -8,6 +8,7 @@ import (
 	pbKubernetes "github.com/topfreegames/pitaya-bot/kubernetes"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 // LaunchManagerDeploy launches the deploy to instantiate a pitaya-bot manager pod inside kubernetes
@@ -22,7 +23,9 @@ func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration ti
 	}
 	logger.Infof("Found %d specs to be executed", len(specs))
 
-	kubeConfig, err := clientcmd.BuildConfigFromFlags(config.GetString("kubernetes.masterurl"), config.GetString("kubernetes.config"))
+	kubeConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: config.GetString("kubernetes.config")},
+		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: config.GetString("kubernetes.masterurl")}, CurrentContext: config.GetString("kubernetes.context")}).ClientConfig()
 	if err != nil {
 		logger.Fatal(err)
 	}
