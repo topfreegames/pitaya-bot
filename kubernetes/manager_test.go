@@ -46,6 +46,29 @@ func TestDeployJobs(t *testing.T) {
 	assert.Equal(t, len(specs), len(jobs.Items))
 }
 
+func TestNotDeployJobsWithManager(t *testing.T) {
+	clientset := fake.NewSimpleClientset()
+	specs, err := launcher.GetSpecs("../testing/specs/")
+	assert.NoError(t, err)
+	config := cmd.CreateConfig("../testing/config/config.yaml")
+	logger := logrus.New()
+	logger.Level = logrus.ErrorLevel
+	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, time.Minute)
+	pbKubernetes.DeployJobs(logger, clientset, config, specs, time.Minute)
+	configMaps, err := clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(configMaps.Items))
+	pods, err := clientset.CoreV1().Pods(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(pods.Items))
+	configMaps, err = clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(configMaps.Items))
+	jobs, err := clientset.BatchV1().Jobs(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(jobs.Items))
+}
+
 func TestDeleteAllManager(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
 	config := cmd.CreateConfig("../testing/config/config.yaml")

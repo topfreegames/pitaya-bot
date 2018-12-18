@@ -41,7 +41,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 
 	deployment := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "manager",
+			Name: fmt.Sprintf("manager-%s", config.GetString("game")),
 			Labels: map[string]string{
 				"app":  "pitaya-bot-manager",
 				"game": config.GetString("game"),
@@ -97,7 +97,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 // DeployJobs will deploy as many kubernetes jobs as number of spec files
 func DeployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
-	if configMapExist("pitaya-bot", logger, clientset, config) {
+	if configMapExist("pitaya-bot", logger, clientset, config) || configMapExist("pitaya-bot-manager", logger, clientset, config) {
 		return
 	}
 
