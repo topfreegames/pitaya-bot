@@ -191,7 +191,7 @@ func (c *ManagerController) getJobTimes(totalDuration time.Duration) (time.Durat
 		var err error
 		args := job.Spec.Template.Spec.Containers[0].Args
 		for i, arg := range args {
-			if arg == "-d" || arg == "--duration" {
+			if arg == "--duration" {
 				totalDuration, err = time.ParseDuration(args[i+1])
 				if err != nil {
 					c.logger.Errorf("Error parsing time duration %v: %v", args[i+1], err)
