@@ -18,6 +18,14 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  digest = "1:b520b55fc1146c5b0eea03b07233f7a3d4a9be985c037c91ea6b82ecb81bd521"
+  name = "github.com/bitly/go-simplejson"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "aabad6e819789e569bd6aabf444c935aa9ba1e44"
+  version = "v0.5.0"
+
+[[projects]]
   digest = "1:5646e6da151d7d087a0de5790f2d543cf0a04bb1f565de2f4d9e53b24545c462"
   name = "github.com/coreos/etcd"
   packages = [
@@ -58,6 +66,17 @@
   version = "v1.4.7"
 
 [[projects]]
+  digest = "1:0594af97b2f4cec6554086eeace6597e20a4b69466eb4ada25adf9f4300dddd2"
+  name = "github.com/garyburd/redigo"
+  packages = [
+    "internal",
+    "redis",
+  ]
+  pruneopts = "UT"
+  revision = "a69d19351219b6dd56f274f96d85a7014a2ec34e"
+  version = "v1.6.0"
+
+[[projects]]
   digest = "1:e1ff887e232b2d8f4f7c7db15a5fac7be418025afc4dda53c59c765dbb5aa6b4"
   name = "github.com/go-playground/locales"
   packages = [
@@ -90,14 +109,19 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:17fe264ee908afc795734e8c4e63db2accabaf57326dbf21763a7d6b86096260"
+  digest = "1:a900f61eec53062419a966d0cf0f4afdce2eefdf39d976fe2fc7b7289b99c038"
   name = "github.com/golang/protobuf"
   packages = [
+    "jsonpb",
     "proto",
+    "protoc-gen-go/descriptor",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
+    "ptypes/empty",
+    "ptypes/struct",
     "ptypes/timestamp",
+    "ptypes/wrappers",
   ]
   pruneopts = "UT"
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
@@ -203,6 +227,19 @@
   pruneopts = "UT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
+
+[[projects]]
+  digest = "1:4fdee5292142b3939400c8d6070e19041ee385bfec35bae6c9a05a47467eee9a"
+  name = "github.com/jhump/protoreflect"
+  packages = [
+    "desc",
+    "desc/internal",
+    "dynamic",
+    "internal",
+  ]
+  pruneopts = "UT"
+  revision = "f90aa080ba36727321f2bc4c61f2a282f756bfab"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:3e551bbb3a7c0ab2a2bf4660e7fcad16db089fdcfbb44b0199e62838038623ea"
@@ -424,8 +461,16 @@
   version = "v1.2.2"
 
 [[projects]]
+  digest = "1:a35142e7dae983dc77f9822b754f1d9e41bfe9767d11585ab24dcd2ec871be0f"
+  name = "github.com/topfreegames/go-workers"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "debd68e29f6123083fb906c7a6352c748203538a"
+  version = "v0.0.1"
+
+[[projects]]
   branch = "master"
-  digest = "1:5bc6d095b978cf9be65bcbab5267f8898e5d5152df9e27aa1d641bdd5757e4fb"
+  digest = "1:d2ba8f7e92afab2678ded596e66162bea21256909ba7bebca1e2cf07bed02683"
   name = "github.com/topfreegames/pitaya"
   packages = [
     ".",
@@ -435,15 +480,16 @@
     "cluster",
     "component",
     "config",
+    "conn/codec",
+    "conn/message",
+    "conn/packet",
     "constants",
     "context",
     "defaultpipelines",
     "docgenerator",
     "errors",
+    "groups",
     "interfaces",
-    "internal/codec",
-    "internal/message",
-    "internal/packet",
     "logger",
     "metrics",
     "modules",
@@ -454,15 +500,25 @@
     "router",
     "serialize",
     "serialize/json",
+    "serialize/protobuf",
     "service",
     "session",
     "timer",
     "tracing",
     "util",
     "util/compression",
+    "worker",
   ]
   pruneopts = "UT"
-  revision = "45608d11f9c5dd02b5ecaa8553045a89691771b5"
+  revision = "4c4013df43ff6278aa92b63a7f5b1276f5f0ae85"
+
+[[projects]]
+  digest = "1:a988307f0c4c8015c00cc122433879cf8eb4da05bd31b2f578795531a7815b13"
+  name = "github.com/topfreegames/viaproxy"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "05f07d250022488417546d8056f49856b253c712"
+  version = "v0.1.2"
 
 [[projects]]
   branch = "master"
@@ -850,6 +906,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/gogo/protobuf/proto",
     "github.com/google/uuid",
     "github.com/prometheus/client_golang/prometheus",
     "github.com/sirupsen/logrus",
@@ -862,9 +919,13 @@
     "github.com/topfreegames/pitaya/component",
     "github.com/topfreegames/pitaya/constants",
     "github.com/topfreegames/pitaya/logger",
+    "github.com/topfreegames/pitaya/protos",
     "github.com/topfreegames/pitaya/serialize/json",
+    "github.com/topfreegames/pitaya/serialize/protobuf",
+    "k8s.io/api/apps/v1",
     "k8s.io/api/batch/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/fields",
     "k8s.io/apimachinery/pkg/util/runtime",
@@ -874,6 +935,7 @@
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
+    "k8s.io/client-go/tools/clientcmd/api",
     "k8s.io/client-go/util/homedir",
     "k8s.io/client-go/util/workqueue",
   ]

@@ -214,7 +214,24 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 		b.logger.Fatal("Bot already connected")
 	}
 
-	client, err := NewPClient(b.host, b.config.GetBool("server.tls"))
+	pushinfoprotos := b.config.GetStringSlice("server.protobuffer.pushinfo.protos")
+	pushinforoutes := b.config.GetStringSlice("server.protobuffer.pushinfo.routes")
+	if len(pushinforoutes) != len(pushinfoprotos) {
+		b.logger.Fatal("Invalid number of protos routes or protos.")
+	}
+	pushinfo := make(map[string]string)
+	for i := range pushinfoprotos {
+		pushinfo[pushinforoutes[i]] = pushinfoprotos[i]
+	}
+
+	servertype := b.config.GetString("server.serializer")
+	docs := ""
+	if servertype == "protobuffer" {
+		docs = b.config.GetString("server.protobuffer.docs")
+	}
+
+	tls := b.config.GetBool("server.tls")
+	client, err := NewPClient(b.host, tls, docs, pushinfo)
 	if err != nil {
 		b.logger.Error("Unable to create client...")
 		return err

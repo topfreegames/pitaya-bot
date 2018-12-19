@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package protos;
+
+// Response represents a rpc message
+message Player {
+	string PrivateID = 1;
+	string AccessToken = 2;
+	string Name = 3;
+	int32 SoftCurrency = 4;
+	int32 Trophies = 5;
+}
+
+message AuthResponse {
+	string Code = 1;
+	string Msg = 2;
+	Player Player = 3;
+}
+
+message AuthArg {
+	string accessToken = 1;
+}
+
+message FindMatchArg {
+	string RoomType = 1;
+}
+
+message FindMatchResponse {
+	string Code = 1;
+	string Msg = 2;
+}
+
+message FindMatchPush {
+	string Code = 1;
+  	string IP = 2;
+  	int32 Port = 3;
+}
