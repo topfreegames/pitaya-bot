@@ -28,7 +28,8 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 	if err != nil {
 		logger.Fatal(err)
 	}
-	createConfigMap("manager-config", "pitaya-bot-manager", map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
+	managerConfig := kubernetesAcceptedNamespace(fmt.Sprintf("%s-manager-config", config.GetString("game")))
+	createConfigMap(managerConfig, "pitaya-bot-manager", map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
 
 	binData := make(map[string][]byte, len(specs))
 	for _, spec := range specs {
@@ -36,11 +37,12 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 		if err != nil {
 			logger.Fatal(err)
 		}
-		specName := kubernetesAcceptedNamespace(filepath.Base(spec.Name))
-		binData[specName] = specBinary
+		binData[filepath.Base(spec.Name)] = specBinary
 	}
-	createConfigMap("manager-specs", "pitaya-bot-manager", binData, logger, clientset, config)
-	managerName := kubernetesAcceptedNamespace(fmt.Sprintf("manager-%s", config.GetString("game")))
+	managerSpecs := kubernetesAcceptedNamespace(fmt.Sprintf("%s-manager-specs", config.GetString("game")))
+	createConfigMap(managerSpecs, "pitaya-bot-manager", binData, logger, clientset, config)
+
+	managerName := kubernetesAcceptedNamespace(fmt.Sprintf("%s-manager", config.GetString("game")))
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -68,15 +70,15 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 					Containers: []corev1.Container{
 						{
 							ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
-							Name:            "pitaya-bot-manager",
+							Name:            managerName,
 							Image:           config.GetString("kubernetes.image"),
 							VolumeMounts: []corev1.VolumeMount{
 								{
-									Name:      "manager-specs",
+									Name:      managerSpecs,
 									MountPath: "/etc/pitaya-bot/specs",
 								},
 								{
-									Name:      "manager-config",
+									Name:      managerConfig,
 									MountPath: "/etc/pitaya-bot",
 								},
 							},
@@ -96,18 +98,18 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 					},
 					Volumes: []corev1.Volume{
 						{
-							Name: "manager-specs",
+							Name: managerSpecs,
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{Name: "manager-specs"},
+									LocalObjectReference: corev1.LocalObjectReference{Name: managerSpecs},
 								},
 							},
 						},
 						{
-							Name: "manager-config",
+							Name: managerConfig,
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{Name: "manager-config"},
+									LocalObjectReference: corev1.LocalObjectReference{Name: managerConfig},
 								},
 							},
 						},
@@ -148,15 +150,16 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 		logger.Fatal(err)
 	}
 
-	createConfigMap("config", "pitaya-bot", map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
+	configName := kubernetesAcceptedNamespace(fmt.Sprintf("%s-config", config.GetString("game")))
+	createConfigMap(configName, "pitaya-bot", map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
 
 	for _, spec := range specs {
 		specBinary, err := ioutil.ReadFile(spec.Name)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		specName := kubernetesAcceptedNamespace(filepath.Base(spec.Name))
-		createConfigMap(specName, "pitaya-bot", map[string][]byte{specName: specBinary}, logger, clientset, config)
+		specName := kubernetesAcceptedNamespace(fmt.Sprintf("%s-%s", config.GetString("game"), filepath.Base(spec.Name)))
+		createConfigMap(specName, "pitaya-bot", map[string][]byte{filepath.Base(spec.Name): specBinary}, logger, clientset, config)
 
 		deployment := &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
@@ -182,15 +185,15 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 						Containers: []corev1.Container{
 							{
 								ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
-								Name:            "pitaya-bot",
+								Name:            specName,
 								Image:           config.GetString("kubernetes.image"),
 								VolumeMounts: []corev1.VolumeMount{
 									{
-										Name:      "spec",
+										Name:      specName,
 										MountPath: "/etc/pitaya-bot/specs",
 									},
 									{
-										Name:      "config",
+										Name:      configName,
 										MountPath: "/etc/pitaya-bot",
 									},
 								},
@@ -210,7 +213,7 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 						},
 						Volumes: []corev1.Volume{
 							{
-								Name: "spec",
+								Name: specName,
 								VolumeSource: corev1.VolumeSource{
 									ConfigMap: &corev1.ConfigMapVolumeSource{
 										LocalObjectReference: corev1.LocalObjectReference{Name: specName},
@@ -218,10 +221,10 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 								},
 							},
 							{
-								Name: "config",
+								Name: configName,
 								VolumeSource: corev1.VolumeSource{
 									ConfigMap: &corev1.ConfigMapVolumeSource{
-										LocalObjectReference: corev1.LocalObjectReference{Name: "config"},
+										LocalObjectReference: corev1.LocalObjectReference{Name: configName},
 									},
 								},
 							},
