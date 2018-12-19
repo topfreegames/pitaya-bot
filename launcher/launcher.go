@@ -17,6 +17,9 @@ import (
 	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/runner"
 	"github.com/topfreegames/pitaya-bot/state"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func readSpec(specPath string) (*models.Spec, error) {
@@ -41,6 +44,20 @@ func validFile(info os.FileInfo) bool {
 		return true
 	}
 	return false
+}
+
+func newKubernetesClientset(config *viper.Viper, logger logrus.FieldLogger) *kubernetes.Clientset {
+	kubeConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: config.GetString("kubernetes.config")},
+		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: config.GetString("kubernetes.masterurl")}, CurrentContext: config.GetString("kubernetes.context")}).ClientConfig()
+	if err != nil {
+		logger.Fatal(err)
+	}
+	clientset, err := kubernetes.NewForConfig(kubeConfig)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	return clientset
 }
 
 // GetSpecs will walk through specsDirectory and transform all spec JSONs into Spec objects
