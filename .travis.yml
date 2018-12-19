@@ -7,6 +7,7 @@ sudo: false
 before_script: make setup-ci
 script: make test
 after_success:
+  - make build-linux
   - ./scripts/push_to_docker.sh
 branches:
   only:
