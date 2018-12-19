@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya-bot/models"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -18,7 +19,7 @@ import (
 
 // CreateManagerPod will deploy a kubernetes pod containing a pitaya-bot manager
 func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
-	deploymentsClient := clientset.CoreV1().Pods(config.GetString("kubernetes.namespace"))
+	deploymentsClient := clientset.AppsV1().Deployments(config.GetString("kubernetes.namespace"))
 	if configMapExist("pitaya-bot-manager", logger, clientset, config) {
 		return
 	}
@@ -41,7 +42,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 	createConfigMap("manager-specs", "pitaya-bot-manager", binData, logger, clientset, config)
 	managerName := kubernetesAcceptedNamespace(fmt.Sprintf("manager-%s", config.GetString("game")))
 
-	deployment := &corev1.Pod{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: managerName,
 			Labels: map[string]string{
@@ -49,51 +50,66 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 				"game": config.GetString("game"),
 			},
 		},
-		Spec: corev1.PodSpec{
-			RestartPolicy: corev1.RestartPolicyOnFailure,
-			Containers: []corev1.Container{
-				{
-					ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
-					Name:            "pitaya-bot-manager",
-					Image:           config.GetString("kubernetes.image"),
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "manager-specs",
-							MountPath: "/etc/pitaya-bot/specs",
-						},
-						{
-							Name:      "manager-config",
-							MountPath: "/etc/pitaya-bot",
-						},
-					},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
-							corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
-						},
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
-							corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
-						},
-					},
-					Command: []string{"./main"},
-					Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager"},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app":  "pitaya-bot-manager",
+					"game": config.GetString("game"),
 				},
 			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "manager-specs",
-					VolumeSource: corev1.VolumeSource{
-						ConfigMap: &corev1.ConfigMapVolumeSource{
-							LocalObjectReference: corev1.LocalObjectReference{Name: "manager-specs"},
-						},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app":  "pitaya-bot-manager",
+						"game": config.GetString("game"),
 					},
 				},
-				{
-					Name: "manager-config",
-					VolumeSource: corev1.VolumeSource{
-						ConfigMap: &corev1.ConfigMapVolumeSource{
-							LocalObjectReference: corev1.LocalObjectReference{Name: "manager-config"},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
+							Name:            "pitaya-bot-manager",
+							Image:           config.GetString("kubernetes.image"),
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "manager-specs",
+									MountPath: "/etc/pitaya-bot/specs",
+								},
+								{
+									Name:      "manager-config",
+									MountPath: "/etc/pitaya-bot",
+								},
+							},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
+									corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
+								},
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
+									corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
+								},
+							},
+							Command: []string{"./main"},
+							Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager"},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "manager-specs",
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "manager-specs"},
+								},
+							},
+						},
+						{
+							Name: "manager-config",
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "manager-config"},
+								},
+							},
 						},
 					},
 				},
@@ -270,6 +286,12 @@ func deleteAll(app string, logger logrus.FieldLogger, clientset kubernetes.Inter
 		logger.WithError(err).Error("Failed to delete jobs")
 	}
 	logger.Infof("Deleted jobs")
+
+	err = clientset.AppsV1().Deployments(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
+	if err != nil {
+		logger.WithError(err).Error("Failed to delete deployments")
+	}
+	logger.Infof("Deleted deployments")
 
 	err = clientset.CoreV1().Pods(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
 	if err != nil {

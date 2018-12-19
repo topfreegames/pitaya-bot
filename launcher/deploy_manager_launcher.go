@@ -35,6 +35,7 @@ func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration ti
 	}
 
 	if shouldDeleteAllResources {
+		pbKubernetes.DeleteAllManager(logger, clientset, config)
 		pbKubernetes.DeleteAll(logger, clientset, config)
 		return
 	}
