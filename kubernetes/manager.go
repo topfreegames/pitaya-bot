@@ -53,8 +53,9 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 			RestartPolicy: corev1.RestartPolicyOnFailure,
 			Containers: []corev1.Container{
 				{
-					Name:  "pitaya-bot-manager",
-					Image: config.GetString("kubernetes.image"),
+					ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
+					Name:            "pitaya-bot-manager",
+					Image:           config.GetString("kubernetes.image"),
 					VolumeMounts: []corev1.VolumeMount{
 						{
 							Name:      "manager-specs",
@@ -164,8 +165,9 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 						RestartPolicy: corev1.RestartPolicyNever,
 						Containers: []corev1.Container{
 							{
-								Name:  "pitaya-bot",
-								Image: config.GetString("kubernetes.image"),
+								ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
+								Name:            "pitaya-bot",
+								Image:           config.GetString("kubernetes.image"),
 								VolumeMounts: []corev1.VolumeMount{
 									{
 										Name:      "spec",

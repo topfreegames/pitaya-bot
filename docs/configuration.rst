@@ -110,6 +110,10 @@ Kubernetes
     - tfgco/pitaya-bot:latest
     - string
     - Pitaya-Bot docker image that kubernetes will use to deploy pods
+  * - kubernetes.imagepull
+    - Always
+    - string
+    - Kubernetes docker image pull policy
   * - kubernetes.masterurl
     - 
     - string

@@ -106,6 +106,7 @@ func fillDefaultValues(config *viper.Viper) {
 		"kubernetes.context":   "",
 		"kubernetes.cpu":       "250m",
 		"kubernetes.image":     "tfgco/pitaya-bot:latest",
+		"kubernetes.imagepull": "Always",
 		"kubernetes.masterurl": "",
 		"kubernetes.memory":    "256Mi",
 		"kubernetes.namespace": corev1.NamespaceDefault,
