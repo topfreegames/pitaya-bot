@@ -25,7 +25,7 @@ func TestCreateManagerPod(t *testing.T) {
 	configMaps, err := clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(configMaps.Items))
-	pods, err := clientset.CoreV1().Pods(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
+	pods, err := clientset.AppsV1().Deployments(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(pods.Items))
 }
@@ -58,7 +58,7 @@ func TestNotDeployJobsLocal(t *testing.T) {
 	configMaps, err := clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(configMaps.Items))
-	pods, err := clientset.CoreV1().Pods(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
+	pods, err := clientset.AppsV1().Deployments(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot-manager,game="})
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(pods.Items))
 	configMaps, err = clientset.CoreV1().ConfigMaps(corev1.NamespaceDefault).List(metav1.ListOptions{LabelSelector: "app=pitaya-bot,game="})
@@ -75,13 +75,13 @@ func TestDeleteAllManager(t *testing.T) {
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
 	pbKubernetes.DeleteAllManager(logger, clientset, config)
-	assert.Equal(t, 3, len(clientset.Actions()))
-	resources := make([]string, 0, 3)
+	assert.Equal(t, 4, len(clientset.Actions()))
+	resources := make([]string, 0, 4)
 	for _, a := range clientset.Actions() {
 		assert.Equal(t, "delete-collection", a.GetVerb())
 		resources = append(resources, a.GetResource().GroupResource().String())
 	}
-	assert.ElementsMatch(t, []string{"configmaps", "jobs.batch", "pods"}, resources)
+	assert.ElementsMatch(t, []string{"configmaps", "jobs.batch", "pods", "deployments.apps"}, resources)
 }
 
 func TestDeleteAll(t *testing.T) {
@@ -90,11 +90,11 @@ func TestDeleteAll(t *testing.T) {
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
 	pbKubernetes.DeleteAll(logger, clientset, config)
-	assert.Equal(t, 3, len(clientset.Actions()))
-	resources := make([]string, 0, 3)
+	assert.Equal(t, 4, len(clientset.Actions()))
+	resources := make([]string, 0, 4)
 	for _, a := range clientset.Actions() {
 		assert.Equal(t, "delete-collection", a.GetVerb())
 		resources = append(resources, a.GetResource().GroupResource().String())
 	}
-	assert.ElementsMatch(t, []string{"configmaps", "jobs.batch", "pods"}, resources)
+	assert.ElementsMatch(t, []string{"configmaps", "jobs.batch", "pods", "deployments.apps"}, resources)
 }
