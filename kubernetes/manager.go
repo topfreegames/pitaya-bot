@@ -67,12 +67,12 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 					},
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.Quantity{Format: "250m"},
-							corev1.ResourceMemory: resource.Quantity{Format: "256Mi"},
+							corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
+							corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
 						},
 						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.Quantity{Format: "250m"},
-							corev1.ResourceMemory: resource.Quantity{Format: "256Mi"},
+							corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
+							corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
 						},
 					},
 					Command: []string{"./main"},
@@ -178,12 +178,12 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 								},
 								Resources: corev1.ResourceRequirements{
 									Requests: corev1.ResourceList{
-										corev1.ResourceCPU:    resource.Quantity{Format: "250m"},
-										corev1.ResourceMemory: resource.Quantity{Format: "256Mi"},
+										corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
+										corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
 									},
 									Limits: corev1.ResourceList{
-										corev1.ResourceCPU:    resource.Quantity{Format: "250m"},
-										corev1.ResourceMemory: resource.Quantity{Format: "256Mi"},
+										corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
+										corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
 									},
 								},
 								Command: []string{"./main"},

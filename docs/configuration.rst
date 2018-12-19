@@ -102,6 +102,10 @@ Kubernetes
     - 
     - string
     - Kubernetes configuration file context
+  * - kubernetes.cpu
+    - 250m
+    - string
+    - CPU which will be allocated for each Kubernetes Pod
   * - kubernetes.image
     - tfgco/pitaya-bot:latest
     - string
@@ -110,6 +114,10 @@ Kubernetes
     - 
     - string
     - Master URL for Kubernetes
+  * - kubernetes.memory
+    - 256Mi
+    - string
+    - RAM Memory which will be allocated for each Kubernetes Pod
   * - kubernetes.namespace
     - default
     - string
