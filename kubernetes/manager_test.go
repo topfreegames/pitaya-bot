@@ -16,9 +16,9 @@ import (
 
 func TestCreateManagerPod(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	specs, err := launcher.GetSpecs("../testing/specs/")
+	specs, err := launcher.GetSpecs("../testing/json/specs/")
 	assert.NoError(t, err)
-	config := cmd.CreateConfig("../testing/config/config.yaml")
+	config := cmd.CreateConfig("../testing/json/config/config.yaml")
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
 	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, time.Minute)
@@ -32,9 +32,9 @@ func TestCreateManagerPod(t *testing.T) {
 
 func TestDeployJobsRemote(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	specs, err := launcher.GetSpecs("../testing/specs/")
+	specs, err := launcher.GetSpecs("../testing/json/specs/")
 	assert.NoError(t, err)
-	config := cmd.CreateConfig("../testing/config/config.yaml")
+	config := cmd.CreateConfig("../testing/json/config/config.yaml")
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
 	pbKubernetes.DeployJobsRemote(logger, clientset, config, specs, time.Minute)
@@ -48,9 +48,9 @@ func TestDeployJobsRemote(t *testing.T) {
 
 func TestNotDeployJobsLocal(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	specs, err := launcher.GetSpecs("../testing/specs/")
+	specs, err := launcher.GetSpecs("../testing/json/specs/")
 	assert.NoError(t, err)
-	config := cmd.CreateConfig("../testing/config/config.yaml")
+	config := cmd.CreateConfig("../testing/json/config/config.yaml")
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
 	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, time.Minute)
@@ -71,7 +71,7 @@ func TestNotDeployJobsLocal(t *testing.T) {
 
 func TestDeleteAllManager(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	config := cmd.CreateConfig("../testing/config/config.yaml")
+	config := cmd.CreateConfig("../testing/json/config/config.yaml")
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
 	pbKubernetes.DeleteAllManager(logger, clientset, config)
@@ -86,7 +86,7 @@ func TestDeleteAllManager(t *testing.T) {
 
 func TestDeleteAll(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	config := cmd.CreateConfig("../testing/config/config.yaml")
+	config := cmd.CreateConfig("../testing/json/config/config.yaml")
 	logger := logrus.New()
 	logger.Level = logrus.ErrorLevel
 	pbKubernetes.DeleteAll(logger, clientset, config)
