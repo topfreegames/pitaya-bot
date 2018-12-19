@@ -73,7 +73,7 @@ The local manager architecture is represented below:
 
 ### Remote Manager
 
-It will instantiate a pitaya-bot manager inside kubernetes cluster, which will create all configmaps, containing all specs and config.yaml, to be used by each kubernetes job. After creating all configmaps and jobs, it will start a controller, that will be watching all the jobs created and after all of them finish their work or time out, it will clean everything that has created and will also delete itself with the its configmaps.
+It will instantiate a pitaya-bot manager inside kubernetes cluster, which will create all configmaps, containing all specs and config.yaml, to be used by each kubernetes job. After creating all configmaps and jobs, it will start a controller, that will be watching all the jobs created and after all of them finish their work or time out, it will clean everything that was created and will also delete itself with the its configmaps.
 
 The remote manager architecture is represented below:
 
@@ -85,4 +85,4 @@ It will create a kubernetes deployment, which will be running a pitaya-bot remot
 
 ### Delete All
 
-It will delete everything that is related to pitaya-bot, which is inside the kubernetes cluster and is mentioned in the config.yaml.
+It will delete everything that is related to pitaya-bot inside the kubernetes cluster and is mentioned in the config.yaml.

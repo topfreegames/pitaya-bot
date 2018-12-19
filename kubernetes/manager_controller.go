@@ -91,7 +91,8 @@ func (c *ManagerController) Run(threadiness int, duration time.Duration) {
 }
 
 func (c *ManagerController) waitJobCreation() {
-	ticker := time.Tick(time.Second)
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 	for {
 		jobs, err := c.clientset.BatchV1().Jobs(c.config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
 		if err != nil {
@@ -100,15 +101,16 @@ func (c *ManagerController) waitJobCreation() {
 		if len(jobs.Items) > 0 {
 			return
 		}
-		<-ticker
+		<-ticker.C
 	}
 }
 
 func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) {
-	ticker := time.Tick(500 * time.Millisecond)
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
 	var spinner rune
 	for {
-		<-ticker
+		<-ticker.C
 		spinner = spin(spinner)
 		elapsed += 500 * time.Millisecond
 		progress := int(math.Max(math.Min(100.0, float64(elapsed)/float64(duration)*100), 0.0))
