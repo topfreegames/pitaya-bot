@@ -21,5 +21,5 @@ func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration ti
 	logger.Infof("Found %d specs to be executed", len(specs))
 
 	clientset := newKubernetesClientset(config, logger)
-	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, duration)
+	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, duration, shouldReportMetrics)
 }

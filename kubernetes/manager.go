@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -18,7 +19,7 @@ import (
 )
 
 // CreateManagerPod will deploy a kubernetes pod containing a pitaya-bot manager
-func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
+func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration, shouldReportMetrics bool) {
 	deploymentsClient := clientset.AppsV1().Deployments(config.GetString("kubernetes.namespace"))
 	if configMapExist("pitaya-bot-manager", logger, clientset, config) {
 		return
@@ -91,7 +92,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 								},
 							},
 							Command: []string{"./main"},
-							Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager"},
+							Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager", "--report-metrics", strconv.FormatBool(shouldReportMetrics)},
 						},
 					},
 					Volumes: []corev1.Volume{
@@ -124,24 +125,24 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 }
 
 // DeployJobsRemote will deploy as many kubernetes jobs as number of spec files from remote
-func DeployJobsRemote(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
+func DeployJobsRemote(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration, shouldReportMetrics bool) {
 	if configMapExist("pitaya-bot", logger, clientset, config) {
 		return
 	}
 
-	deployJobs(logger, clientset, config, specs, duration)
+	deployJobs(logger, clientset, config, specs, duration, shouldReportMetrics)
 }
 
 // DeployJobsLocal will deploy as many kubernetes jobs as number of spec files from local
-func DeployJobsLocal(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
+func DeployJobsLocal(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration, shouldReportMetrics bool) {
 	if configMapExist("pitaya-bot", logger, clientset, config) || configMapExist("pitaya-bot-manager", logger, clientset, config) {
 		return
 	}
 
-	deployJobs(logger, clientset, config, specs, duration)
+	deployJobs(logger, clientset, config, specs, duration, shouldReportMetrics)
 }
 
-func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration) {
+func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration, shouldReportMetrics bool) {
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
 	configBinary, err := ioutil.ReadFile(config.ConfigFileUsed())
 	if err != nil {
@@ -205,7 +206,7 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 									},
 								},
 								Command: []string{"./main"},
-								Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "local"},
+								Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "local", "--report-metrics", strconv.FormatBool(shouldReportMetrics)},
 							},
 						},
 						Volumes: []corev1.Volume{

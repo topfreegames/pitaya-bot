@@ -22,7 +22,7 @@ func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration tim
 
 	clientset := newKubernetesClientset(config, logger)
 
-	pbKubernetes.DeployJobsLocal(logger, clientset, config, specs, duration)
+	pbKubernetes.DeployJobsLocal(logger, clientset, config, specs, duration, shouldReportMetrics)
 	controller := pbKubernetes.NewManagerController(logger, clientset, config)
 	controller.Run(1, duration)
 	pbKubernetes.DeleteAll(logger, clientset, config)
