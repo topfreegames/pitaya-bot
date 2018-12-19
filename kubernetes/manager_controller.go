@@ -81,7 +81,7 @@ func (c *ManagerController) Run(threadiness int, duration time.Duration) {
 		close(c.stopCh)
 	}
 
-	go c.printManagerStatus(c.getPodElapsedTime(), duration)
+	go c.printManagerStatus(c.getJobTimes(duration))
 
 	<-c.stopCh
 	c.logger.Infof("Stopping Local Manager Controller")
@@ -182,15 +182,26 @@ func (c *ManagerController) finishedAllJobs() bool {
 	return true
 }
 
-func (c *ManagerController) getPodElapsedTime() time.Duration {
+func (c *ManagerController) getJobTimes(totalDuration time.Duration) (time.Duration, time.Duration) {
 	for _, obj := range c.indexer.List() {
 		job := obj.(*batchv1.Job)
 		if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
 			continue
 		}
-		return time.Since(job.Status.StartTime.Local())
+		var err error
+		args := job.Spec.Template.Spec.Containers[0].Args
+		for i, arg := range args {
+			if arg == "-d" || arg == "--duration" {
+				totalDuration, err = time.ParseDuration(args[i+1])
+				if err != nil {
+					c.logger.Errorf("Error parsing time duration %v: %v", args[i+1], err)
+				}
+				break
+			}
+		}
+		return time.Since(job.Status.StartTime.Local()), totalDuration
 	}
-	return 0
+	return 0, totalDuration
 }
 
 func (c *ManagerController) handleErr(err error, key interface{}) {

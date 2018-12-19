@@ -12,7 +12,7 @@ import (
 
 func TestNewManagerController(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	config := cmd.CreateConfig("../testing/config/config.yaml")
+	config := cmd.CreateConfig("../testing/json/config/config.yaml")
 	managerController := pbKubernetes.NewManagerController(logrus.New(), clientset, config)
 	assert.NotNil(t, managerController)
 }
