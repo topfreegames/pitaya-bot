@@ -22,4 +22,6 @@ func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration ti
 
 	clientset := newKubernetesClientset(config, logger)
 	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, duration, shouldReportMetrics)
+	controller := pbKubernetes.NewManagerController(logger, clientset, config)
+	controller.Run(1, duration)
 }

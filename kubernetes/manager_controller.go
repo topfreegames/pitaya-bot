@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	batchv1 "k8s.io/api/batch/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -66,6 +67,8 @@ func (c *ManagerController) Run(threadiness int, duration time.Duration) {
 	defer c.queue.ShutDown()
 	c.logger.Infof("Starting pitaya-bot manager controller")
 
+	c.waitJobCreation()
+
 	go c.informer.Run(c.stopCh)
 
 	if !cache.WaitForCacheSync(c.stopCh, c.informer.HasSynced) {
@@ -85,6 +88,20 @@ func (c *ManagerController) Run(threadiness int, duration time.Duration) {
 
 	<-c.stopCh
 	c.logger.Infof("Stopping Local Manager Controller")
+}
+
+func (c *ManagerController) waitJobCreation() {
+	ticker := time.Tick(time.Second)
+	for {
+		jobs, err := c.clientset.BatchV1().Jobs(c.config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
+		if err != nil {
+			c.logger.Error(err)
+		}
+		if len(jobs.Items) > 0 {
+			return
+		}
+		<-ticker
+	}
 }
 
 func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) {
