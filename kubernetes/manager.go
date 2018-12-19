@@ -20,7 +20,8 @@ import (
 // CreateManagerPod will deploy a kubernetes pod containing a pitaya-bot manager
 func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration, shouldReportMetrics bool) {
 	deploymentsClient := clientset.AppsV1().Deployments(config.GetString("kubernetes.namespace"))
-	if configMapExist("pitaya-bot-manager", logger, clientset, config) {
+	app := "pitaya-bot-manager"
+	if configMapExist(app, logger, clientset, config) {
 		return
 	}
 
@@ -29,7 +30,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 		logger.Fatal(err)
 	}
 	managerConfig := kubernetesAcceptedNamespace(fmt.Sprintf("%s-manager-config", config.GetString("game")))
-	createConfigMap(managerConfig, "pitaya-bot-manager", map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
+	createConfigMap(managerConfig, app, map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
 
 	binData := make(map[string][]byte, len(specs))
 	for _, spec := range specs {
@@ -40,33 +41,22 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 		binData[filepath.Base(spec.Name)] = specBinary
 	}
 	managerSpecs := kubernetesAcceptedNamespace(fmt.Sprintf("%s-manager-specs", config.GetString("game")))
-	createConfigMap(managerSpecs, "pitaya-bot-manager", binData, logger, clientset, config)
+	createConfigMap(managerSpecs, app, binData, logger, clientset, config)
 
 	managerName := kubernetesAcceptedNamespace(fmt.Sprintf("%s-manager", config.GetString("game")))
 
 	deployment := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: managerName,
-			Labels: map[string]string{
-				"app":  "pitaya-bot-manager",
-				"game": config.GetString("game"),
-			},
-		},
+		ObjectMeta: newObjectMeta(managerName, app, config),
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app":  "pitaya-bot-manager",
+					"app":  app,
 					"game": config.GetString("game"),
 				},
 			},
 			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app":  "pitaya-bot-manager",
-						"game": config.GetString("game"),
-					},
-				},
-				Spec: newJobSpec(corev1.RestartPolicyAlways, managerSpecs, managerConfig, "remote-manager", duration, shouldReportMetrics, config),
+				ObjectMeta: newObjectMeta("pod", app, config),
+				Spec:       newJobSpec(corev1.RestartPolicyAlways, managerSpecs, managerConfig, "remote-manager", duration, shouldReportMetrics, config),
 			},
 		},
 	}
@@ -98,12 +88,13 @@ func DeployJobsLocal(logger logrus.FieldLogger, clientset kubernetes.Interface, 
 func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper, specs []*models.Spec, duration time.Duration, shouldReportMetrics bool) {
 	deploymentsClient := clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace"))
 	configBinary, err := ioutil.ReadFile(config.ConfigFileUsed())
+	app := "pitaya-bot"
 	if err != nil {
 		logger.Fatal(err)
 	}
 
 	configName := kubernetesAcceptedNamespace(fmt.Sprintf("%s-config", config.GetString("game")))
-	createConfigMap(configName, "pitaya-bot", map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
+	createConfigMap(configName, app, map[string][]byte{"config.yaml": configBinary}, logger, clientset, config)
 
 	for _, spec := range specs {
 		specBinary, err := ioutil.ReadFile(spec.Name)
@@ -111,28 +102,17 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 			logger.Fatal(err)
 		}
 		specName := kubernetesAcceptedNamespace(fmt.Sprintf("%s-%s", config.GetString("game"), filepath.Base(spec.Name)))
-		createConfigMap(specName, "pitaya-bot", map[string][]byte{filepath.Base(spec.Name): specBinary}, logger, clientset, config)
+		createConfigMap(specName, app, map[string][]byte{filepath.Base(spec.Name): specBinary}, logger, clientset, config)
 
 		deployment := &batchv1.Job{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: specName,
-				Labels: map[string]string{
-					"app":  "pitaya-bot",
-					"game": config.GetString("game"),
-				},
-			},
+			ObjectMeta: newObjectMeta(specName, app, config),
 			Spec: batchv1.JobSpec{
 				//Parallelism: int32Ptr(1), TODO: Via config file, see how many bots are to be instantiated
 				BackoffLimit: int32Ptr(config.GetInt32("kubernetes.job.retry")),
 				Completions:  int32Ptr(1),
 				Template: corev1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Labels: map[string]string{
-							"app":  "pitaya-bot",
-							"game": config.GetString("game"),
-						},
-					},
-					Spec: newJobSpec(corev1.RestartPolicyNever, specName, configName, "local", duration, shouldReportMetrics, config),
+					ObjectMeta: newObjectMeta("job", app, config),
+					Spec:       newJobSpec(corev1.RestartPolicyNever, specName, configName, "local", duration, shouldReportMetrics, config),
 				},
 			},
 		}
@@ -141,6 +121,16 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 			logger.Fatal(err)
 		}
 		logger.Infof("Created job %s", specName)
+	}
+}
+
+func newObjectMeta(name, app string, config *viper.Viper) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name: name,
+		Labels: map[string]string{
+			"app":  app,
+			"game": config.GetString("game"),
+		},
 	}
 }
 
