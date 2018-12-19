@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -92,7 +91,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 								},
 							},
 							Command: []string{"./main"},
-							Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager", "--report-metrics", strconv.FormatBool(shouldReportMetrics)},
+							Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager", fmt.Sprintf("--report-metrics=%t", shouldReportMetrics)},
 						},
 					},
 					Volumes: []corev1.Volume{
@@ -206,7 +205,7 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 									},
 								},
 								Command: []string{"./main"},
-								Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "local", "--report-metrics", strconv.FormatBool(shouldReportMetrics)},
+								Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "local", fmt.Sprintf("--report-metrics=%t", shouldReportMetrics)},
 							},
 						},
 						Volumes: []corev1.Volume{
