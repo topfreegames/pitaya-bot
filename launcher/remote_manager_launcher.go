@@ -33,8 +33,8 @@ func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration ti
 	logger.Infof("Kubernetes In Cluster Client created")
 
 	if shouldDeleteAllResources {
-		pbKubernetes.DeleteAllManager(logger, clientset, config)
 		pbKubernetes.DeleteAll(logger, clientset, config)
+		pbKubernetes.DeleteAllManager(logger, clientset, config)
 		return
 	}
 
