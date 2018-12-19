@@ -79,3 +79,10 @@ The remote manager architecture is represented below:
 
 ![remote manager](./_static/RemoteManagerWorkflow.png "Remote Manager Pitaya-Bot")
 
+### Deploy Manager
+
+It will create a kubernetes deployment, which will be running a pitaya-bot remote manager inside a kubernetes cluster.
+
+### Delete All
+
+It will delete everything that is related to pitaya-bot, which is inside the kubernetes cluster and is mentioned in the config.yaml.

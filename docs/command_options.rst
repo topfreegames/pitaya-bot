@@ -43,12 +43,7 @@ Base configuration needed to run pitaya-bot
     - t
     - local
     - string
-    - Pitaya-Bot workflow type that will be executed. It can be: local, local-manager, remote-manager, deploy-manager
-  * - kill
-    - k
-    - false
-    - bool
-    - Should delete all pitaya-bot instances from game(configuration parameter) inside kubernetes
+    - Pitaya-Bot workflow type that will be executed. It can be: local, local-manager, remote-manager, deploy-manager, delete-all
 
 Logger
 =================
