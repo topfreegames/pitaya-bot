@@ -66,55 +66,7 @@ func CreateManagerPod(logger logrus.FieldLogger, clientset kubernetes.Interface,
 						"game": config.GetString("game"),
 					},
 				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
-							Name:            managerName,
-							Image:           config.GetString("kubernetes.image"),
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      managerSpecs,
-									MountPath: "/etc/pitaya-bot/specs",
-								},
-								{
-									Name:      managerConfig,
-									MountPath: "/etc/pitaya-bot",
-								},
-							},
-							Resources: corev1.ResourceRequirements{
-								Requests: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
-									corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
-								},
-								Limits: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
-									corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
-								},
-							},
-							Command: []string{"./main"},
-							Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "remote-manager", fmt.Sprintf("--report-metrics=%t", shouldReportMetrics)},
-						},
-					},
-					Volumes: []corev1.Volume{
-						{
-							Name: managerSpecs,
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{Name: managerSpecs},
-								},
-							},
-						},
-						{
-							Name: managerConfig,
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{Name: managerConfig},
-								},
-							},
-						},
-					},
-				},
+				Spec: newJobSpec(corev1.RestartPolicyAlways, managerSpecs, managerConfig, "remote-manager", duration, shouldReportMetrics, config),
 			},
 		},
 	}
@@ -180,56 +132,7 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 							"game": config.GetString("game"),
 						},
 					},
-					Spec: corev1.PodSpec{
-						RestartPolicy: corev1.RestartPolicyNever,
-						Containers: []corev1.Container{
-							{
-								ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
-								Name:            specName,
-								Image:           config.GetString("kubernetes.image"),
-								VolumeMounts: []corev1.VolumeMount{
-									{
-										Name:      specName,
-										MountPath: "/etc/pitaya-bot/specs",
-									},
-									{
-										Name:      configName,
-										MountPath: "/etc/pitaya-bot",
-									},
-								},
-								Resources: corev1.ResourceRequirements{
-									Requests: corev1.ResourceList{
-										corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
-										corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
-									},
-									Limits: corev1.ResourceList{
-										corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
-										corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
-									},
-								},
-								Command: []string{"./main"},
-								Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", "local", fmt.Sprintf("--report-metrics=%t", shouldReportMetrics)},
-							},
-						},
-						Volumes: []corev1.Volume{
-							{
-								Name: specName,
-								VolumeSource: corev1.VolumeSource{
-									ConfigMap: &corev1.ConfigMapVolumeSource{
-										LocalObjectReference: corev1.LocalObjectReference{Name: specName},
-									},
-								},
-							},
-							{
-								Name: configName,
-								VolumeSource: corev1.VolumeSource{
-									ConfigMap: &corev1.ConfigMapVolumeSource{
-										LocalObjectReference: corev1.LocalObjectReference{Name: configName},
-									},
-								},
-							},
-						},
-					},
+					Spec: newJobSpec(corev1.RestartPolicyNever, specName, configName, "local", duration, shouldReportMetrics, config),
 				},
 			},
 		}
@@ -238,6 +141,59 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 			logger.Fatal(err)
 		}
 		logger.Infof("Created job %s", specName)
+	}
+}
+
+func newJobSpec(restartPolicy corev1.RestartPolicy, specName, configName, workflowType string, duration time.Duration, shouldReportMetrics bool, config *viper.Viper) corev1.PodSpec {
+	return corev1.PodSpec{
+		RestartPolicy: restartPolicy,
+		Containers: []corev1.Container{
+			{
+				ImagePullPolicy: corev1.PullPolicy(config.GetString("kubernetes.imagepull")),
+				Name:            specName,
+				Image:           config.GetString("kubernetes.image"),
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      specName,
+						MountPath: "/etc/pitaya-bot/specs",
+					},
+					{
+						Name:      configName,
+						MountPath: "/etc/pitaya-bot",
+					},
+				},
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
+						corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
+					},
+					Limits: corev1.ResourceList{
+						corev1.ResourceCPU:    resource.Quantity{Format: resource.Format(config.GetString("kubernetes.cpu"))},
+						corev1.ResourceMemory: resource.Quantity{Format: resource.Format(config.GetString("kubernetes.memory"))},
+					},
+				},
+				Command: []string{"./main"},
+				Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", workflowType, fmt.Sprintf("--report-metrics=%t", shouldReportMetrics)},
+			},
+		},
+		Volumes: []corev1.Volume{
+			{
+				Name: specName,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{Name: specName},
+					},
+				},
+			},
+			{
+				Name: configName,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{Name: configName},
+					},
+				},
+			},
+		},
 	}
 }
 
