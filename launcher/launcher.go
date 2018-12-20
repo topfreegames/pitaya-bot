@@ -129,8 +129,7 @@ func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration fl
 	var compoundError []error
 	start := time.Now().UTC()
 	for {
-		err := runClients(app, spec, config, logger)
-		if err != nil {
+		if err := runClients(app, spec, config, logger); err != nil {
 			compoundError = append(compoundError, err...)
 		}
 
@@ -161,8 +160,7 @@ func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration
 	for _, spec := range specs {
 		wg.Add(1)
 		go func(spec *models.Spec) {
-			err := runSpec(app, spec, config, duration, logger)
-			if err != nil {
+			if err := runSpec(app, spec, config, duration, logger); err != nil {
 				errmutex.Lock()
 				compoundError = append(compoundError, err...)
 				errmutex.Unlock()

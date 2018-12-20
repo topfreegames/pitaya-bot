@@ -100,7 +100,7 @@ func (m *Player) GetTrophies() int32 {
 type AuthResponse struct {
 	Code   string  `protobuf:"bytes,1,opt,name=Code,proto3" json:"Code,omitempty"`
 	Msg    string  `protobuf:"bytes,2,opt,name=Msg,proto3" json:"Msg,omitempty"`
-	Player *Player `protobuf:"bytes,3,opt,name=Player,proto3" json:"Player,omitempty"`
+	Player *Player `protobuf:"bytes,3,opt,name=Player" json:"Player,omitempty"`
 }
 
 func (m *AuthResponse) Reset()         { *m = AuthResponse{} }

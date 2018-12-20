@@ -229,7 +229,8 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:4fdee5292142b3939400c8d6070e19041ee385bfec35bae6c9a05a47467eee9a"
+  branch = "master"
+  digest = "1:b8483882847c4b7d3e3d8469213e1675e0bea3396e55abaa8bed87aacf29de8e"
   name = "github.com/jhump/protoreflect"
   packages = [
     "desc",
@@ -238,8 +239,7 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "f90aa080ba36727321f2bc4c61f2a282f756bfab"
-  version = "v1.1.0"
+  revision = "b5ebaabe89bfb1233c6ddf3db25536f0f3176960"
 
 [[projects]]
   digest = "1:3e551bbb3a7c0ab2a2bf4660e7fcad16db089fdcfbb44b0199e62838038623ea"
@@ -470,7 +470,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d2ba8f7e92afab2678ded596e66162bea21256909ba7bebca1e2cf07bed02683"
+  digest = "1:b1a7a857c6dc2529c2cb115cb265c06c8e4d06f17537c299266aa13b8db22b84"
   name = "github.com/topfreegames/pitaya"
   packages = [
     ".",
@@ -510,7 +510,7 @@
     "worker",
   ]
   pruneopts = "UT"
-  revision = "4c4013df43ff6278aa92b63a7f5b1276f5f0ae85"
+  revision = "eab89799e12c6233a6d1abacb757e52f9ec2efd6"
 
 [[projects]]
   digest = "1:a988307f0c4c8015c00cc122433879cf8eb4da05bd31b2f578795531a7815b13"
