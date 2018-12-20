@@ -7,7 +7,9 @@ sudo: false
 before_script: make setup-ci
 script: make test
 after_success:
+  - make build-linux
   - ./scripts/push_to_docker.sh
+  - $HOME/gopath/bin/goveralls -coverprofile coverprofile.out -service=travis-ci
 branches:
   only:
     - master

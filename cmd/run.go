@@ -33,7 +33,6 @@ var (
 	pitayaBotType  string
 	testDuration   time.Duration
 	reportMetrics  bool
-	kill           bool
 )
 
 // runCmd represents the run command
@@ -44,8 +43,14 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := getLogger()
 		switch pitayaBotType {
+		case "deploy-manager":
+			launcher.LaunchManagerDeploy(config, specsDirectory, testDuration, reportMetrics, logger)
+		case "remote-manager":
+			launcher.LaunchRemoteManager(config, specsDirectory, testDuration, reportMetrics, logger)
 		case "local-manager":
-			launcher.LaunchLocalManager(config, specsDirectory, testDuration.Seconds(), reportMetrics, kill, logger)
+			launcher.LaunchLocalManager(config, specsDirectory, testDuration, reportMetrics, logger)
+		case "delete-all":
+			launcher.LaunchDeleteAll(config, logger)
 		default:
 			app := state.NewApp(config, reportMetrics)
 			launcher.Launch(app, config, specsDirectory, testDuration.Seconds(), reportMetrics, logger)
@@ -61,6 +66,5 @@ func init() {
 	runCmd.PersistentFlags().StringVarP(&specsDirectory, "dir", "d", "./specs/", "Spec to run")
 	runCmd.PersistentFlags().DurationVar(&testDuration, "duration", 1*time.Minute, "how long should the test take")
 	runCmd.PersistentFlags().BoolVar(&reportMetrics, "report-metrics", false, "Should metrics be reported")
-	runCmd.PersistentFlags().BoolVarP(&kill, "kill", "k", false, "Should kill all resources related to chosen action")
 	runCmd.PersistentFlags().StringVarP(&pitayaBotType, "pitaya-bot-type", "t", "local", "Pitaya-Bot Type which will be run")
 }

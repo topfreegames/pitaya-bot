@@ -107,11 +107,31 @@ Kubernetes
   * - kubernetes.config
     - $HOME/.kube/config
     - string
-    - Path where kubernetes config file is located
+    - Path where kubernetes configuration file is located
+  * - kubernetes.context
+    - 
+    - string
+    - Kubernetes configuration file context
+  * - kubernetes.cpu
+    - 250m
+    - string
+    - CPU which will be allocated for each Kubernetes Pod
+  * - kubernetes.image
+    - tfgco/pitaya-bot:latest
+    - string
+    - Pitaya-Bot docker image that kubernetes will use to deploy pods
+  * - kubernetes.imagepull
+    - Always
+    - string
+    - Kubernetes docker image pull policy
   * - kubernetes.masterurl
     - 
     - string
     - Master URL for Kubernetes
+  * - kubernetes.memory
+    - 256Mi
+    - string
+    - RAM Memory which will be allocated for each Kubernetes Pod
   * - kubernetes.namespace
     - default
     - string

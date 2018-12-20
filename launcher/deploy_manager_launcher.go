@@ -8,10 +8,10 @@ import (
 	pbKubernetes "github.com/topfreegames/pitaya-bot/kubernetes"
 )
 
-// LaunchLocalManager launches the manager locally, that will instantiate jobs and manage them until the end
-func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration time.Duration, shouldReportMetrics bool, logger logrus.FieldLogger) {
+// LaunchManagerDeploy launches the deploy to instantiate a pitaya-bot manager pod inside kubernetes
+func LaunchManagerDeploy(config *viper.Viper, specsDirectory string, duration time.Duration, shouldReportMetrics bool, logger logrus.FieldLogger) {
 	logger = logger.WithFields(logrus.Fields{
-		"function": "LaunchLocalManager",
+		"function": "LaunchManagerDeploy",
 	})
 
 	specs, err := GetSpecs(specsDirectory)
@@ -21,9 +21,7 @@ func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration tim
 	logger.Infof("Found %d specs to be executed", len(specs))
 
 	clientset := newKubernetesClientset(config, logger)
-
-	pbKubernetes.DeployJobsLocal(logger, clientset, config, specs, duration, shouldReportMetrics)
+	pbKubernetes.CreateManagerPod(logger, clientset, config, specs, duration, shouldReportMetrics)
 	controller := pbKubernetes.NewManagerController(logger, clientset, config)
 	controller.Run(1, duration)
-	pbKubernetes.DeleteAll(logger, clientset, config)
 }

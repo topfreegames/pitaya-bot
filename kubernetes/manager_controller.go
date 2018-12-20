@@ -2,10 +2,14 @@ package kubernetes
 
 import (
 	"fmt"
+	"math"
+	"sort"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	batchv1 "k8s.io/api/batch/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -20,13 +24,13 @@ type ManagerController struct {
 	queue     workqueue.RateLimitingInterface
 	informer  cache.Controller
 	logger    logrus.FieldLogger
-	clientset *kubernetes.Clientset
+	clientset kubernetes.Interface
 	config    *viper.Viper
 	stopCh    chan struct{}
 }
 
 // NewManagerController is the ManagerController constructor
-func NewManagerController(logger logrus.FieldLogger, clientset *kubernetes.Clientset, config *viper.Viper) *ManagerController {
+func NewManagerController(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) *ManagerController {
 	jobListWatcher := cache.NewListWatchFromClient(clientset.BatchV1().RESTClient(), "jobs", config.GetString("kubernetes.namespace"), fields.Everything())
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	indexer, informer := cache.NewIndexerInformer(jobListWatcher, &batchv1.Job{}, 0, cache.ResourceEventHandlerFuncs{
@@ -58,10 +62,12 @@ func NewManagerController(logger logrus.FieldLogger, clientset *kubernetes.Clien
 }
 
 // Run is the main loop which the pitaya-bot kubernetes controller will executing
-func (c *ManagerController) Run(threadiness int) {
+func (c *ManagerController) Run(threadiness int, duration time.Duration) {
 	defer runtime.HandleCrash()
 	defer c.queue.ShutDown()
 	c.logger.Infof("Starting pitaya-bot manager controller")
+
+	c.waitJobCreation()
 
 	go c.informer.Run(c.stopCh)
 
@@ -78,8 +84,73 @@ func (c *ManagerController) Run(threadiness int) {
 		close(c.stopCh)
 	}
 
+	go c.printManagerStatus(c.getJobTimes(duration))
+
 	<-c.stopCh
 	c.logger.Infof("Stopping Local Manager Controller")
+}
+
+func (c *ManagerController) waitJobCreation() {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		jobs, err := c.clientset.BatchV1().Jobs(c.config.GetString("kubernetes.namespace")).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=pitaya-bot,game=%s", c.config.GetString("game"))})
+		if err != nil {
+			c.logger.Error(err)
+		}
+		if len(jobs.Items) > 0 {
+			return
+		}
+		<-ticker.C
+	}
+}
+
+func (c *ManagerController) printManagerStatus(elapsed, duration time.Duration) {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+	var spinner rune
+	for {
+		<-ticker.C
+		spinner = spin(spinner)
+		elapsed += 500 * time.Millisecond
+		progress := int(math.Max(math.Min(100.0, float64(elapsed)/float64(duration)*100), 0.0))
+		managerStatus := fmt.Sprintf("\rProgress: [%3d%c]%c[", progress, '%', spinner)
+		for i := 0; i < 50; i++ {
+			if i < progress/2 {
+				managerStatus = fmt.Sprintf("%s#", managerStatus)
+			} else {
+				managerStatus = fmt.Sprintf("%s.", managerStatus)
+			}
+		}
+		managerStatus = fmt.Sprintf("%s] %s\n\n  JOB                                      | ACTIVE | SUCCESS | FAILED\n+------------------------------------------+--------+---------+--------+\n", managerStatus, elapsed.String())
+		jobList := make([]string, 0, len(c.indexer.List()))
+		for _, obj := range c.indexer.List() {
+			job := obj.(*batchv1.Job)
+			if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
+				continue
+			}
+			jobList = append(jobList, fmt.Sprintf("  %-40s | %-6d | %-7d | %d\n", job.Name, job.Status.Active, job.Status.Succeeded, job.Status.Failed))
+		}
+		sort.Strings(jobList)
+		for _, job := range jobList {
+			managerStatus = fmt.Sprintf("%s%s", managerStatus, job)
+		}
+		managerStatus = fmt.Sprintf("%s+------------------------------------------+--------+---------+--------+\n\n", managerStatus)
+		fmt.Print(managerStatus)
+	}
+}
+
+func spin(spinner rune) rune {
+	switch spinner {
+	case '-':
+		return '\\'
+	case '\\':
+		return '|'
+	case '|':
+		return '/'
+	default:
+		return '-'
+	}
 }
 
 func (c *ManagerController) processNextItem() bool {
@@ -128,6 +199,28 @@ func (c *ManagerController) finishedAllJobs() bool {
 		}
 	}
 	return true
+}
+
+func (c *ManagerController) getJobTimes(totalDuration time.Duration) (time.Duration, time.Duration) {
+	for _, obj := range c.indexer.List() {
+		job := obj.(*batchv1.Job)
+		if job.ObjectMeta.Labels["app"] != "pitaya-bot" || job.ObjectMeta.Labels["game"] != c.config.GetString("game") {
+			continue
+		}
+		var err error
+		args := job.Spec.Template.Spec.Containers[0].Args
+		for i, arg := range args {
+			if arg == "--duration" {
+				totalDuration, err = time.ParseDuration(args[i+1])
+				if err != nil {
+					c.logger.Errorf("Error parsing time duration %v: %v", args[i+1], err)
+				}
+				break
+			}
+		}
+		return time.Since(job.Status.StartTime.Local()), totalDuration
+	}
+	return 0, totalDuration
 }
 
 func (c *ManagerController) handleErr(err error, key interface{}) {
