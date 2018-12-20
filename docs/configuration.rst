@@ -71,7 +71,15 @@ The configurations needed to access the Pitaya server being tested
   * - server.protobuffer.docs
     - ""
     - string
-    - Route for server documentation. Target server must implement remotes for protobuf descriptors and auto documentation.
+    - Route for server documentation. Target server must implement handlers for protobuf descriptors and auto documentation.
+  * - server.protobuffer.pushinfo.routes
+    - []
+    - []string
+    - Information about the protos used by push messages from the server, this part contains the routes of the messages
+  * - server.protobuffer.pushinfo.protos
+    - []
+    - []string
+    - Information about the protos used by push messages from the server, this part contains the names of the protos
 
 If your application use protobuffers, specifying docs is required. You can also add a list of routes and protobuffer types if your application sends push information to the bot. See :file:`testing/protobuffer/config/config.yaml` for example.
 

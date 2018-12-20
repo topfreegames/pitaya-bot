@@ -28,7 +28,7 @@ The goal of pitaya-bot is to provide a basic development framework for testing p
 ### Installing
 clone the repo
 ```
-go get -u github.com/topfreegames//pitaya-bot
+go get -u github.com/topfreegames/pitaya-bot
 ```
 setup pitaya-bot dependencies
 ```
@@ -36,13 +36,13 @@ cd $GOPATH/src/github.com/topfreegames/pitaya-bot/
 make setup
 ```
 
-### Hacking pitaya-bot
+### Running pitaya-bot
 
-Here's how to run the testing example:
+Here's how to run the testing example with JSON serializer:
 
 Start etcd and nats (this command requires docker-compose and will run etcd and nats containers locally, you may run etcd and/or nats without docker if you prefer)
 ```
-docker-compose -f ./testing/docker-compose.yml up -d etcd
+docker-compose -f ./testing/json/docker-compose.yml up -d etcd
 ```
 run the server from testing example
 ```
@@ -51,10 +51,16 @@ make run-testing-server
 
 Now a pitaya server should be running in one terminal. In another one, you can use pitaya-bot testing example:
 ```
-$ pitaya-bot run -d ./testing/specs/ --config ./testing/config/config.yaml
-testing/specs/default.json 1755
+$ pitaya-bot run -d ./testing/json/specs/ --config ./testing/json/config/config.yaml
+testing/json/specs/default.json 1755
 INFO[0000] Found 1 specs to be executed                  function=launch source=pitaya-bot
 ...
+```
+
+To run the protobuf example you can run:
+```
+make run-testing-proto-server
+pitaya-bot run -d ./testing/protobuffer/specs --config ./testing/protobuffer/config/config.yaml
 ```
 
 ## Running the tests
