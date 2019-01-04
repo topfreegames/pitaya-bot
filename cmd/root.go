@@ -89,7 +89,7 @@ func CreateConfig(path string) *viper.Viper {
 	// If a config file is found, read it in.
 	if err := config.ReadInConfig(); err != nil {
 		fmt.Printf("Config file %s failed to load: %s.\n", path, err.Error())
-		panic("Failed to load config file")
+		return nil
 	}
 	fillDefaultValues(config)
 	return config

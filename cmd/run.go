@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -41,6 +42,11 @@ var runCmd = &cobra.Command{
 	Short: "Runs the pitaya bot",
 	Long:  `Runs the pitaya bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if config == nil {
+			cmd.Help()
+			os.Exit(0)
+		}
+
 		logger := getLogger()
 		switch pitayaBotType {
 		case "deploy-manager":
