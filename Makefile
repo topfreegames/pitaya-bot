@@ -42,4 +42,7 @@ unit-test-coverage:
 	@echo "===============RUNNING UNIT TESTS==============="
 	@go test $(TESTABLE_PACKAGES) -coverprofile coverprofile.out
 
+build-docker-image: build-linux
+	@docker build -t pitaya-bot . -f Dockerfile-dev
+
 
