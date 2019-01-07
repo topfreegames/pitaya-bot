@@ -32,6 +32,7 @@ func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration ti
 	}
 	logger.Infof("Kubernetes In Cluster Client created")
 
+	pbKubernetes.DeleteAll(logger, clientset, config)
 	pbKubernetes.DeployJobsRemote(logger, clientset, config, specs, duration, shouldReportMetrics)
 	controller := pbKubernetes.NewManagerController(logger, clientset, config)
 	controller.Run(1, duration)
