@@ -148,6 +148,14 @@ Kubernetes
     - 0
     - int
     - Backoff limit from the jobs that will run each spec file
+  * - kubernetes.job.parallelism
+    - 1
+    - int
+    - how many jobs can run um parallel
+  * - kubernetes.job.completions
+    - 1
+    - int
+    - number of jobs to init
 
 Manager
 ==========

@@ -107,13 +107,13 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 		deployment := &batchv1.Job{
 			ObjectMeta: newObjectMeta(specName, app, config),
 			Spec: batchv1.JobSpec{
-				//Parallelism: int32Ptr(1), TODO: Via config file, see how many bots are to be instantiated
 				BackoffLimit: int32Ptr(config.GetInt32("kubernetes.job.retry")),
-				Completions:  int32Ptr(1),
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: newObjectMeta("job", app, config),
 					Spec:       newJobSpec(corev1.RestartPolicyNever, specName, configName, "local", duration, shouldReportMetrics, config),
 				},
+				Parallelism: int32Ptr(config.GetInt32("kubernetes.job.parallelism")),
+				Completions: int32Ptr(config.GetInt32("kubernetes.job.completions")),
 			},
 		}
 
