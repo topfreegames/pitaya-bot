@@ -151,11 +151,11 @@ Kubernetes
   * - kubernetes.job.parallelism
     - 1
     - int
-    - how many jobs can run um parallel
+    - Number of pods running at any instant
   * - kubernetes.job.completions
     - 1
     - int
-    - number of jobs to init
+    - Number of pods to run during the job
 
 Manager
 ==========
