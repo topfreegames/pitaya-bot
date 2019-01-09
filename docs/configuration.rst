@@ -148,6 +148,14 @@ Kubernetes
     - 0
     - int
     - Backoff limit from the jobs that will run each spec file
+  * - kubernetes.job.parallelism
+    - 1
+    - int
+    - Number of pods running at any instant
+  * - kubernetes.job.completions
+    - 1
+    - int
+    - Number of pods to run during the job
 
 Manager
 ==========

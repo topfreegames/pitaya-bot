@@ -107,13 +107,13 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 		deployment := &batchv1.Job{
 			ObjectMeta: newObjectMeta(specName, app, config),
 			Spec: batchv1.JobSpec{
-				//Parallelism: int32Ptr(1), TODO: Via config file, see how many bots are to be instantiated
 				BackoffLimit: int32Ptr(config.GetInt32("kubernetes.job.retry")),
-				Completions:  int32Ptr(1),
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: newObjectMeta("job", app, config),
 					Spec:       newJobSpec(corev1.RestartPolicyNever, specName, configName, "local", duration, shouldReportMetrics, config),
 				},
+				Parallelism: int32Ptr(config.GetInt32("kubernetes.job.parallelism")),
+				Completions: int32Ptr(config.GetInt32("kubernetes.job.completions")),
 			},
 		}
 
@@ -223,28 +223,105 @@ func DeleteAllManager(logger logrus.FieldLogger, clientset kubernetes.Interface,
 	deleteAll("pitaya-bot-manager", logger, clientset, config)
 }
 
+// CheckAll will check if exist any kubernetes resources that have been allocated to make the jobs
+func CheckAll(logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) bool {
+	return checkAll("pitaya-bot", logger, clientset, config)
+}
+
 func deleteAll(app string, logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) {
-	err := clientset.CoreV1().ConfigMaps(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
+	err := clientset.CoreV1().
+		ConfigMaps(config.GetString("kubernetes.namespace")).
+		DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game")),
+		})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete configMaps")
 	}
 	logger.Infof("Deleted configMaps")
 
-	err = clientset.BatchV1().Jobs(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
+	err = clientset.BatchV1().
+		Jobs(config.GetString("kubernetes.namespace")).
+		DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game")),
+		})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete jobs")
 	}
 	logger.Infof("Deleted jobs")
 
-	err = clientset.AppsV1().Deployments(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
+	err = clientset.AppsV1().
+		Deployments(config.GetString("kubernetes.namespace")).
+		DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game")),
+		})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete deployments")
 	}
 	logger.Infof("Deleted deployments")
 
-	err = clientset.CoreV1().Pods(config.GetString("kubernetes.namespace")).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game"))})
+	err = clientset.CoreV1().
+		Pods(config.GetString("kubernetes.namespace")).
+		DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game")),
+		})
 	if err != nil {
 		logger.WithError(err).Error("Failed to delete pods")
 	}
 	logger.Infof("Deleted pods")
+}
+
+func checkAll(app string, logger logrus.FieldLogger, clientset kubernetes.Interface, config *viper.Viper) bool {
+	exist := false
+	listConfigMaps, errConfigMaps := clientset.CoreV1().
+		ConfigMaps(config.GetString("kubernetes.namespace")).
+		List(metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game")),
+		})
+	if errConfigMaps != nil {
+		logger.WithError(errConfigMaps).Error("Failed to read configMaps")
+	}
+	if len(listConfigMaps.Items) > 0 {
+		logger.Error("Already exist configMaps")
+		exist = true
+	}
+
+	listJobs, errJobs := clientset.BatchV1().
+		Jobs(config.GetString("kubernetes.namespace")).
+		List(metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game")),
+		})
+	if errJobs != nil {
+		logger.WithError(errJobs).Error("Failed to read jobs")
+	}
+	if len(listJobs.Items) > 0 {
+		logger.Error("Already exist jobs")
+		exist = true
+	}
+
+	listDeployments, errDeployments := clientset.AppsV1().
+		Deployments(config.GetString("kubernetes.namespace")).
+		List(metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game")),
+		})
+	if errDeployments != nil {
+		logger.WithError(errDeployments).Error("Failed to read deployments")
+	}
+	if len(listDeployments.Items) > 0 {
+		logger.Error("Already exist deployments")
+		exist = true
+	}
+
+	listPods, errPods := clientset.CoreV1().
+		Pods(config.GetString("kubernetes.namespace")).
+		List(metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,game=%s", app, config.GetString("game")),
+		})
+	if errPods != nil {
+		logger.WithError(errPods).Error("Failed to read pods")
+	}
+	if len(listPods.Items) > 0 {
+		logger.Error("Already exist pods")
+		exist = true
+	}
+	return exist
 }

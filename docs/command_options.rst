@@ -44,6 +44,11 @@ Base configuration needed to run pitaya-bot
     - local
     - string
     - Pitaya-Bot workflow type that will be executed. It can be: local, local-manager, remote-manager, deploy-manager, delete-all
+  * - delete
+    - 
+    - false
+    - bool
+    - Delete all pods, config maps, jobs and deployements before run. Only available when pitaya-bot-type is local-manager or remote-manager.
 
 Logger
 =================

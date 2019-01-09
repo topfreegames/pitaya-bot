@@ -218,6 +218,9 @@ func (c *ManagerController) getJobTimes(totalDuration time.Duration) (time.Durat
 				break
 			}
 		}
+		if job.Status.StartTime == nil {
+			continue
+		}
 		return time.Since(job.Status.StartTime.Local()), totalDuration
 	}
 	return 0, totalDuration

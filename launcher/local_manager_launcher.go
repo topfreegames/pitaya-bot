@@ -9,7 +9,7 @@ import (
 )
 
 // LaunchLocalManager launches the manager locally, that will instantiate jobs and manage them until the end
-func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration time.Duration, shouldReportMetrics bool, logger logrus.FieldLogger) {
+func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration time.Duration, shouldReportMetrics, deleteBeforeRun bool, logger logrus.FieldLogger) {
 	logger = logger.WithFields(logrus.Fields{
 		"function": "LaunchLocalManager",
 	})
@@ -22,6 +22,12 @@ func LaunchLocalManager(config *viper.Viper, specsDirectory string, duration tim
 
 	clientset := newKubernetesClientset(config, logger)
 
+	if deleteBeforeRun {
+		pbKubernetes.DeleteAll(logger, clientset, config)
+	}
+	if pbKubernetes.CheckAll(logger, clientset, config) {
+		return
+	}
 	pbKubernetes.DeployJobsLocal(logger, clientset, config, specs, duration, shouldReportMetrics)
 	controller := pbKubernetes.NewManagerController(logger, clientset, config)
 	controller.Run(1, duration)

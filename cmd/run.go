@@ -30,10 +30,11 @@ import (
 )
 
 var (
-	specsDirectory string
-	pitayaBotType  string
-	testDuration   time.Duration
-	reportMetrics  bool
+	specsDirectory  string
+	pitayaBotType   string
+	testDuration    time.Duration
+	reportMetrics   bool
+	deleteBeforeRun bool
 )
 
 // runCmd represents the run command
@@ -52,9 +53,9 @@ var runCmd = &cobra.Command{
 		case "deploy-manager":
 			launcher.LaunchManagerDeploy(config, specsDirectory, testDuration, reportMetrics, logger)
 		case "remote-manager":
-			launcher.LaunchRemoteManager(config, specsDirectory, testDuration, reportMetrics, logger)
+			launcher.LaunchRemoteManager(config, specsDirectory, testDuration, reportMetrics, deleteBeforeRun, logger)
 		case "local-manager":
-			launcher.LaunchLocalManager(config, specsDirectory, testDuration, reportMetrics, logger)
+			launcher.LaunchLocalManager(config, specsDirectory, testDuration, reportMetrics, deleteBeforeRun, logger)
 		case "delete-all":
 			launcher.LaunchDeleteAll(config, logger)
 		default:
@@ -73,4 +74,5 @@ func init() {
 	runCmd.PersistentFlags().DurationVar(&testDuration, "duration", 1*time.Minute, "how long should the test take")
 	runCmd.PersistentFlags().BoolVar(&reportMetrics, "report-metrics", false, "Should metrics be reported")
 	runCmd.PersistentFlags().StringVarP(&pitayaBotType, "pitaya-bot-type", "t", "local", "Pitaya-Bot Type which will be run")
+	runCmd.PersistentFlags().BoolVar(&deleteBeforeRun, "delete", false, "Delete all before run")
 }
