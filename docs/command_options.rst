@@ -48,7 +48,7 @@ Base configuration needed to run pitaya-bot
     - 
     - false
     - bool
-    - Delete all pods, config maps, jobs and deployements before run. Only avaliable when pitaya-bot-type is local-manager or remote-manager.
+    - Delete all pods, config maps, jobs and deployements before run. Only available when pitaya-bot-type is local-manager or remote-manager.
 
 Logger
 =================
