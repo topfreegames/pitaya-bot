@@ -11,7 +11,7 @@ import (
 )
 
 // LaunchRemoteManager launches the manager in kubernetes cluster, that will instantiate jobs and manage them until the end
-func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration time.Duration, shouldReportMetrics bool, logger logrus.FieldLogger) {
+func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration time.Duration, shouldReportMetrics, deleteBeforeRun bool, logger logrus.FieldLogger) {
 	logger = logger.WithFields(logrus.Fields{
 		"function": "LaunchRemoteManager",
 	})
@@ -32,7 +32,12 @@ func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration ti
 	}
 	logger.Infof("Kubernetes In Cluster Client created")
 
-	pbKubernetes.DeleteAll(logger, clientset, config)
+	if deleteBeforeRun {
+		pbKubernetes.DeleteAll(logger, clientset, config)
+	}
+	if pbKubernetes.CheckAll(logger, clientset, config) {
+		return
+	}
 	pbKubernetes.DeployJobsRemote(logger, clientset, config, specs, duration, shouldReportMetrics)
 	controller := pbKubernetes.NewManagerController(logger, clientset, config)
 	controller.Run(1, duration)
