@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc" // used by the k8s clusters for auth
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 )

@@ -775,7 +775,7 @@
   revision = "4d029f0333996cf231080e108e0bd1ece2a94d9f"
 
 [[projects]]
-  digest = "1:48423256cbf3917aa7a2527ada8e9661a5e3dee1ab49691ab651b788fe3f527a"
+  digest = "1:258bbe65f62aaf50d1e559b4240ef11495e8f5a5a696dee2f23f289a43600298"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -852,6 +852,7 @@
     "pkg/apis/clientauthentication/v1beta1",
     "pkg/version",
     "plugin/pkg/client/auth/exec",
+    "plugin/pkg/client/auth/oidc",
     "rest",
     "rest/watch",
     "testing",
@@ -932,6 +933,7 @@
     "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/fake",
+    "k8s.io/client-go/plugin/pkg/client/auth/oidc",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
