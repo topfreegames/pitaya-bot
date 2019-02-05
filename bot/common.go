@@ -71,9 +71,16 @@ func parseArg(params interface{}, store storage.Storage) (interface{}, error) {
 		return nil, err
 	}
 
-	paramType := p["type"].(string)
-	var paramValue interface{}
+	pVal, ok := p["type"]
+	if !ok {
+		return nil, fmt.Errorf("type is not available in arg")
+	}
+	paramType, ok := pVal.(string)
+	if !ok {
+		return nil, fmt.Errorf("type is not a string")
+	}
 
+	var paramValue interface{}
 	if valueFromStorage != nil {
 		paramValue = valueFromStorage
 	} else {

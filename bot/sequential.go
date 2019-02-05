@@ -54,19 +54,24 @@ func (b *SequentialBot) Initialize() error {
 }
 
 // Run runs the bot
-func (b *SequentialBot) Run() error {
+func (b *SequentialBot) Run() (err error) {
 	defer b.Disconnect()
+	defer func() {
+		if rec := recover(); rec != nil {
+			b.logger.Errorf("Panic running sequential bot: %+v", rec)
+			err = fmt.Errorf("panic")
+		}
+	}()
 
 	steps := b.spec.SequentialOperations
-
 	for _, step := range steps {
-		err := b.runOperation(step)
+		err = b.runOperation(step)
 		if err != nil {
-			return err
+			return
 		}
 	}
 
-	return nil
+	return
 }
 
 func (b *SequentialBot) runRequest(op *models.Operation) error {
