@@ -73,25 +73,25 @@ Below is a base example of a spec file, for a working example, check: [spec](htt
 
 ```
 {
-	"numberOfInstances": 1,
-	"sequentialOperations": [
-		{
-      			"type": "request",
-      			"uri": "connector.gameHandler.create",
-      			"expect": {
-					"$response["code"]: {
-          				"type": "string",
-          				"value": "200"
-        			} 
-      			},
-      			"store": {
-				"playerAccessToken": {
-          				"type": "string",
-          				"value": "$response["game"]["roomCode"]"
-        			}
-      			}
-    		}
-	]
+  "numberOfInstances": 1,
+  "sequentialOperations": [
+  {
+    "type": "request",
+    "uri": "connector.gameHandler.create",
+    "expect": {
+      "$response.code": {
+        "type": "string",
+        "value": "200"
+      } 
+    },
+    "store": {
+      "playerAccessToken": {
+        "type": "string",
+        "value": "$response.token"
+      }
+    }
+  }
+  ]
 }
 ```
 

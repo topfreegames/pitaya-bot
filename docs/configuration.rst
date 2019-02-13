@@ -40,7 +40,7 @@ These configuration values configure the Prometheus monitoring service to check 
   * - prometheus.port
     - 9191
     - int
-    - Port which the Prometheus instance is running
+    - Port which the Prometheus instance will run
 
 Server
 ===========
