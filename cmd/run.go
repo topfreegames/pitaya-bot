@@ -68,7 +68,7 @@ var runCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(runCmd)
 
-	// The bot will recusrively find all json files within specDir directory
+	// The bot will recursively find all json files within specDir directory
 	// and run the specs
 	runCmd.PersistentFlags().StringVarP(&specsDirectory, "dir", "d", "./specs/", "Spec to run")
 	runCmd.PersistentFlags().DurationVar(&testDuration, "duration", 1*time.Minute, "how long should the test take")

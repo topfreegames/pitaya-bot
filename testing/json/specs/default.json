@@ -27,11 +27,11 @@
     {
       "type": "request",
       "uri": "connector.playerHandler.authenticate",
-      "args": { 
-        "accessToken": { 
+      "args": {
+        "accessToken": {
           "type": "string",
           "value": "$store.playerAccessToken"
-        } 
+        }
       },
       "expect": {
         "$response.code": {

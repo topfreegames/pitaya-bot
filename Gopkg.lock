@@ -470,7 +470,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0f9e73a97ed943dddcf0352be2df26c36976e14bee3a70b078ebced3c8c76fc4"
+  digest = "1:e722c920f8b4140f5b9aa61c23c0d88cfe0f2e19d319edbe6e808b90592b18bf"
   name = "github.com/topfreegames/pitaya"
   packages = [
     ".",
@@ -510,7 +510,7 @@
     "worker",
   ]
   pruneopts = "UT"
-  revision = "dc28e42f6eb0f4f3ca2d00f7eebfe986a5964bc9"
+  revision = "8cbf617375b4139cadee0c9067b41ff9125bd728"
 
 [[projects]]
   branch = "master"
@@ -910,6 +910,7 @@
     "github.com/topfreegames/pitaya/acceptor",
     "github.com/topfreegames/pitaya/client",
     "github.com/topfreegames/pitaya/component",
+    "github.com/topfreegames/pitaya/conn/message",
     "github.com/topfreegames/pitaya/constants",
     "github.com/topfreegames/pitaya/logger",
     "github.com/topfreegames/pitaya/protos",

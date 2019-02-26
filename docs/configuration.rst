@@ -155,7 +155,7 @@ Kubernetes
   * - kubernetes.job.completions
     - 1
     - int
-    - Number of pods to run during the job
+    - Number of executions to run for each job
 
 Manager
 ==========

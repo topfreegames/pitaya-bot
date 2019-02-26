@@ -8,17 +8,12 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/topfreegames/pitaya/client"
+	pitayamessage "github.com/topfreegames/pitaya/conn/message"
 )
 
 // information for the singleton
 var instance *client.ProtoBufferInfo
 var once sync.Once
-
-// FIXME - constants from internal pitaya package
-const (
-	MsgResponseType byte = 0x02
-	MsgPushType     byte = 0x03
-)
 
 // PClient is a wrapper around pitaya/client.
 // The ideia is to be able to separate request/responses
@@ -51,7 +46,6 @@ func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.
 
 // NewPClient is the PCLient constructor
 func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]string) (*PClient, error) {
-
 	var pclient client.PitayaClient
 	if docs != "" {
 		protoclient := client.NewProto(docs, logrus.InfoLevel)
@@ -174,13 +168,12 @@ func (c *PClient) StartListening() {
 	channel := c.client.MsgChannel()
 	go func() {
 		for m := range channel {
-			t := byte(m.Type)
-			switch t {
-			case MsgResponseType:
+			switch m.Type {
+			case pitayamessage.Response:
 				ch := c.getResponseChannelForID(m.ID)
 				ch <- m.Data
 				c.removeResponseChannelForID(m.ID)
-			case MsgPushType:
+			case pitayamessage.Push:
 				ch := c.getPushChannelForRoute(m.Route)
 				ch <- m.Data
 			default:

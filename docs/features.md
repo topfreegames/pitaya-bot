@@ -47,3 +47,7 @@ This storage retains all information inside the testing machine memory. The stor
 ## Serializers
 
 Pitaya-Bot supports both JSON and Protobuf serializers out of the box for the messages sent to and from the client, the default serializer is JSON.
+
+## Spec generation
+
+It is possible to create specs from pitaya-cli history by using the `parseHistory` command.
