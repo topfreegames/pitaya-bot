@@ -104,7 +104,7 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 		specName := kubernetesAcceptedNamespace(fmt.Sprintf("%s-%s", config.GetString("game"), filepath.Base(spec.Name)))
 		createConfigMap(specName, app, map[string][]byte{filepath.Base(spec.Name): specBinary}, logger, clientset, config)
 
-		deployment := &batchv1.Job{
+		job := &batchv1.Job{
 			ObjectMeta: newObjectMeta(specName, app, config),
 			Spec: batchv1.JobSpec{
 				BackoffLimit: int32Ptr(config.GetInt32("kubernetes.job.retry")),
@@ -112,12 +112,12 @@ func deployJobs(logger logrus.FieldLogger, clientset kubernetes.Interface, confi
 					ObjectMeta: newObjectMeta("job", app, config),
 					Spec:       newJobSpec(corev1.RestartPolicyNever, specName, configName, "local", duration, shouldReportMetrics, config),
 				},
-				Parallelism: int32Ptr(config.GetInt32("kubernetes.job.parallelism")),
-				Completions: int32Ptr(config.GetInt32("kubernetes.job.completions")),
+				Parallelism: int32Ptr(config.GetInt32("bot.spec.parallelism")),
+				Completions: int32Ptr(config.GetInt32("bot.spec.parallelism")),
 			},
 		}
 
-		if _, err := deploymentsClient.Create(deployment); err != nil {
+		if _, err := deploymentsClient.Create(job); err != nil {
 			logger.Fatal(err)
 		}
 		logger.Infof("Created job %s", specName)

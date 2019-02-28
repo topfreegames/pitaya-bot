@@ -18,7 +18,7 @@ func LaunchRemoteManager(config *viper.Viper, specsDirectory string, duration ti
 
 	specs, err := GetSpecs(specsDirectory)
 	if err != nil {
-		logger.Fatal(err)
+		logger.WithError(err).Fatal("Failed to get specs")
 	}
 	logger.Infof("Found %d specs to be executed", len(specs))
 

@@ -104,7 +104,7 @@ func runClients(app *state.App, spec *models.Spec, config *viper.Viper, logger l
 	for i := 0; i < spec.NumberOfInstances; i++ {
 		wg.Add(1)
 		go func(i int) {
-			sleepDuration := time.Duration(random.Intn(1000)) * time.Millisecond
+			sleepDuration := time.Duration(random.Intn(int(config.GetDuration("bot.operation.maxSleep"))))
 			time.Sleep(sleepDuration)
 			if err := runner.Run(app, config, spec, i, logger); err != nil {
 				errmutex.Lock()
@@ -131,6 +131,9 @@ func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration fl
 	for {
 		if err := runClients(app, spec, config, logger); err != nil {
 			compoundError = append(compoundError, err...)
+			if config.GetBool("bot.operation.stopOnError") {
+				break
+			}
 		}
 
 		elapsed := time.Now().UTC().Sub(start)

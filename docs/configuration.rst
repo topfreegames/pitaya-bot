@@ -148,14 +148,6 @@ Kubernetes
     - 0
     - int
     - Backoff limit from the jobs that will run each spec file
-  * - kubernetes.job.parallelism
-    - 1
-    - int
-    - Number of pods running at any instant
-  * - kubernetes.job.completions
-    - 1
-    - int
-    - Number of executions to run for each job
 
 Manager
 ==========
@@ -177,3 +169,28 @@ Manager
     - 1s
     - time.Period
     - Waiting time between each job process
+
+Bot
+==========
+
+.. list-table::
+  :widths: 15 10 10 50
+  :header-rows: 1
+  :stub-columns: 1
+
+  * - Configuration
+    - Default value
+    - Type
+    - Description
+  * - bot.operation.maxSleep
+    - 500ms
+    - time.Duration
+    - Maximum sleep duration between bot operations, the launcher selects a random value in the range [0, maxSleep]
+  * - bot.operation.stopOnError
+    - false
+    - bool
+    - Defines if the bot should stop running on error, by default it restarts the spec
+  * - bot.spec.parallelism
+    - 1
+    - int
+    - Defines the number of instances to run for each spec when running on kubernetes
