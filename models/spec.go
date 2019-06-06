@@ -48,11 +48,12 @@ type ExpectSpec map[string]ExpectSpecEntry
 
 // Operation defines an operation the bot may execute
 type Operation struct {
-	Type    string                 `json:"type"`
-	Timeout int                    `json:"timeout,omitempty"`
-	URI     string                 `json:"uri"`
-	Args    map[string]interface{} `json:"args"`
-	Expect  ExpectSpec             `json:"expect,omitempty"`
-	Store   StoreSpec              `json:"store,omitempty"`
-	Change  map[string]interface{} `json:"change,omitempty"`
+	Type     string                 `json:"type"`
+	Timeout  int                    `json:"timeout,omitempty"`
+	DontWait bool                   `json:"dontWait,omitempty"`
+	URI      string                 `json:"uri"`
+	Args     map[string]interface{} `json:"args"`
+	Expect   ExpectSpec             `json:"expect,omitempty"`
+	Store    StoreSpec              `json:"store,omitempty"`
+	Change   map[string]interface{} `json:"change,omitempty"`
 }

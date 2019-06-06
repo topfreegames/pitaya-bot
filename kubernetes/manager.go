@@ -163,7 +163,7 @@ func newJobSpec(restartPolicy corev1.RestartPolicy, specName, configName, workfl
 					},
 				},
 				Command: []string{"./main"},
-				Args:    []string{"run", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", workflowType, fmt.Sprintf("--report-metrics=%t", shouldReportMetrics)},
+				Args:    []string{"run", "--logJSON", "--config", "/etc/pitaya-bot/config.yaml", "--duration", duration.String(), "-d", "/etc/pitaya-bot/specs", "-t", workflowType, fmt.Sprintf("--report-metrics=%t", shouldReportMetrics)},
 			},
 		},
 		Volumes: []corev1.Volume{

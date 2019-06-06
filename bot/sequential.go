@@ -75,6 +75,15 @@ func (b *SequentialBot) Run() (err error) {
 }
 
 func (b *SequentialBot) runRequest(op *models.Operation) error {
+	if op.DontWait {
+		go b.runRequestSync(op)
+		return nil
+	}
+
+	return b.runRequestSync(op)
+}
+
+func (b *SequentialBot) runRequestSync(op *models.Operation) error {
 	b.logger.Debug("Executing request to: " + op.URI)
 	route := op.URI
 	args, err := buildArgByType(op.Args, "object", b.storage)
@@ -155,8 +164,23 @@ func (b *SequentialBot) runFunction(op *models.Operation) error {
 }
 
 func (b *SequentialBot) listenToPush(op *models.Operation) error {
+	ready := make(chan struct{}, 1)
+
+	if op.DontWait {
+		go b.listenToPushSync(op, ready)
+		<-ready
+		return nil
+	}
+
+	return b.listenToPushSync(op, ready)
+}
+
+func (b *SequentialBot) listenToPushSync(
+	op *models.Operation,
+	ready chan struct{},
+) error {
 	b.logger.Debug("Waiting for push on route: " + op.URI)
-	resp, err := b.client.ReceivePush(op.URI, op.Timeout)
+	resp, err := b.client.ReceivePush(op.URI, op.Timeout, ready)
 	if err != nil {
 		return err
 	}

@@ -146,8 +146,14 @@ func (c *PClient) Notify(route string, data []byte) error {
 }
 
 // ReceivePush ...
-func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
+func (c *PClient) ReceivePush(
+	route string,
+	timeout int,
+	ready chan struct{},
+) (Response, error) {
 	ch := c.getPushChannelForRoute(route)
+
+	ready <- struct{}{}
 
 	select {
 	case data := <-ch:

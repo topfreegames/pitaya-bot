@@ -37,6 +37,7 @@ Operation is the generalistic struct which contains the action that the specifie
 
 * `Type`: Type of operation which the bot will do. Each bot has different types
 * `Timeout`: Time that the bot has to execute given operation
+* `DontWait`: If true fires the operation and goes to next one, defaults to false; valid only for type equals push and request
 * `Uri`: URI which the bot will use to make request, notification, listen, ...
 * `Args`: Arguments that will be used in given operation
 * `Expect`: Expected result from operation
