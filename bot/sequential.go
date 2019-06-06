@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -201,13 +202,15 @@ func (b *SequentialBot) startListening() {
 func (b *SequentialBot) runOperation(op *models.Operation) error {
 	switch op.Type {
 	case "request":
+		time.Sleep(10 * time.Millisecond)
 		return b.runRequest(op)
 	case "notify":
 		return b.runNotify(op)
 	case "function":
 		return b.runFunction(op)
 	case "listen":
-		return b.listenToPush(op)
+		go b.listenToPush(op)
+		return nil
 	}
 
 	return fmt.Errorf("Unknown type: %s", op.Type)
