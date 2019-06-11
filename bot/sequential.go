@@ -209,6 +209,9 @@ func (b *SequentialBot) runOperation(op *models.Operation) error {
 	case "function":
 		return b.runFunction(op)
 	case "listen":
+		if op.Wait {
+			return b.listenToPush(op)
+		}
 		go b.listenToPush(op)
 		return nil
 	}
