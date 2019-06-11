@@ -50,6 +50,7 @@ type ExpectSpec map[string]ExpectSpecEntry
 type Operation struct {
 	Type    string                 `json:"type"`
 	Timeout int                    `json:"timeout,omitempty"`
+	Wait    bool                   `json:"wait,omitempty"`
 	URI     string                 `json:"uri"`
 	Args    map[string]interface{} `json:"args"`
 	Expect  ExpectSpec             `json:"expect,omitempty"`
