@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya-bot/constants"
+	"github.com/topfreegames/pitaya-bot/custom"
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/storage"
@@ -15,16 +16,22 @@ import (
 type SequentialBot struct {
 	client          *PClient
 	config          *viper.Viper
+	host            string
 	id              int
+	logger          logrus.FieldLogger
+	metricsReporter []metrics.Reporter
 	spec            *models.Spec
 	storage         storage.Storage
-	logger          logrus.FieldLogger
-	host            string
-	metricsReporter []metrics.Reporter
 }
 
 // NewSequentialBot returns a new sequantial bot instance
-func NewSequentialBot(config *viper.Viper, spec *models.Spec, id int, mr []metrics.Reporter, logger logrus.FieldLogger) (Bot, error) {
+func NewSequentialBot(
+	config *viper.Viper,
+	spec *models.Spec,
+	id int,
+	mr []metrics.Reporter,
+	logger logrus.FieldLogger,
+) (Bot, error) {
 	store, err := storage.NewStorage(config)
 	if err != nil {
 		return nil, err
@@ -32,12 +39,12 @@ func NewSequentialBot(config *viper.Viper, spec *models.Spec, id int, mr []metri
 
 	bot := &SequentialBot{
 		config:          config,
-		spec:            spec,
-		id:              id,
-		storage:         store,
-		logger:          logger,
 		host:            config.GetString("server.host"),
+		id:              id,
+		logger:          logger,
 		metricsReporter: mr,
+		spec:            spec,
+		storage:         store,
 	}
 
 	if err = bot.Connect(); err != nil {
@@ -49,7 +56,14 @@ func NewSequentialBot(config *viper.Viper, spec *models.Spec, id int, mr []metri
 
 // Initialize initializes the bot
 func (b *SequentialBot) Initialize() error {
-	// TODO
+	b.logger.Debug("Initializing bot")
+	pre := custom.GetPre(b.config, b.spec)
+	storage, err := pre.Run(b.spec.PreRun.Args)
+	if err != nil {
+		return err
+	}
+	b.logger.Debugf("Received storage: %+v", storage)
+	b.storage = storage
 	return nil
 }
 

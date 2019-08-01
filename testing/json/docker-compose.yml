@@ -8,3 +8,9 @@ services:
     image: appcelerator/etcd
     ports:
       - 2379:2379
+  redis:
+    image: redis:5.0.5-alpine
+    container_name: redis
+    ports:
+      - 9010:6379
+

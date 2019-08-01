@@ -252,7 +252,11 @@ func equals(lhs interface{}, rhs interface{}) bool {
 	}
 }
 
-func storeData(storeSpec models.StoreSpec, store storage.Storage, response Response) error {
+func storeData(
+	storeSpec models.StoreSpec,
+	store storage.Storage,
+	response Response,
+) error {
 	for name, spec := range storeSpec {
 		valueFromResponse, err := tryExtractValue(&response, Expr(spec.Value), spec.Type)
 		if err != nil {

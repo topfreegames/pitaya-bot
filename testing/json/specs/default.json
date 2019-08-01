@@ -1,7 +1,10 @@
 {
   "numberOfInstances": 1,
   "preRun": {
-    "function": "initializeDb"
+    "function": "redis",
+    "args": {
+      "name": "test"
+    }
   },
   "sequentialOperations": [
     {

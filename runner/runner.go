@@ -12,7 +12,13 @@ import (
 )
 
 // Run runs a bot according to the spec
-func Run(app *state.App, config *viper.Viper, spec *models.Spec, id int, log logrus.FieldLogger) error {
+func Run(
+	app *state.App,
+	config *viper.Viper,
+	spec *models.Spec,
+	id int,
+	log logrus.FieldLogger,
+) error {
 	logger := log.WithFields(logrus.Fields{
 		"source":   "pitaya-bot",
 		"function": "run",
@@ -25,7 +31,6 @@ func Run(app *state.App, config *viper.Viper, spec *models.Spec, id int, log log
 		if err != nil {
 			logger.Error("PANIC")
 			logger.Errorf("%s", debug.Stack())
-
 			logger.Error(err)
 		}
 	}()

@@ -7,6 +7,12 @@ import (
 // MemoryStorage is the in memory storage implementation
 type MemoryStorage map[string]interface{}
 
+// NewMemoryStorage returns a new MemoryStorage from map
+func NewMemoryStorage(m map[string]interface{}) *MemoryStorage {
+	mem := MemoryStorage(m)
+	return &mem
+}
+
 // Get returns value from key
 func (s *MemoryStorage) Get(key string) (interface{}, error) {
 	i := map[string]interface{}(*s)

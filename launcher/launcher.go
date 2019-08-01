@@ -146,7 +146,14 @@ func runSpec(app *state.App, spec *models.Spec, config *viper.Viper, duration fl
 }
 
 // Launch launches the bot spec
-func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration float64, shouldReportMetrics bool, logger logrus.FieldLogger) {
+func Launch(
+	app *state.App,
+	config *viper.Viper,
+	specsDirectory string,
+	duration float64,
+	shouldReportMetrics bool,
+	logger logrus.FieldLogger,
+) {
 	logger = logger.WithFields(logrus.Fields{
 		"function": "Launch",
 	})
@@ -175,7 +182,7 @@ func Launch(app *state.App, config *viper.Viper, specsDirectory string, duration
 	wg.Wait()
 
 	logger.Info("Finished running bots")
-	app.FinishedExecition = true
+	app.FinishedExecution = true
 
 	if shouldReportMetrics {
 		logger.Info("Waiting for metrics to be collected...")

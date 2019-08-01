@@ -20,12 +20,14 @@ func NewSpec(name string) *Spec {
 
 // InitialDefinitions are set before running each bot
 type InitialDefinitions struct {
-	Function string `json:"function,omitempty"`
+	Function string                 `json:"function,omitempty"`
+	Args     map[string]interface{} `json:"args,omitempty"`
 }
 
 // FinalDefinitions are run after finishing running each bot
 type FinalDefinitions struct {
-	Function string `json:"function,omitempty"`
+	Function string                 `json:"function,omitempty"`
+	Args     map[string]interface{} `json:"args,omitempty"`
 }
 
 // StoreSpecEntry ...
