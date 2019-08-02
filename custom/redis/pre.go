@@ -76,10 +76,17 @@ func NewPre(
 // Run runs the configured script and returns the storage
 func (p *Pre) Run(args map[string]interface{}) (storage.Storage, error) {
 	var name string
+	failEmpty := false
 	if nameInt, ok := args["name"]; ok {
 		name, ok = nameInt.(string)
 		if !ok {
 			return nil, fmt.Errorf("invalid type for name")
+		}
+	}
+	if failEmptyInt, ok := args["failEmpty"]; ok {
+		failEmpty, ok = failEmptyInt.(bool)
+		if !ok {
+			return nil, fmt.Errorf("invalid type for failEmpty")
 		}
 	}
 	if name == "" {
@@ -88,6 +95,9 @@ func (p *Pre) Run(args map[string]interface{}) (storage.Storage, error) {
 
 	res, err := p.script.Run(p.client.Client, []string{name}).Result()
 	if err != nil {
+		if !failEmpty && err == goredis.Nil {
+			return storage.NewMemoryStorage(nil), nil
+		}
 		return nil, err
 	}
 	if resStr, ok := res.(string); ok {

@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"encoding/json"
+
 	"github.com/topfreegames/pitaya-bot/constants"
 )
 
@@ -31,4 +33,12 @@ func (s *MemoryStorage) Set(key string, val interface{}) error {
 	i := map[string]interface{}(*s)
 	i[key] = val
 	return nil
+}
+
+func (s MemoryStorage) String() string {
+	j, err := json.Marshal(s)
+	if err != nil {
+		return ""
+	}
+	return string(j)
 }

@@ -3,6 +3,13 @@
   "preRun": {
     "function": "redis",
     "args": {
+      "name": "test",
+      "failEmpty": false
+    }
+  },
+  "postRun": {
+    "function": "redis",
+    "args": {
       "name": "test"
     }
   },
@@ -82,8 +89,5 @@
         }
       }
     }
-  ],
-  "postRun": {
-    "function": "saveToFile"
-  }
+  ]
 }

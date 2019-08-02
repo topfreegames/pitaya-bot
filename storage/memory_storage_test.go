@@ -77,3 +77,23 @@ func TestMemoryStorageNew(t *testing.T) {
 		})
 	}
 }
+
+func TestMemoryStorageString(t *testing.T) {
+	t.Parallel()
+
+	tables := map[string]struct {
+		store  Storage
+		result string
+	}{
+		"success": {
+			store:  &MemoryStorage{"attr": true},
+			result: `{"attr":true}`,
+		},
+	}
+
+	for name, table := range tables {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, table.result, table.store.String())
+		})
+	}
+}

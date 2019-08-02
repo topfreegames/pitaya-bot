@@ -215,7 +215,12 @@ func (b *SequentialBot) runOperation(op *models.Operation) error {
 
 // Finalize finalizes the bot
 func (b *SequentialBot) Finalize() error {
-	// TODO
+	b.logger.Debug("Finalizing bot")
+	post := custom.GetPost(b.config, b.spec)
+	if err := post.Run(b.spec.PostRun.Args, b.storage); err != nil {
+		return err
+	}
+	b.logger.Debugf("Saved storage")
 	return nil
 }
 
