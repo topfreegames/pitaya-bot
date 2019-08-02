@@ -19,7 +19,7 @@ func getRedis(
 	redisMutex.Lock()
 	defer redisMutex.Unlock()
 	if clients == nil {
-		clients = make(map[string]*redis.Client, 0)
+		clients = make(map[string]*redis.Client)
 	}
 	if _, ok := clients[prefix]; !ok {
 		redis, err := redis.NewClient(prefix, config)

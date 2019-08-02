@@ -1,13 +1,13 @@
-TESTABLE_PACKAGES = `go list ./... | egrep -v 'testing|constants|models|cmd' | grep 'pitaya-bot/'`
+.EXPORT_ALL_VARIABLES:
+GO111MODULE = on
+TESTABLE_PACKAGES = `go list ./... | egrep -v 'testing|constants|cmd' | grep 'pitaya-bot/'`
 
 setup:
-	@dep ensure
+	# NOOP
 
 setup-ci:
 	@go get github.com/mattn/goveralls
-	@go get -u github.com/golang/dep/cmd/dep
 	@go get -u github.com/wadey/gocovmerge
-	@dep ensure
 
 setup-protobuf-macos:
 	@brew install protobuf
@@ -40,7 +40,7 @@ test: unit-test-coverage
 
 unit-test-coverage:
 	@echo "===============RUNNING UNIT TESTS==============="
-	@go test $(TESTABLE_PACKAGES) -coverprofile coverprofile.out
+	@GO111MODULE=on go test $(TESTABLE_PACKAGES) -coverprofile coverprofile.out
 
 build-docker-image: build-linux
 	@docker build -t pitaya-bot . -f Dockerfile-dev

@@ -91,7 +91,7 @@ func (p *Pre) Run(args map[string]interface{}) (storage.Storage, error) {
 		return nil, err
 	}
 	if resStr, ok := res.(string); ok {
-		m := make(map[string]interface{}, 0)
+		m := make(map[string]interface{})
 		err = json.Unmarshal([]byte(resStr), &m)
 		if err != nil {
 			return nil, err
