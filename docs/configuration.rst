@@ -194,3 +194,40 @@ Bot
     - 1
     - int
     - Defines the number of instances to run for each spec when running on kubernetes
+
+Custom initialization and wrap-up
+==========
+
+.. list-table::
+  :widths: 15 10 10 50
+  :header-rows: 1
+  :stub-columns: 1
+
+  * - Configuration
+    - Default value
+    - Type
+    - Description
+  * - custom.redis.pre.url
+    - redis://localhost:9010
+    - string
+    - Redis url to connect if using a custom redis initialization
+  * - custom.redis.pre.connectionTimeout
+    - 10
+    - int
+    - Timeout in seconds to connect to redis
+  * - custom.redis.pre.script
+    - ""
+    - string
+    - Path to the lua script to run if using a custom redis initialization
+  * - custom.redis.post.url
+    - redis://localhost:9010
+    - string
+    - Redis url to connect if using a custom redis wrap-up
+  * - custom.redis.post.connectionTimeout
+    - 10
+    - int
+    - Timeout in seconds to connect to redis
+  * - custom.redis.post.script
+    - ""
+    - string
+    - Path to the lua script to run if using a custom redis wrap-up
