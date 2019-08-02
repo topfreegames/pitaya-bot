@@ -9,6 +9,9 @@ type MemoryStorage map[string]interface{}
 
 // NewMemoryStorage returns a new MemoryStorage from map
 func NewMemoryStorage(m map[string]interface{}) *MemoryStorage {
+	if m == nil {
+		m = make(map[string]interface{})
+	}
 	mem := MemoryStorage(m)
 	return &mem
 }
