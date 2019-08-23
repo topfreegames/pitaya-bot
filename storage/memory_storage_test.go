@@ -8,7 +8,9 @@ import (
 )
 
 func TestMemoryStorageGet(t *testing.T) {
-	var testMemoryStorageGetTable = map[string]struct {
+	t.Parallel()
+
+	testMemoryStorageGetTable := map[string]struct {
 		store  Storage
 		result interface{}
 		err    error
@@ -29,7 +31,9 @@ func TestMemoryStorageGet(t *testing.T) {
 }
 
 func TestMemoryStorageSet(t *testing.T) {
-	var testMemoryStorageGetTable = map[string]struct {
+	t.Parallel()
+
+	testMemoryStorageGetTable := map[string]struct {
 		value interface{}
 	}{
 		"success_bool":   {true},
@@ -45,6 +49,51 @@ func TestMemoryStorageSet(t *testing.T) {
 			result, err := store.Get("attr")
 			assert.Equal(t, table.value, result)
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestMemoryStorageNew(t *testing.T) {
+	t.Parallel()
+
+	tables := map[string]struct {
+		m     map[string]interface{}
+		store Storage
+	}{
+		"nil": {
+			m:     nil,
+			store: &MemoryStorage{},
+		},
+		"val": {
+			m:     map[string]interface{}{"attr": "wat", "attr2": false},
+			store: &MemoryStorage{"attr": "wat", "attr2": false},
+		},
+	}
+
+	for name, table := range tables {
+		t.Run(name, func(t *testing.T) {
+			s := NewMemoryStorage(table.m)
+			assert.Equal(t, table.store, s)
+		})
+	}
+}
+
+func TestMemoryStorageString(t *testing.T) {
+	t.Parallel()
+
+	tables := map[string]struct {
+		store  Storage
+		result string
+	}{
+		"success": {
+			store:  &MemoryStorage{"attr": true},
+			result: `{"attr":true}`,
+		},
+	}
+
+	for name, table := range tables {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, table.result, table.store.String())
 		})
 	}
 }

@@ -20,7 +20,7 @@ func TestNewApp(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			app := NewApp(table.config, table.shouldReportMetrics)
 			assert.Equal(t, false, app.ChannelClosed)
-			assert.Equal(t, false, app.FinishedExecition)
+			assert.Equal(t, false, app.FinishedExecution)
 			assert.Empty(t, app.DieChan)
 			if table.shouldReportMetrics {
 				assert.NotEmpty(t, app.MetricsReporter)

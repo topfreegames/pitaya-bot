@@ -10,7 +10,7 @@ import (
 
 // App is the struct that holds the app global data shared between packages
 type App struct {
-	FinishedExecition bool
+	FinishedExecution bool
 	ChannelClosed     bool
 	DieChan           chan struct{}
 	MetricsReporter   []metrics.Reporter
@@ -20,7 +20,7 @@ type App struct {
 // NewApp is the NewApp constructor
 func NewApp(config *viper.Viper, shouldReportMetrics bool) *App {
 	app := &App{
-		FinishedExecition: false,
+		FinishedExecution: false,
 		DieChan:           make(chan struct{}),
 	}
 
@@ -33,7 +33,7 @@ func NewApp(config *viper.Viper, shouldReportMetrics bool) *App {
 				func() {
 					defer app.Mu.Unlock()
 					app.Mu.Lock()
-					if app.FinishedExecition && !app.ChannelClosed {
+					if app.FinishedExecution && !app.ChannelClosed {
 						app.ChannelClosed = true
 						close(app.DieChan)
 					}

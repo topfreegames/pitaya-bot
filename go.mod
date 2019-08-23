@@ -3,7 +3,9 @@ module github.com/topfreegames/pitaya-bot
 go 1.12
 
 require (
+	github.com/bsm/redis-lock v6.0.0+incompatible // indirect
 	github.com/evanphx/json-patch v4.1.0+incompatible // indirect
+	github.com/go-redis/redis v6.13.2+incompatible
 	github.com/gogo/protobuf v1.2.1
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
@@ -34,6 +36,7 @@ require (
 	github.com/spf13/pflag v1.0.2 // indirect
 	github.com/spf13/viper v1.1.0
 	github.com/stretchr/testify v1.2.2
+	github.com/topfreegames/extensions v8.2.2+incompatible
 	github.com/topfreegames/pitaya v0.14.3
 	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890 // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect

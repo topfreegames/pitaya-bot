@@ -44,6 +44,33 @@ Pitaya-Bot comes with a few implemented storages, and more can be implemented as
 
 This storage retains all information inside the testing machine memory. The stored information is not persistent and will be flushed with the end of the test. 
 
+## Custom initialization and wrap-up
+
+Specs can specify custom initialization and wrap-up routines to do operations such as fetching an initial state from some storage and saving the final state to a storage.
+
+To define an initialization function in the script you should create a *preRun* field, with *function* specifying which function should be run. It also accepts *args* as an object with arguments to be passed to the function.
+
+To define a wrap-up function in the script you should create a *postRun* field, with *function* specifying which function should be run. It also accepts *args* as an object with arguments to be passed to the function.
+
+The JSON testing sample has an example with these fields.
+
+### Redis
+
+These initialization and wrap-routines run lua scripts in redis and come with default scripts to fetch a state from a set and save it to another. The preRun script is expected to return the initial state for the bot and the postRun script receives the final state and is expected to do something with it.
+
+The default initialization script tries to fetch an element from the set *${name}:available* and write it to *{name}:used*.
+
+The default wrap-up script writes the state to *${name}:available*.
+
+The initialization script accepts two arguments:
+
+- **name (required)**: the key argument that is passed to the lua script
+- **failEmpty (optional)**: a boolean indicating if the method should fail if the script returns nil
+
+The wrap-up script accepts one argument:
+
+- **name (required)**: the key argument that is passed to the lua script
+
 ## Serializers
 
 Pitaya-Bot supports both JSON and Protobuf serializers out of the box for the messages sent to and from the client, the default serializer is JSON.

@@ -1,7 +1,17 @@
 {
   "numberOfInstances": 1,
   "preRun": {
-    "function": "initializeDb"
+    "function": "redis",
+    "args": {
+      "name": "test",
+      "failEmpty": false
+    }
+  },
+  "postRun": {
+    "function": "redis",
+    "args": {
+      "name": "test"
+    }
   },
   "sequentialOperations": [
     {
@@ -79,8 +89,5 @@
         }
       }
     }
-  ],
-  "postRun": {
-    "function": "saveToFile"
-  }
+  ]
 }
