@@ -57,8 +57,8 @@ func NewSequentialBot(
 // Initialize initializes the bot
 func (b *SequentialBot) Initialize() error {
 	b.logger.Debug("Initializing bot")
-	pre := custom.GetPre(b.config, b.spec)
-	storage, err := pre.Run(b.spec.PreRun.Args)
+	pre, args := custom.GetPre(b.config, b.spec)
+	storage, err := pre.Run(args)
 	if err != nil {
 		return err
 	}
@@ -216,8 +216,8 @@ func (b *SequentialBot) runOperation(op *models.Operation) error {
 // Finalize finalizes the bot
 func (b *SequentialBot) Finalize() error {
 	b.logger.Debug("Finalizing bot")
-	post := custom.GetPost(b.config, b.spec)
-	if err := post.Run(b.spec.PostRun.Args, b.storage); err != nil {
+	post, args := custom.GetPost(b.config, b.spec)
+	if err := post.Run(args, b.storage); err != nil {
 		return err
 	}
 	b.logger.Debugf("Saved storage")

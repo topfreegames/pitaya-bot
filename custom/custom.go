@@ -45,27 +45,27 @@ func (d *DummyPost) Run(args map[string]interface{}, store storage.Storage) erro
 }
 
 // GetPre returns the pre operation for the spec, if it exists
-func GetPre(config *viper.Viper, spec *models.Spec) PreOperation {
+func GetPre(config *viper.Viper, spec *models.Spec) (PreOperation, map[string]interface{}) {
 	if spec.PreRun == nil {
-		return &DummyPre{}
+		return &DummyPre{}, map[string]interface{}{}
 	}
 
 	switch spec.PreRun.Function {
 	case PreRunFunctionRedis:
-		return redis.GetPre(config)
+		return redis.GetPre(config), spec.PreRun.Args
 	}
-	return &DummyPre{}
+	return &DummyPre{}, map[string]interface{}{}
 }
 
 // GetPost returns the post operation for the spec, if it exists
-func GetPost(config *viper.Viper, spec *models.Spec) PostOperation {
+func GetPost(config *viper.Viper, spec *models.Spec) (PostOperation, map[string]interface{}) {
 	if spec.PostRun == nil {
-		return &DummyPost{}
+		return &DummyPost{}, map[string]interface{}{}
 	}
 
 	switch spec.PostRun.Function {
 	case PostRunFunctionRedis:
-		return redis.GetPost(config)
+		return redis.GetPost(config), spec.PostRun.Args
 	}
-	return &DummyPost{}
+	return &DummyPost{}, map[string]interface{}{}
 }
