@@ -32,6 +32,10 @@ run-testing-proto-bots:
 kill-testing-proto-deps:
 	@docker-compose -f ./testing/protobuffer/docker-compose.yml down; true
 
+build-mac:
+	@mkdir -p out
+	@GOOS=darwin GOARCH=amd64 go build -o ./out/pitaya-bot-darwin ./main.go
+
 build-linux:
 	@mkdir -p out
 	@GOOS=linux GOARCH=amd64 go build -o ./out/pitaya-bot-linux ./main.go
