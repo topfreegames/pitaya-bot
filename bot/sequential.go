@@ -78,9 +78,10 @@ func (b *SequentialBot) Run() (err error) {
 	}()
 
 	steps := b.spec.SequentialOperations
-	for _, step := range steps {
+	for idx, step := range steps {
 		err = b.runOperation(step)
 		if err != nil {
+			b.logger.WithError(err).Warnf("failed sequential step %d (%s/%s)", idx, step.Type, step.URI)
 			return
 		}
 	}
