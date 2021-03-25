@@ -6,7 +6,7 @@ require (
 	github.com/bsm/redis-lock v6.0.0+incompatible // indirect
 	github.com/evanphx/json-patch v4.1.0+incompatible // indirect
 	github.com/go-redis/redis v6.13.2+incompatible
-	github.com/gogo/protobuf v1.2.1
+	github.com/gogo/protobuf v1.3.0
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/google/uuid v1.0.0
@@ -18,7 +18,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/magiconair/properties v1.8.0 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v0.0.0-20180715050151-f15292f7a699 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -37,7 +36,7 @@ require (
 	github.com/spf13/viper v1.1.0
 	github.com/stretchr/testify v1.2.2
 	github.com/topfreegames/extensions v8.2.2+incompatible
-	github.com/topfreegames/pitaya v0.14.3
+	github.com/topfreegames/pitaya v0.15.4
 	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890 // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/appengine v1.3.0 // indirect
