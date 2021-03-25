@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -44,8 +45,25 @@ func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.
 	return instance
 }
 
+func tryConnect(pClient client.PitayaClient, addr string) error {
+	if err := pClient.ConnectToWS(addr, "", &tls.Config{
+		InsecureSkipVerify: true,
+	}); err != nil {
+		if err := pClient.ConnectToWS(addr, ""); err != nil {
+			if err := pClient.ConnectTo(addr, &tls.Config{
+				InsecureSkipVerify: true,
+			}); err != nil {
+				if err := pClient.ConnectTo(addr); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // NewPClient is the PCLient constructor
-func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]string) (*PClient, error) {
+func NewPClient(host string, docs string, pushinfo map[string]string) (*PClient, error) {
 	var pclient client.PitayaClient
 	if docs != "" {
 		protoclient := client.NewProto(docs, logrus.InfoLevel)
@@ -57,18 +75,10 @@ func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]strin
 		pclient = client.New(logrus.InfoLevel)
 	}
 
-	if useTLS {
-		if err := pclient.ConnectToTLS(host, true); err != nil {
-			fmt.Println("Error connecting to server")
-			fmt.Println(err)
-			return nil, err
-		}
-	} else {
-		if err := pclient.ConnectTo(host); err != nil {
-			fmt.Println("Error connecting to server")
-			fmt.Println(err)
-			return nil, err
-		}
+	if err := tryConnect(pclient, host); err != nil {
+		fmt.Println("Error connecting to server")
+		fmt.Println(err)
+		return nil, err
 	}
 
 	return &PClient{

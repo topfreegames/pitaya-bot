@@ -60,8 +60,7 @@ storage:
   type: "memory"
 
 server:
-  host: "localhost",
-  tls: true
+  host: "localhost"
 
 prometheus:
   port: 9191

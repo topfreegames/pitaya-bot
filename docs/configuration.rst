@@ -60,10 +60,6 @@ The configurations needed to access the Pitaya server being tested
     - localhost
     - string
     - Pitaya server host
-  * - server.tls
-    - false
-    - bool
-    - Boolean to enable/disable TLS to connect with Pitaya server
   * - server.serializer
     - json
     - string

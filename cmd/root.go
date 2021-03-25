@@ -100,7 +100,6 @@ func fillDefaultValues(config *viper.Viper) {
 		"game":                                "",
 		"prometheus.port":                     9191,
 		"server.host":                         "localhost",
-		"server.tls":                          false,
 		"server.serializer":                   "json",
 		"server.protobuffer.docs":             "connector.docsHandler.docs",
 		"storage.type":                        "memory",
