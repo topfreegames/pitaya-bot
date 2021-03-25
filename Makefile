@@ -14,7 +14,7 @@ setup-protobuf-macos:
 	@go get -u github.com/gogo/protobuf/protoc-gen-gogofaster
 
 run-testing-server:
-	@docker-compose -f ./testing/json/docker-compose.yml up -d etcd nats && go run ./testing/json/main.go
+	@docker-compose -f ./testing/json/docker-compose.yml up -d etcd nats redis && go run ./testing/json/main.go
 
 run-testing-bots:
 	@go run *.go run -d ./testing/json/specs/ --config ./testing/json/config/config.yaml
