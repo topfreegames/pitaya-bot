@@ -61,6 +61,7 @@ storage:
 
 server:
   host: "localhost"
+  tls: true
 
 prometheus:
   port: 9191

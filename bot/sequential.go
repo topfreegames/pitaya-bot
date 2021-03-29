@@ -255,7 +255,8 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 		docs = b.config.GetString("server.protobuffer.docs")
 	}
 
-	client, err := NewPClient(b.host, docs, pushinfo)
+ 	useTLS := b.config.GetBool("server.tls")
+	client, err := NewPClient(b.host, useTLS, docs, pushinfo)
 	if err != nil {
 		b.logger.WithError(err).Error("Unable to create client...")
 		return err
