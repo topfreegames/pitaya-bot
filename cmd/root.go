@@ -103,6 +103,7 @@ func fillDefaultValues(config *viper.Viper) {
 		"server.tls":                          "false",
 		"server.serializer":                   "json",
 		"server.protobuffer.docs":             "connector.docsHandler.docs",
+		"server.requestTimeout":               "5s",
 		"storage.type":                        "memory",
 		"kubernetes.config":                   filepath.Join(homedir.HomeDir(), ".kube", "config"),
 		"kubernetes.context":                  "",

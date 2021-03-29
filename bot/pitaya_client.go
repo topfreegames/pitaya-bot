@@ -26,9 +26,12 @@ type PClient struct {
 
 	pushesMutex sync.Mutex
 	pushes      map[string]chan []byte
+
+	timeout time.Duration
+	logger  logrus.FieldLogger
 }
 
-func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.ProtoBufferInfo {
+func getProtoInfo(host string, docs string, pushinfo map[string]string, logger logrus.FieldLogger) *client.ProtoBufferInfo {
 	once.Do(func() {
 		cli := client.NewProto(docs, logrus.InfoLevel)
 		for k, v := range pushinfo {
@@ -36,8 +39,7 @@ func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.
 		}
 		err := cli.LoadServerInfo(host)
 		if err != nil {
-			fmt.Println("Unable to load server documentation.")
-			fmt.Println(err)
+			logger.WithError(err).Error("Unable to load server documentation.")
 		} else {
 			instance = cli.ExportInformation()
 		}
@@ -45,8 +47,8 @@ func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.
 	return instance
 }
 
-func tryConnect(pClient client.PitayaClient, addr string, useTLS bool) error {
-	fmt.Printf("Connecting (tls=[%v])...\n", useTLS)
+func tryConnect(pClient client.PitayaClient, addr string, useTLS bool, logger logrus.FieldLogger) error {
+	logger.Debugf("Connecting (tls=[%v])...\n", useTLS)
 	if useTLS {
 		if err := pClient.ConnectToWS(addr, "", &tls.Config{
 			InsecureSkipVerify: true,
@@ -68,21 +70,20 @@ func tryConnect(pClient client.PitayaClient, addr string, useTLS bool) error {
 }
 
 // NewPClient is the PCLient constructor
-func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]string) (*PClient, error) {
+func NewPClient(host string, useTLS bool, timeout time.Duration, logger logrus.FieldLogger, docs string, pushinfo map[string]string) (*PClient, error) {
 	var pclient client.PitayaClient
 	if docs != "" {
 		protoclient := client.NewProto(docs, logrus.InfoLevel)
 		pclient = protoclient
-		if err := protoclient.LoadInfo(getProtoInfo(host, docs, pushinfo)); err != nil {
+		if err := protoclient.LoadInfo(getProtoInfo(host, docs, pushinfo, logger)); err != nil {
 			return nil, err
 		}
 	} else {
 		pclient = client.New(logrus.InfoLevel)
 	}
 
-	if err := tryConnect(pclient, host, useTLS); err != nil {
-		fmt.Println("Error connecting to server")
-		fmt.Println(err)
+	if err := tryConnect(pclient, host, useTLS, logger); err != nil {
+		logger.WithError(err).Error("Error connecting to server")
 		return nil, err
 	}
 
@@ -90,6 +91,8 @@ func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]strin
 		client:    pclient,
 		responses: make(map[uint]chan []byte),
 		pushes:    make(map[string]chan []byte),
+		timeout:   timeout,
+		logger:    logger,
 	}, nil
 }
 
@@ -149,7 +152,7 @@ func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 		}
 
 		return ret, responseData, nil
-	case <-time.After(5 * time.Second): // TODO - pass timeout as config
+	case <-time.After(c.timeout):
 		return nil, nil, fmt.Errorf("Timeout waiting for response on route %s", route)
 	}
 }
