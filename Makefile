@@ -17,7 +17,7 @@ run-testing-json-server:
 	@docker-compose -f ./testing/json/docker-compose.yml up -d etcd nats redis && go run ./testing/json/main.go
 
 run-testing-json-bots:
-	@go run *.go run -d ./testing/json/specs/ --config ./testing/json/config/config.yaml
+	@go run *.go run --duration 5s -d ./testing/json/specs/ --config ./testing/json/config/config.yaml
 
 kill-testing-json-deps:
 	@docker-compose -f ./testing/json/docker-compose.yml down; true
@@ -27,7 +27,7 @@ run-testing-proto-server:
 	@docker-compose -f ./testing/protobuffer/docker-compose.yml up -d etcd nats && go run ./testing/protobuffer/main.go
 
 run-testing-proto-bots:
-	@go run *.go run --duration 10s -d ./testing/protobuffer/specs/ --config ./testing/protobuffer/config/config.yaml
+	@go run *.go run --duration 5s -d ./testing/protobuffer/specs/ --config ./testing/protobuffer/config/config.yaml
 
 kill-testing-proto-deps:
 	@docker-compose -f ./testing/protobuffer/docker-compose.yml down; true
