@@ -164,7 +164,7 @@ func (c *PClient) Notify(route string, data []byte) error {
 }
 
 // ReceivePush ...
-func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
+func (c *PClient) ReceivePush(route string, timeout int) (Response, []byte, error) {
 	ch := c.getPushChannelForRoute(route)
 
 	select {
@@ -172,12 +172,12 @@ func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
 		var ret Response
 		if err := json.Unmarshal(data, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
-			return nil, err
+			return nil, nil, err
 		}
 
-		return ret, nil
+		return ret, data, nil
 	case <-time.After(time.Duration(timeout) * time.Millisecond):
-		return nil, fmt.Errorf("Timeout waiting for push on route %s", route)
+		return nil, nil, fmt.Errorf("Timeout waiting for push on route %s", route)
 	}
 }
 

@@ -171,7 +171,7 @@ func (b *SequentialBot) runFunction(op *models.Operation) error {
 
 func (b *SequentialBot) listenToPush(op *models.Operation) error {
 	b.logger.Debug("Waiting for push on route: " + op.URI)
-	resp, err := b.client.ReceivePush(op.URI, op.Timeout)
+	resp, rawResp, err := b.client.ReceivePush(op.URI, op.Timeout)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (b *SequentialBot) listenToPush(op *models.Operation) error {
 	b.logger.Debug("validating expectations")
 	err = validateExpectations(op.Expect, resp, b.storage)
 	if err != nil {
-		return err
+		return NewExpectError(err, rawResp, op.Expect)
 	}
 	b.logger.Debug("received valid response")
 
