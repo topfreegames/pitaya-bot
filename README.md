@@ -53,7 +53,7 @@ $ make run-testing-json-bots
 For the examples with protobuf, instead run:
 ```
 $ make run-testing-proto-server
-$ make run-testing-proto-server
+$ make run-testing-proto-bots
 ```
 
 ## Running the tests
