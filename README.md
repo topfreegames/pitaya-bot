@@ -40,27 +40,20 @@ make setup
 
 Here's how to run the testing example with JSON serializer:
 
-Start etcd and nats (this command requires docker-compose and will run etcd and nats containers locally, you may run etcd and/or nats without docker if you prefer)
+Start the dependencies (this command requires docker-compose, but you may run the dependencies locally if need be) and the pitaya server:
 ```
-docker-compose -f ./testing/json/docker-compose.yml up -d etcd
-```
-run the server from testing example
-```
-make run-testing-server
+$ make run-testing-json-server
 ```
 
-Now a pitaya server should be running in one terminal. In another one, you can use pitaya-bot testing example:
+Now a pitaya server should be running in one terminal. In another one, you can run pitaya-bot with the test specs:
 ```
-$ pitaya-bot run -d ./testing/json/specs/ --config ./testing/json/config/config.yaml
-testing/json/specs/default.json 1755
-INFO[0000] Found 1 specs to be executed                  function=launch source=pitaya-bot
-...
+$ make run-testing-json-bots
 ```
 
-To run the protobuf example you can run:
+For the examples with protobuf, instead run:
 ```
-make run-testing-proto-server
-pitaya-bot run -d ./testing/protobuffer/specs --config ./testing/protobuffer/config/config.yaml
+$ make run-testing-proto-server
+$ make run-testing-proto-bots
 ```
 
 ## Running the tests

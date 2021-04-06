@@ -64,6 +64,10 @@ The configurations needed to access the Pitaya server being tested
     - false
     - bool
     - Boolean to enable/disable TLS to connect with Pitaya server
+  * - server.requestTimeout
+    - 5s
+    - time.Duration
+    - Request timeout for the Pitaya client
   * - server.serializer
     - json
     - string

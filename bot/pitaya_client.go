@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -25,9 +26,12 @@ type PClient struct {
 
 	pushesMutex sync.Mutex
 	pushes      map[string]chan []byte
+
+	timeout time.Duration
+	logger  logrus.FieldLogger
 }
 
-func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.ProtoBufferInfo {
+func getProtoInfo(host string, docs string, pushinfo map[string]string, logger logrus.FieldLogger) *client.ProtoBufferInfo {
 	once.Do(func() {
 		cli := client.NewProto(docs, logrus.InfoLevel)
 		for k, v := range pushinfo {
@@ -35,8 +39,7 @@ func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.
 		}
 		err := cli.LoadServerInfo(host)
 		if err != nil {
-			fmt.Println("Unable to load server documentation.")
-			fmt.Println(err)
+			logger.WithError(err).Error("Unable to load server documentation.")
 		} else {
 			instance = cli.ExportInformation()
 		}
@@ -44,37 +47,52 @@ func getProtoInfo(host string, docs string, pushinfo map[string]string) *client.
 	return instance
 }
 
+func tryConnect(pClient client.PitayaClient, addr string, useTLS bool, logger logrus.FieldLogger) error {
+	logger.Debugf("Connecting (tls=[%v])...\n", useTLS)
+	if useTLS {
+		if err := pClient.ConnectToWS(addr, "", &tls.Config{
+			InsecureSkipVerify: true,
+		}); err != nil {
+			if err := pClient.ConnectTo(addr, &tls.Config{
+				InsecureSkipVerify: true,
+			}); err != nil {
+				return err
+			}
+		}
+	} else {
+		if err := pClient.ConnectToWS(addr, ""); err != nil {
+			if err := pClient.ConnectTo(addr); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // NewPClient is the PCLient constructor
-func NewPClient(host string, useTLS bool, docs string, pushinfo map[string]string) (*PClient, error) {
+func NewPClient(host string, useTLS bool, timeout time.Duration, logger logrus.FieldLogger, docs string, pushinfo map[string]string) (*PClient, error) {
 	var pclient client.PitayaClient
 	if docs != "" {
 		protoclient := client.NewProto(docs, logrus.InfoLevel)
 		pclient = protoclient
-		if err := protoclient.LoadInfo(getProtoInfo(host, docs, pushinfo)); err != nil {
+		if err := protoclient.LoadInfo(getProtoInfo(host, docs, pushinfo, logger)); err != nil {
 			return nil, err
 		}
 	} else {
 		pclient = client.New(logrus.InfoLevel)
 	}
 
-	if useTLS {
-		if err := pclient.ConnectToTLS(host, true); err != nil {
-			fmt.Println("Error connecting to server")
-			fmt.Println(err)
-			return nil, err
-		}
-	} else {
-		if err := pclient.ConnectTo(host); err != nil {
-			fmt.Println("Error connecting to server")
-			fmt.Println(err)
-			return nil, err
-		}
+	if err := tryConnect(pclient, host, useTLS, logger); err != nil {
+		logger.WithError(err).Error("Error connecting to server")
+		return nil, err
 	}
 
 	return &PClient{
 		client:    pclient,
 		responses: make(map[uint]chan []byte),
 		pushes:    make(map[string]chan []byte),
+		timeout:   timeout,
+		logger:    logger,
 	}, nil
 }
 
@@ -134,7 +152,7 @@ func (c *PClient) Request(route string, data []byte) (Response, []byte, error) {
 		}
 
 		return ret, responseData, nil
-	case <-time.After(5 * time.Second): // TODO - pass timeout as config
+	case <-time.After(c.timeout):
 		return nil, nil, fmt.Errorf("Timeout waiting for response on route %s", route)
 	}
 }
@@ -146,7 +164,7 @@ func (c *PClient) Notify(route string, data []byte) error {
 }
 
 // ReceivePush ...
-func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
+func (c *PClient) ReceivePush(route string, timeout int) (Response, []byte, error) {
 	ch := c.getPushChannelForRoute(route)
 
 	select {
@@ -154,12 +172,12 @@ func (c *PClient) ReceivePush(route string, timeout int) (Response, error) {
 		var ret Response
 		if err := json.Unmarshal(data, &ret); err != nil {
 			err = fmt.Errorf("Error unmarshaling response: %s", err)
-			return nil, err
+			return nil, nil, err
 		}
 
-		return ret, nil
+		return ret, data, nil
 	case <-time.After(time.Duration(timeout) * time.Millisecond):
-		return nil, fmt.Errorf("Timeout waiting for push on route %s", route)
+		return nil, nil, fmt.Errorf("Timeout waiting for push on route %s", route)
 	}
 }
 

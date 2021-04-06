@@ -25,18 +25,22 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
+	gogoproto "github.com/gogo/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/topfreegames/pitaya"
-	"github.com/topfreegames/pitaya-bot/testing/protobuffer/protos"
 	"github.com/topfreegames/pitaya/acceptor"
 	"github.com/topfreegames/pitaya/component"
+	"github.com/topfreegames/pitaya/constants"
 	pitayaprotos "github.com/topfreegames/pitaya/protos"
 	"github.com/topfreegames/pitaya/serialize/protobuf"
+
+	"github.com/topfreegames/pitaya-bot/testing/protobuffer/protos"
 )
 
 // DocsHandler ...
@@ -127,35 +131,56 @@ func (p *PlayerHandler) FindMatch(ctx context.Context, arg *protos.FindMatchArg)
 }
 
 // Docs returns documentation
-func (c *DocsHandler) Docs(ctx context.Context) (*pitayaprotos.Doc, error) {
-	d, err := pitaya.Documentation(true)
-	if err != nil {
-		return nil, err
-	}
-	doc, err := json.Marshal(d)
-
+func (d *DocsHandler) Docs(ctx context.Context) (*pitayaprotos.Doc, error) {
+	docs, err := pitaya.Documentation(true)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pitayaprotos.Doc{Doc: string(doc)}, nil
+	jsonDocs, err := json.Marshal(docs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pitayaprotos.Doc{Doc: string(jsonDocs)}, nil
 }
 
 // Protos return protobuffers descriptors
-func (c *DocsHandler) Protos(ctx context.Context, message *pitayaprotos.ProtoNames) (*pitayaprotos.ProtoDescriptors, error) {
+func (d *DocsHandler) Protos(ctx context.Context, message *pitayaprotos.ProtoNames) (*pitayaprotos.ProtoDescriptors, error) {
 	var descriptors [][]byte
 
 	for _, name := range message.GetName() {
 		protoDescriptor, err := pitaya.Descriptor(name)
 		if err != nil {
-			return nil, err
+			// Not a default pitaya proto, so we can probably find it here
+			protoDescriptor, err = getDescriptorFromName(name)
+			if err != nil { 
+				return nil, constants.ErrProtodescriptor
+			}
 		}
+
 		descriptors = append(descriptors, protoDescriptor)
 	}
 
 	return &pitayaprotos.ProtoDescriptors{
 		Desc: descriptors,
 	}, nil
+}
+
+// taken partly from pitaya/docgenerator/descriptors.go
+func getDescriptorFromName(protoName string) ([]byte, error) {
+	protoReflectTypePointer := gogoproto.MessageType(protoName)
+	protoReflectType := protoReflectTypePointer.Elem()
+	protoValue := reflect.New(protoReflectType)
+	descriptorMethod, ok := protoReflectTypePointer.MethodByName("Descriptor")
+	if !ok {
+		return nil, constants.ErrProtodescriptor
+	}
+
+	descriptorValue := descriptorMethod.Func.Call([]reflect.Value{protoValue})
+	protoDescriptor := descriptorValue[0].Bytes()
+
+	return protoDescriptor, nil
 }
 
 func main() {
@@ -195,7 +220,8 @@ func main() {
 	pitaya.AddAcceptor(tcp)
 	cfg := viper.New()
 	cfg.Set("pitaya.cluster.sd.etcd.prefix", *sdPrefix)
-	pitaya.Configure(true, *svType, pitaya.Cluster, map[string]string{}, cfg)
+	isFrontend := true
+	pitaya.Configure(isFrontend, *svType, pitaya.Cluster, map[string]string{}, cfg)
 
 	pitaya.Start()
 }

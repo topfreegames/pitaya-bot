@@ -166,13 +166,15 @@ func Launch(
 
 	var wg sync.WaitGroup
 	errmutex := sync.Mutex{}
-	compoundError := []error{}
+	compoundErrorHist := make(map[string]int)
 	for _, spec := range specs {
 		wg.Add(1)
 		go func(spec *models.Spec) {
-			if err := runSpec(app, spec, config, duration, logger); err != nil {
+			if errs := runSpec(app, spec, config, duration, logger); errs != nil {
 				errmutex.Lock()
-				compoundError = append(compoundError, err...)
+				for _, err := range errs {
+					compoundErrorHist[err.Error()]++
+				}
 				errmutex.Unlock()
 			}
 			wg.Done()
@@ -193,9 +195,10 @@ func Launch(
 		}
 	}
 
-	if len(compoundError) > 0 {
-		logger.Error("Spec execution failed")
-		logger.Error(compoundError)
+	if len(compoundErrorHist) > 0 {
+		logger.WithFields(logrus.Fields{
+			"errors": compoundErrorHist,
+		}).Error("Spec execution failed")
 		os.Exit(1)
 	}
 }

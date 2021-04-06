@@ -1,5 +1,9 @@
 package models
 
+import (
+	"github.com/topfreegames/pitaya-bot/constants"
+)
+
 // Spec defines the bots' spec
 type Spec struct {
 	Name                 string              `json:"name"`
@@ -57,4 +61,24 @@ type Operation struct {
 	Expect  ExpectSpec             `json:"expect,omitempty"`
 	Store   StoreSpec              `json:"store,omitempty"`
 	Change  map[string]interface{} `json:"change,omitempty"`
+}
+
+// Validate returns an error if the operation is malformed
+// TODO -- more validations
+func (o *Operation) Validate() error {
+	if o == nil {
+		return constants.ErrSpecInvalidNil
+	}
+
+	if o.Type == "" {
+		// must have a Type specified
+		return constants.ErrSpecInvalidType
+	}
+
+	if o.URI == "" {
+		// must have a URI specified
+		return constants.ErrSpecInvalidURI
+	}
+
+	return nil
 }
