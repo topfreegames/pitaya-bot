@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/topfreegames/pitaya/logger"
+	"github.com/topfreegames/pitaya/v2/logger"
+	pitayalogrus "github.com/topfreegames/pitaya/v2/logger/logrus"
 )
 
 func getLogger() logrus.FieldLogger {
@@ -29,6 +30,6 @@ func getLogger() logrus.FieldLogger {
 		"app": "pitaya-bot",
 	})
 
-	logger.SetLogger(fieldLogger)
+	logger.SetLogger(pitayalogrus.NewWithEntry(fieldLogger))
 	return fieldLogger
 }

@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -10,6 +11,7 @@ import (
 	"github.com/topfreegames/pitaya-bot/metrics"
 	"github.com/topfreegames/pitaya-bot/models"
 	"github.com/topfreegames/pitaya-bot/storage"
+	"github.com/topfreegames/pitaya/v2/session"
 )
 
 // SequentialBot defines the struct for the sequential bot that is going to run
@@ -255,9 +257,15 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 		docs = b.config.GetString("server.protobuffer.docs")
 	}
 
- 	useTLS := b.config.GetBool("server.tls")
- 	timeout := b.config.GetDuration("server.requestTimeout")
-	client, err := NewPClient(b.host, useTLS, timeout, b.logger, docs, pushinfo)
+	var handshake *session.HandshakeData
+	err := json.Unmarshal([]byte(b.config.GetString("server.handshake")), &handshake)
+	if err != nil {
+		b.logger.Fatal("Invalid handshake.")
+	}
+
+	useTLS := b.config.GetBool("server.tls")
+	timeout := b.config.GetDuration("server.requestTimeout")
+	client, err := NewPClient(b.host, useTLS, handshake, timeout, b.logger, docs, pushinfo)
 	if err != nil {
 		b.logger.WithError(err).Error("Unable to create client...")
 		return err

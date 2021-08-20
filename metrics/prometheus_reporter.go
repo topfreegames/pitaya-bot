@@ -8,7 +8,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	pbConstants "github.com/topfreegames/pitaya-bot/constants"
-	"github.com/topfreegames/pitaya/constants"
+	"github.com/topfreegames/pitaya/v2/constants"
 )
 
 var (

@@ -33,12 +33,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/topfreegames/pitaya"
-	"github.com/topfreegames/pitaya/acceptor"
-	"github.com/topfreegames/pitaya/component"
-	"github.com/topfreegames/pitaya/constants"
-	pitayaprotos "github.com/topfreegames/pitaya/protos"
-	"github.com/topfreegames/pitaya/serialize/protobuf"
+	"github.com/topfreegames/pitaya/v2"
+	"github.com/topfreegames/pitaya/v2/acceptor"
+	"github.com/topfreegames/pitaya/v2/component"
+	"github.com/topfreegames/pitaya/v2/constants"
+	pitayaprotos "github.com/topfreegames/pitaya/v2/protos"
+	"github.com/topfreegames/pitaya/v2/serialize/protobuf"
 
 	"github.com/topfreegames/pitaya-bot/testing/protobuffer/protos"
 )
