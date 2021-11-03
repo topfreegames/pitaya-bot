@@ -60,7 +60,7 @@ storage:
   type: "memory"
 
 server:
-  host: "localhost",
+  host: "localhost"
   tls: true
 
 prometheus:

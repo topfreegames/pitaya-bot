@@ -3,11 +3,13 @@
 
 package protos
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-
-import io "io"
+import (
+	fmt "fmt"
+	proto "github.com/gogo/protobuf/proto"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -18,7 +20,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Response represents a rpc message
 type Player struct {
@@ -33,7 +35,7 @@ func (m *Player) Reset()         { *m = Player{} }
 func (m *Player) String() string { return proto.CompactTextString(m) }
 func (*Player) ProtoMessage()    {}
 func (*Player) Descriptor() ([]byte, []int) {
-	return fileDescriptor_example_4c07b9927c24f8f0, []int{0}
+	return fileDescriptor_15a1dc8d40dadaa6, []int{0}
 }
 func (m *Player) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -43,15 +45,15 @@ func (m *Player) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return xxx_messageInfo_Player.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (dst *Player) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Player.Merge(dst, src)
+func (m *Player) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Player.Merge(m, src)
 }
 func (m *Player) XXX_Size() int {
 	return m.Size()
@@ -100,14 +102,14 @@ func (m *Player) GetTrophies() int32 {
 type AuthResponse struct {
 	Code   string  `protobuf:"bytes,1,opt,name=Code,proto3" json:"Code,omitempty"`
 	Msg    string  `protobuf:"bytes,2,opt,name=Msg,proto3" json:"Msg,omitempty"`
-	Player *Player `protobuf:"bytes,3,opt,name=Player" json:"Player,omitempty"`
+	Player *Player `protobuf:"bytes,3,opt,name=Player,proto3" json:"Player,omitempty"`
 }
 
 func (m *AuthResponse) Reset()         { *m = AuthResponse{} }
 func (m *AuthResponse) String() string { return proto.CompactTextString(m) }
 func (*AuthResponse) ProtoMessage()    {}
 func (*AuthResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_example_4c07b9927c24f8f0, []int{1}
+	return fileDescriptor_15a1dc8d40dadaa6, []int{1}
 }
 func (m *AuthResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -117,15 +119,15 @@ func (m *AuthResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return xxx_messageInfo_AuthResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (dst *AuthResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AuthResponse.Merge(dst, src)
+func (m *AuthResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthResponse.Merge(m, src)
 }
 func (m *AuthResponse) XXX_Size() int {
 	return m.Size()
@@ -165,7 +167,7 @@ func (m *AuthArg) Reset()         { *m = AuthArg{} }
 func (m *AuthArg) String() string { return proto.CompactTextString(m) }
 func (*AuthArg) ProtoMessage()    {}
 func (*AuthArg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_example_4c07b9927c24f8f0, []int{2}
+	return fileDescriptor_15a1dc8d40dadaa6, []int{2}
 }
 func (m *AuthArg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -175,15 +177,15 @@ func (m *AuthArg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return xxx_messageInfo_AuthArg.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (dst *AuthArg) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AuthArg.Merge(dst, src)
+func (m *AuthArg) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthArg.Merge(m, src)
 }
 func (m *AuthArg) XXX_Size() int {
 	return m.Size()
@@ -209,7 +211,7 @@ func (m *FindMatchArg) Reset()         { *m = FindMatchArg{} }
 func (m *FindMatchArg) String() string { return proto.CompactTextString(m) }
 func (*FindMatchArg) ProtoMessage()    {}
 func (*FindMatchArg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_example_4c07b9927c24f8f0, []int{3}
+	return fileDescriptor_15a1dc8d40dadaa6, []int{3}
 }
 func (m *FindMatchArg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -219,15 +221,15 @@ func (m *FindMatchArg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return xxx_messageInfo_FindMatchArg.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (dst *FindMatchArg) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FindMatchArg.Merge(dst, src)
+func (m *FindMatchArg) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FindMatchArg.Merge(m, src)
 }
 func (m *FindMatchArg) XXX_Size() int {
 	return m.Size()
@@ -254,7 +256,7 @@ func (m *FindMatchResponse) Reset()         { *m = FindMatchResponse{} }
 func (m *FindMatchResponse) String() string { return proto.CompactTextString(m) }
 func (*FindMatchResponse) ProtoMessage()    {}
 func (*FindMatchResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_example_4c07b9927c24f8f0, []int{4}
+	return fileDescriptor_15a1dc8d40dadaa6, []int{4}
 }
 func (m *FindMatchResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -264,15 +266,15 @@ func (m *FindMatchResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return xxx_messageInfo_FindMatchResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (dst *FindMatchResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FindMatchResponse.Merge(dst, src)
+func (m *FindMatchResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FindMatchResponse.Merge(m, src)
 }
 func (m *FindMatchResponse) XXX_Size() int {
 	return m.Size()
@@ -307,7 +309,7 @@ func (m *FindMatchPush) Reset()         { *m = FindMatchPush{} }
 func (m *FindMatchPush) String() string { return proto.CompactTextString(m) }
 func (*FindMatchPush) ProtoMessage()    {}
 func (*FindMatchPush) Descriptor() ([]byte, []int) {
-	return fileDescriptor_example_4c07b9927c24f8f0, []int{5}
+	return fileDescriptor_15a1dc8d40dadaa6, []int{5}
 }
 func (m *FindMatchPush) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -317,15 +319,15 @@ func (m *FindMatchPush) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return xxx_messageInfo_FindMatchPush.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (dst *FindMatchPush) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FindMatchPush.Merge(dst, src)
+func (m *FindMatchPush) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FindMatchPush.Merge(m, src)
 }
 func (m *FindMatchPush) XXX_Size() int {
 	return m.Size()
@@ -365,10 +367,38 @@ func init() {
 	proto.RegisterType((*FindMatchResponse)(nil), "protos.FindMatchResponse")
 	proto.RegisterType((*FindMatchPush)(nil), "protos.FindMatchPush")
 }
+
+func init() { proto.RegisterFile("example.proto", fileDescriptor_15a1dc8d40dadaa6) }
+
+var fileDescriptor_15a1dc8d40dadaa6 = []byte{
+	// 327 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x51, 0x3d, 0x4f, 0x02, 0x41,
+	0x14, 0x64, 0xf9, 0x12, 0x1e, 0x1f, 0xd1, 0xad, 0x2e, 0xc4, 0x5c, 0xc8, 0x16, 0x86, 0x68, 0x42,
+	0xa1, 0x95, 0x25, 0x62, 0x34, 0x14, 0x98, 0xcd, 0x4a, 0x69, 0xb3, 0x1e, 0x4f, 0x20, 0xc2, 0xed,
+	0x65, 0x77, 0x31, 0xf2, 0x2f, 0xfc, 0x01, 0xfe, 0x20, 0x4b, 0x4a, 0x4b, 0x03, 0x7f, 0xc4, 0xdc,
+	0xde, 0x71, 0x62, 0x62, 0x63, 0x75, 0xf3, 0x66, 0xde, 0xbc, 0x9b, 0xc9, 0x42, 0x03, 0x5f, 0xe5,
+	0x22, 0x9a, 0x63, 0x37, 0xd2, 0xca, 0x2a, 0x5a, 0x76, 0x1f, 0xc3, 0xde, 0x09, 0x94, 0xf9, 0x5c,
+	0xae, 0x50, 0xd3, 0x63, 0xa8, 0x72, 0x3d, 0x7b, 0x91, 0x16, 0x07, 0xd7, 0x1e, 0x69, 0x93, 0x4e,
+	0x55, 0xfc, 0x10, 0xb4, 0x0d, 0xb5, 0x5e, 0x10, 0xa0, 0x31, 0x23, 0xf5, 0x8c, 0xa1, 0x97, 0x77,
+	0xfa, 0x3e, 0x45, 0x29, 0x14, 0xef, 0xe4, 0x02, 0xbd, 0x82, 0x93, 0x1c, 0xa6, 0x0c, 0xea, 0xf7,
+	0xea, 0xc9, 0xf6, 0x97, 0x5a, 0x63, 0x18, 0xac, 0xbc, 0x62, 0x9b, 0x74, 0x4a, 0xe2, 0x17, 0x47,
+	0x5b, 0x50, 0x19, 0x69, 0x15, 0x4d, 0x67, 0x68, 0xbc, 0x92, 0xd3, 0xb3, 0x99, 0x3d, 0x40, 0xbd,
+	0xb7, 0xb4, 0x53, 0x81, 0x26, 0x52, 0xa1, 0xc1, 0xf8, 0x1f, 0x7d, 0x35, 0xc6, 0x34, 0x9e, 0xc3,
+	0xf4, 0x10, 0x0a, 0x43, 0x33, 0x49, 0x13, 0xc5, 0x90, 0x9e, 0xec, 0x3a, 0xb9, 0x2c, 0xb5, 0xf3,
+	0x66, 0x52, 0xda, 0x74, 0x13, 0x56, 0xa4, 0x2a, 0x3b, 0x83, 0x83, 0xf8, 0x7a, 0x4f, 0x4f, 0xe2,
+	0x7a, 0x72, 0xaf, 0x5e, 0x72, 0x7f, 0x9f, 0x62, 0xa7, 0x50, 0xbf, 0x99, 0x85, 0xe3, 0xa1, 0xb4,
+	0x81, 0x73, 0xb4, 0xa0, 0x22, 0x94, 0x5a, 0x8c, 0x56, 0xd1, 0x2e, 0x4e, 0x36, 0xb3, 0x4b, 0x38,
+	0xca, 0x76, 0xff, 0x97, 0x9d, 0xdd, 0x42, 0x23, 0xb3, 0xf2, 0xa5, 0x99, 0xfe, 0x69, 0x6b, 0x42,
+	0x7e, 0xc0, 0x53, 0x57, 0x7e, 0xc0, 0xe3, 0x1d, 0xae, 0xb4, 0x75, 0x75, 0x4b, 0xc2, 0xe1, 0x2b,
+	0xef, 0x63, 0xe3, 0x93, 0xf5, 0xc6, 0x27, 0x5f, 0x1b, 0x9f, 0xbc, 0x6d, 0xfd, 0xdc, 0x7a, 0xeb,
+	0xe7, 0x3e, 0xb7, 0x7e, 0xee, 0x31, 0x79, 0xfb, 0x8b, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x71,
+	0x44, 0x40, 0x9d, 0x13, 0x02, 0x00, 0x00,
+}
+
 func (m *Player) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -376,45 +406,53 @@ func (m *Player) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Player) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Player) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.PrivateID) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.PrivateID)))
-		i += copy(dAtA[i:], m.PrivateID)
-	}
-	if len(m.AccessToken) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.AccessToken)))
-		i += copy(dAtA[i:], m.AccessToken)
-	}
-	if len(m.Name) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+	if m.Trophies != 0 {
+		i = encodeVarintExample(dAtA, i, uint64(m.Trophies))
+		i--
+		dAtA[i] = 0x28
 	}
 	if m.SoftCurrency != 0 {
-		dAtA[i] = 0x20
-		i++
 		i = encodeVarintExample(dAtA, i, uint64(m.SoftCurrency))
+		i--
+		dAtA[i] = 0x20
 	}
-	if m.Trophies != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(m.Trophies))
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	return i, nil
+	if len(m.AccessToken) > 0 {
+		i -= len(m.AccessToken)
+		copy(dAtA[i:], m.AccessToken)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.AccessToken)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.PrivateID) > 0 {
+		i -= len(m.PrivateID)
+		copy(dAtA[i:], m.PrivateID)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.PrivateID)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *AuthResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -422,39 +460,48 @@ func (m *AuthResponse) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AuthResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AuthResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Code) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Code)))
-		i += copy(dAtA[i:], m.Code)
+	if m.Player != nil {
+		{
+			size, err := m.Player.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintExample(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
 	}
 	if len(m.Msg) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Msg)
+		copy(dAtA[i:], m.Msg)
 		i = encodeVarintExample(dAtA, i, uint64(len(m.Msg)))
-		i += copy(dAtA[i:], m.Msg)
+		i--
+		dAtA[i] = 0x12
 	}
-	if m.Player != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(m.Player.Size()))
-		n1, err := m.Player.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
+	if len(m.Code) > 0 {
+		i -= len(m.Code)
+		copy(dAtA[i:], m.Code)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Code)))
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *AuthArg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -462,23 +509,29 @@ func (m *AuthArg) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AuthArg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AuthArg) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.AccessToken) > 0 {
-		dAtA[i] = 0xa
-		i++
+		i -= len(m.AccessToken)
+		copy(dAtA[i:], m.AccessToken)
 		i = encodeVarintExample(dAtA, i, uint64(len(m.AccessToken)))
-		i += copy(dAtA[i:], m.AccessToken)
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *FindMatchArg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -486,23 +539,29 @@ func (m *FindMatchArg) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *FindMatchArg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FindMatchArg) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	if len(m.RoomType) > 0 {
-		dAtA[i] = 0xa
-		i++
+		i -= len(m.RoomType)
+		copy(dAtA[i:], m.RoomType)
 		i = encodeVarintExample(dAtA, i, uint64(len(m.RoomType)))
-		i += copy(dAtA[i:], m.RoomType)
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *FindMatchResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -510,29 +569,36 @@ func (m *FindMatchResponse) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *FindMatchResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FindMatchResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Code) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Code)))
-		i += copy(dAtA[i:], m.Code)
-	}
 	if len(m.Msg) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.Msg)
+		copy(dAtA[i:], m.Msg)
 		i = encodeVarintExample(dAtA, i, uint64(len(m.Msg)))
-		i += copy(dAtA[i:], m.Msg)
+		i--
+		dAtA[i] = 0x12
 	}
-	return i, nil
+	if len(m.Code) > 0 {
+		i -= len(m.Code)
+		copy(dAtA[i:], m.Code)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Code)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *FindMatchPush) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -540,38 +606,47 @@ func (m *FindMatchPush) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *FindMatchPush) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FindMatchPush) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Code) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Code)))
-		i += copy(dAtA[i:], m.Code)
+	if m.Port != 0 {
+		i = encodeVarintExample(dAtA, i, uint64(m.Port))
+		i--
+		dAtA[i] = 0x18
 	}
 	if len(m.IP) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.IP)
+		copy(dAtA[i:], m.IP)
 		i = encodeVarintExample(dAtA, i, uint64(len(m.IP)))
-		i += copy(dAtA[i:], m.IP)
+		i--
+		dAtA[i] = 0x12
 	}
-	if m.Port != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(m.Port))
+	if len(m.Code) > 0 {
+		i -= len(m.Code)
+		copy(dAtA[i:], m.Code)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Code)))
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintExample(dAtA []byte, offset int, v uint64) int {
+	offset -= sovExample(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
 func (m *Player) Size() (n int) {
 	if m == nil {
@@ -685,14 +760,7 @@ func (m *FindMatchPush) Size() (n int) {
 }
 
 func sovExample(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozExample(x uint64) (n int) {
 	return sovExample(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -712,7 +780,7 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -740,7 +808,7 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -750,6 +818,9 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -769,7 +840,7 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -779,6 +850,9 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -798,7 +872,7 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -808,6 +882,9 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -827,7 +904,7 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.SoftCurrency |= (int32(b) & 0x7F) << shift
+				m.SoftCurrency |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -846,7 +923,7 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Trophies |= (int32(b) & 0x7F) << shift
+				m.Trophies |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -857,7 +934,7 @@ func (m *Player) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthExample
 			}
 			if (iNdEx + skippy) > l {
@@ -887,7 +964,7 @@ func (m *AuthResponse) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -915,7 +992,7 @@ func (m *AuthResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -925,6 +1002,9 @@ func (m *AuthResponse) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -944,7 +1024,7 @@ func (m *AuthResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -954,6 +1034,9 @@ func (m *AuthResponse) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -973,7 +1056,7 @@ func (m *AuthResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -982,6 +1065,9 @@ func (m *AuthResponse) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -998,7 +1084,7 @@ func (m *AuthResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthExample
 			}
 			if (iNdEx + skippy) > l {
@@ -1028,7 +1114,7 @@ func (m *AuthArg) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1056,7 +1142,7 @@ func (m *AuthArg) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1066,6 +1152,9 @@ func (m *AuthArg) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1077,7 +1166,7 @@ func (m *AuthArg) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthExample
 			}
 			if (iNdEx + skippy) > l {
@@ -1107,7 +1196,7 @@ func (m *FindMatchArg) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1135,7 +1224,7 @@ func (m *FindMatchArg) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1145,6 +1234,9 @@ func (m *FindMatchArg) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1156,7 +1248,7 @@ func (m *FindMatchArg) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthExample
 			}
 			if (iNdEx + skippy) > l {
@@ -1186,7 +1278,7 @@ func (m *FindMatchResponse) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1214,7 +1306,7 @@ func (m *FindMatchResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1224,6 +1316,9 @@ func (m *FindMatchResponse) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1243,7 +1338,7 @@ func (m *FindMatchResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1253,6 +1348,9 @@ func (m *FindMatchResponse) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1264,7 +1362,7 @@ func (m *FindMatchResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthExample
 			}
 			if (iNdEx + skippy) > l {
@@ -1294,7 +1392,7 @@ func (m *FindMatchPush) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1322,7 +1420,7 @@ func (m *FindMatchPush) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1332,6 +1430,9 @@ func (m *FindMatchPush) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1351,7 +1452,7 @@ func (m *FindMatchPush) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1361,6 +1462,9 @@ func (m *FindMatchPush) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthExample
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthExample
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1380,7 +1484,7 @@ func (m *FindMatchPush) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Port |= (int32(b) & 0x7F) << shift
+				m.Port |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1391,7 +1495,7 @@ func (m *FindMatchPush) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthExample
 			}
 			if (iNdEx + skippy) > l {
@@ -1409,6 +1513,7 @@ func (m *FindMatchPush) Unmarshal(dAtA []byte) error {
 func skipExample(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1440,10 +1545,8 @@ func skipExample(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1460,80 +1563,34 @@ func skipExample(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
 				return 0, ErrInvalidLengthExample
 			}
-			return iNdEx, nil
+			iNdEx += length
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowExample
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipExample(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupExample
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthExample
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthExample = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowExample   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthExample        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowExample          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupExample = fmt.Errorf("proto: unexpected end of group")
 )
-
-func init() { proto.RegisterFile("example.proto", fileDescriptor_example_4c07b9927c24f8f0) }
-
-var fileDescriptor_example_4c07b9927c24f8f0 = []byte{
-	// 327 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x51, 0x3d, 0x4f, 0x02, 0x41,
-	0x14, 0x64, 0xf9, 0x12, 0x1e, 0x1f, 0xd1, 0xad, 0x2e, 0xc4, 0x5c, 0xc8, 0x16, 0x86, 0x68, 0x42,
-	0xa1, 0x95, 0x25, 0x62, 0x34, 0x14, 0x98, 0xcd, 0x4a, 0x69, 0xb3, 0x1e, 0x4f, 0x20, 0xc2, 0xed,
-	0x65, 0x77, 0x31, 0xf2, 0x2f, 0xfc, 0x01, 0xfe, 0x20, 0x4b, 0x4a, 0x4b, 0x03, 0x7f, 0xc4, 0xdc,
-	0xde, 0x71, 0x62, 0x62, 0x63, 0x75, 0xf3, 0x66, 0xde, 0xbc, 0x9b, 0xc9, 0x42, 0x03, 0x5f, 0xe5,
-	0x22, 0x9a, 0x63, 0x37, 0xd2, 0xca, 0x2a, 0x5a, 0x76, 0x1f, 0xc3, 0xde, 0x09, 0x94, 0xf9, 0x5c,
-	0xae, 0x50, 0xd3, 0x63, 0xa8, 0x72, 0x3d, 0x7b, 0x91, 0x16, 0x07, 0xd7, 0x1e, 0x69, 0x93, 0x4e,
-	0x55, 0xfc, 0x10, 0xb4, 0x0d, 0xb5, 0x5e, 0x10, 0xa0, 0x31, 0x23, 0xf5, 0x8c, 0xa1, 0x97, 0x77,
-	0xfa, 0x3e, 0x45, 0x29, 0x14, 0xef, 0xe4, 0x02, 0xbd, 0x82, 0x93, 0x1c, 0xa6, 0x0c, 0xea, 0xf7,
-	0xea, 0xc9, 0xf6, 0x97, 0x5a, 0x63, 0x18, 0xac, 0xbc, 0x62, 0x9b, 0x74, 0x4a, 0xe2, 0x17, 0x47,
-	0x5b, 0x50, 0x19, 0x69, 0x15, 0x4d, 0x67, 0x68, 0xbc, 0x92, 0xd3, 0xb3, 0x99, 0x3d, 0x40, 0xbd,
-	0xb7, 0xb4, 0x53, 0x81, 0x26, 0x52, 0xa1, 0xc1, 0xf8, 0x1f, 0x7d, 0x35, 0xc6, 0x34, 0x9e, 0xc3,
-	0xf4, 0x10, 0x0a, 0x43, 0x33, 0x49, 0x13, 0xc5, 0x90, 0x9e, 0xec, 0x3a, 0xb9, 0x2c, 0xb5, 0xf3,
-	0x66, 0x52, 0xda, 0x74, 0x13, 0x56, 0xa4, 0x2a, 0x3b, 0x83, 0x83, 0xf8, 0x7a, 0x4f, 0x4f, 0xe2,
-	0x7a, 0x72, 0xaf, 0x5e, 0x72, 0x7f, 0x9f, 0x62, 0xa7, 0x50, 0xbf, 0x99, 0x85, 0xe3, 0xa1, 0xb4,
-	0x81, 0x73, 0xb4, 0xa0, 0x22, 0x94, 0x5a, 0x8c, 0x56, 0xd1, 0x2e, 0x4e, 0x36, 0xb3, 0x4b, 0x38,
-	0xca, 0x76, 0xff, 0x97, 0x9d, 0xdd, 0x42, 0x23, 0xb3, 0xf2, 0xa5, 0x99, 0xfe, 0x69, 0x6b, 0x42,
-	0x7e, 0xc0, 0x53, 0x57, 0x7e, 0xc0, 0xe3, 0x1d, 0xae, 0xb4, 0x75, 0x75, 0x4b, 0xc2, 0xe1, 0x2b,
-	0xef, 0x63, 0xe3, 0x93, 0xf5, 0xc6, 0x27, 0x5f, 0x1b, 0x9f, 0xbc, 0x6d, 0xfd, 0xdc, 0x7a, 0xeb,
-	0xe7, 0x3e, 0xb7, 0x7e, 0xee, 0x31, 0x79, 0xfb, 0x8b, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x71,
-	0x44, 0x40, 0x9d, 0x13, 0x02, 0x00, 0x00,
-}

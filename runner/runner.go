@@ -39,6 +39,13 @@ func Run(
 	logger.Infof("Starting bot with id: %d", id)
 	if spec.SequentialOperations != nil {
 		logger.Debug("Found sequential operations")
+		for idx, step := range spec.SequentialOperations {
+			if err := step.Validate(); err != nil {
+				logger.WithError(err).Errorf("invalid step=[%d]", idx)
+				return err
+			}
+		}
+
 		bot, err = pbot.NewSequentialBot(config, spec, id, app.MetricsReporter, logger)
 		if err != nil {
 			logger.WithError(err).Error("Failed to create bot")

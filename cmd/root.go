@@ -63,7 +63,7 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./config/config.yaml", "config file")
 	rootCmd.PersistentFlags().IntVarP(
-		&verbose, "verbose", "v", 3,
+		&verbose, "verbose", "v", 2,
 		"Verbosity level => v0: Error, v1=Warning, v2=Info, v3=Debug",
 	)
 	rootCmd.PersistentFlags().BoolVarP(&logJSON, "logJSON", "j", false, "logJSON output mode")
@@ -100,9 +100,10 @@ func fillDefaultValues(config *viper.Viper) {
 		"game":                                "",
 		"prometheus.port":                     9191,
 		"server.host":                         "localhost",
-		"server.tls":                          false,
+		"server.tls":                          "false",
 		"server.serializer":                   "json",
 		"server.protobuffer.docs":             "connector.docsHandler.docs",
+		"server.requestTimeout":               "5s",
 		"storage.type":                        "memory",
 		"kubernetes.config":                   filepath.Join(homedir.HomeDir(), ".kube", "config"),
 		"kubernetes.context":                  "",

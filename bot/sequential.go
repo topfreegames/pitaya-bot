@@ -78,9 +78,10 @@ func (b *SequentialBot) Run() (err error) {
 	}()
 
 	steps := b.spec.SequentialOperations
-	for _, step := range steps {
+	for idx, step := range steps {
 		err = b.runOperation(step)
 		if err != nil {
+			b.logger.WithError(err).Warnf("failed sequential step %d (%s/%s)", idx, step.Type, step.URI)
 			return
 		}
 	}
@@ -170,7 +171,7 @@ func (b *SequentialBot) runFunction(op *models.Operation) error {
 
 func (b *SequentialBot) listenToPush(op *models.Operation) error {
 	b.logger.Debug("Waiting for push on route: " + op.URI)
-	resp, err := b.client.ReceivePush(op.URI, op.Timeout)
+	resp, rawResp, err := b.client.ReceivePush(op.URI, op.Timeout)
 	if err != nil {
 		return err
 	}
@@ -178,7 +179,7 @@ func (b *SequentialBot) listenToPush(op *models.Operation) error {
 	b.logger.Debug("validating expectations")
 	err = validateExpectations(op.Expect, resp, b.storage)
 	if err != nil {
-		return err
+		return NewExpectError(err, rawResp, op.Expect)
 	}
 	b.logger.Debug("received valid response")
 
@@ -254,8 +255,9 @@ func (b *SequentialBot) Connect(hosts ...string) error {
 		docs = b.config.GetString("server.protobuffer.docs")
 	}
 
-	tls := b.config.GetBool("server.tls")
-	client, err := NewPClient(b.host, tls, docs, pushinfo)
+ 	useTLS := b.config.GetBool("server.tls")
+ 	timeout := b.config.GetDuration("server.requestTimeout")
+	client, err := NewPClient(b.host, useTLS, timeout, b.logger, docs, pushinfo)
 	if err != nil {
 		b.logger.WithError(err).Error("Unable to create client...")
 		return err
