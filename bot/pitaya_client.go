@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/topfreegames/pitaya/client"
-	pitayamessage "github.com/topfreegames/pitaya/conn/message"
+	"github.com/topfreegames/pitaya/v2/client"
+	pitayamessage "github.com/topfreegames/pitaya/v2/conn/message"
+	"github.com/topfreegames/pitaya/v2/session"
 )
 
 // information for the singleton
@@ -70,7 +71,7 @@ func tryConnect(pClient client.PitayaClient, addr string, useTLS bool, logger lo
 }
 
 // NewPClient is the PCLient constructor
-func NewPClient(host string, useTLS bool, timeout time.Duration, logger logrus.FieldLogger, docs string, pushinfo map[string]string) (*PClient, error) {
+func NewPClient(host string, useTLS bool, handshake *session.HandshakeData, timeout time.Duration, logger logrus.FieldLogger, docs string, pushinfo map[string]string) (*PClient, error) {
 	var pclient client.PitayaClient
 	if docs != "" {
 		protoclient := client.NewProto(docs, logrus.InfoLevel)
@@ -82,6 +83,7 @@ func NewPClient(host string, useTLS bool, timeout time.Duration, logger logrus.F
 		pclient = client.New(logrus.InfoLevel)
 	}
 
+	pclient.SetClientHandshakeData(handshake)
 	if err := tryConnect(pclient, host, useTLS, logger); err != nil {
 		logger.WithError(err).Error("Error connecting to server")
 		return nil, err
