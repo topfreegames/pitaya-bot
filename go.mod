@@ -6,7 +6,7 @@ require (
 	github.com/bsm/redis-lock v6.0.0+incompatible // indirect
 	github.com/evanphx/json-patch v4.1.0+incompatible // indirect
 	github.com/go-redis/redis v6.13.2+incompatible
-	github.com/gogo/protobuf v1.3.0
+	github.com/gogo/protobuf v1.3.2
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/google/uuid v1.0.0
