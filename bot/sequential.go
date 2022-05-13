@@ -3,6 +3,7 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -164,6 +165,8 @@ func (b *SequentialBot) runFunction(op *models.Operation) error {
 		b.Connect(host)
 	case "reconnect":
 		b.Reconnect()
+	case "sleep":
+		b.Sleep(op.Timeout)
 	default:
 		return fmt.Errorf("Unknown function: %s", fName)
 	}
@@ -282,3 +285,10 @@ func (b *SequentialBot) Reconnect() {
 	b.Connect()
 	b.logger.Debug("Reconnect done")
 }
+
+//Sleep
+func (b *SequentialBot) Sleep(timeout int) {
+	time.Sleep(time.Duration(timeout) * time.Millisecond)
+	b.logger.Debug("Sleeping")
+}
+

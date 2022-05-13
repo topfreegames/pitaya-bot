@@ -8,4 +8,5 @@ type Bot interface {
 	Connect(...string) error
 	Disconnect()
 	Reconnect()
+	Sleep(int)
 }
