@@ -8,3 +8,5 @@ server:
         - "connector.playerHandler.matchfound"
       protos:
         - "protos.FindMatchPush"
+  handshake: >
+   {}

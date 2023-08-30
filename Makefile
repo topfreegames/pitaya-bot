@@ -11,7 +11,7 @@ setup-ci:
 
 setup-protobuf-macos:
 	@brew install protobuf
-	@go get -u github.com/gogo/protobuf/protoc-gen-gogofaster
+	@go install github.com/gogo/protobuf/protoc-gen-gogofaster
 
 run-testing-json-server:
 	@docker-compose -f ./testing/json/docker-compose.yml up -d etcd nats redis && go run ./testing/json/main.go
