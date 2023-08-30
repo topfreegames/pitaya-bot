@@ -33,6 +33,8 @@ import (
 	"github.com/topfreegames/pitaya/v2"
 	"github.com/topfreegames/pitaya/v2/acceptor"
 	"github.com/topfreegames/pitaya/v2/component"
+	"github.com/topfreegames/pitaya/v2/config"
+	pitayalogrus "github.com/topfreegames/pitaya/v2/logger/logrus"
 	"github.com/topfreegames/pitaya/v2/serialize/json"
 )
 
@@ -87,6 +89,8 @@ var (
 		SoftCurrency: 100,
 		Trophies:     2,
 	}
+
+	app pitaya.Pitaya
 )
 
 // Create ...
@@ -102,7 +106,7 @@ func (p *PlayerHandler) Create(ctx context.Context) (*AuthResponse, error) {
 }
 
 func bindSession(ctx context.Context, uid uuid.UUID) error {
-	return pitaya.GetSessionFromCtx(ctx).Bind(ctx, uid.String())
+	return app.GetSessionFromCtx(ctx).Bind(ctx, uid.String())
 }
 
 // Authenticate ...
@@ -126,7 +130,7 @@ func (p *PlayerHandler) FindMatch(ctx context.Context, arg *findMatchArg) (*Find
 			IP:   "127.0.0.1",
 			Port: 9090,
 		}
-		if _, err := pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, []string{player.PrivateID.String()}, "connector"); err != nil {
+		if _, err := app.SendPushToUsers("connector.playerHandler.matchfound", response, []string{player.PrivateID.String()}, "connector"); err != nil {
 			panic(err)
 		}
 	}()
@@ -151,23 +155,25 @@ func main() {
 		l.SetLevel(logrus.DebugLevel)
 	}
 
-	pitaya.SetLogger(l)
-
 	tcp := acceptor.NewTCPAcceptor(fmt.Sprintf(":%d", *port))
 
-	pitaya.Register(
+	plogger := pitayalogrus.NewWithEntry(l.WithField("app", "pitaya-bot-testing-sv"))
+	pitaya.SetLogger(plogger)
+
+	l.Infof("Port: %d", *port)
+	cfg := viper.New()
+	cfg.Set("pitaya.cluster.sd.etcd.prefix", *sdPrefix)
+
+	builder := pitaya.NewBuilderWithConfigs(true, *svType, pitaya.Cluster, map[string]string{}, config.NewConfig(cfg))
+	builder.AddAcceptor(tcp)
+	builder.Serializer = json.NewSerializer()
+	app = builder.Build()
+
+	app.Register(
 		&PlayerHandler{},
 		component.WithName("playerHandler"),
 		component.WithNameFunc(strings.ToLower),
 	)
 
-	pitaya.SetSerializer(json.NewSerializer())
-
-	l.Infof("Port: %d", *port)
-	pitaya.AddAcceptor(tcp)
-	cfg := viper.New()
-	cfg.Set("pitaya.cluster.sd.etcd.prefix", *sdPrefix)
-	pitaya.Configure(true, *svType, pitaya.Cluster, map[string]string{}, cfg)
-
-	pitaya.Start()
+	app.Start()
 }

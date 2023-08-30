@@ -36,7 +36,9 @@ import (
 	"github.com/topfreegames/pitaya/v2"
 	"github.com/topfreegames/pitaya/v2/acceptor"
 	"github.com/topfreegames/pitaya/v2/component"
+	"github.com/topfreegames/pitaya/v2/config"
 	"github.com/topfreegames/pitaya/v2/constants"
+	pitayalogrus "github.com/topfreegames/pitaya/v2/logger/logrus"
 	pitayaprotos "github.com/topfreegames/pitaya/v2/protos"
 	"github.com/topfreegames/pitaya/v2/serialize/protobuf"
 
@@ -70,6 +72,7 @@ var (
 		SoftCurrency: 100,
 		Trophies:     2,
 	}
+	app pitaya.Pitaya
 )
 
 // Proto transform Player in proto.Player
@@ -96,7 +99,7 @@ func (p *PlayerHandler) Create(ctx context.Context) (*protos.AuthResponse, error
 }
 
 func bindSession(ctx context.Context, uid uuid.UUID) error {
-	return pitaya.GetSessionFromCtx(ctx).Bind(ctx, uid.String())
+	return app.GetSessionFromCtx(ctx).Bind(ctx, uid.String())
 }
 
 // Authenticate ...
@@ -120,7 +123,7 @@ func (p *PlayerHandler) FindMatch(ctx context.Context, arg *protos.FindMatchArg)
 			Port: 9090,
 		}
 		uuids := []string{player.PrivateID.String()}
-		if _, err := pitaya.SendPushToUsers("connector.playerHandler.matchfound", response, uuids, "connector"); err != nil {
+		if _, err := app.SendPushToUsers("connector.playerHandler.matchfound", response, uuids, "connector"); err != nil {
 			panic(err)
 		}
 	}()
@@ -132,7 +135,7 @@ func (p *PlayerHandler) FindMatch(ctx context.Context, arg *protos.FindMatchArg)
 
 // Docs returns documentation
 func (d *DocsHandler) Docs(ctx context.Context) (*pitayaprotos.Doc, error) {
-	docs, err := pitaya.Documentation(true)
+	docs, err := app.Documentation(true)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +157,7 @@ func (d *DocsHandler) Protos(ctx context.Context, message *pitayaprotos.ProtoNam
 		if err != nil {
 			// Not a default pitaya proto, so we can probably find it here
 			protoDescriptor, err = getDescriptorFromName(name)
-			if err != nil { 
+			if err != nil {
 				return nil, constants.ErrProtodescriptor
 			}
 		}
@@ -198,30 +201,32 @@ func main() {
 		l.SetLevel(logrus.DebugLevel)
 	}
 
-	pitaya.SetLogger(l)
+	plogger := pitayalogrus.NewWithEntry(l.WithField("app", "pitaya-bot-test-sv"))
 
 	tcp := acceptor.NewTCPAcceptor(fmt.Sprintf(":%d", *port))
 
-	pitaya.Register(
+	l.Infof("Port: %d", *port)
+	cfg := viper.New()
+	cfg.Set("pitaya.cluster.sd.etcd.prefix", *sdPrefix)
+
+	builder := pitaya.NewBuilderWithConfigs(true, *svType, pitaya.Cluster, map[string]string{}, config.NewConfig(cfg))
+	builder.AddAcceptor(tcp)
+	builder.Serializer = protobuf.NewSerializer()
+
+	app = builder.Build()
+	app.Register(
 		&PlayerHandler{},
 		component.WithName("playerHandler"),
 		component.WithNameFunc(strings.ToLower),
 	)
 
-	pitaya.Register(
+	pitaya.SetLogger(plogger)
+
+	app.Register(
 		&DocsHandler{},
 		component.WithName("docsHandler"),
 		component.WithNameFunc(strings.ToLower),
 	)
 
-	pitaya.SetSerializer(protobuf.NewSerializer())
-
-	l.Infof("Port: %d", *port)
-	pitaya.AddAcceptor(tcp)
-	cfg := viper.New()
-	cfg.Set("pitaya.cluster.sd.etcd.prefix", *sdPrefix)
-	isFrontend := true
-	pitaya.Configure(isFrontend, *svType, pitaya.Cluster, map[string]string{}, cfg)
-
-	pitaya.Start()
+	app.Start()
 }

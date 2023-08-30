@@ -1,2 +1,4 @@
 server:
   host: "localhost:30123"
+  handshake: >
+    {}

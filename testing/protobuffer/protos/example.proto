@@ -32,6 +32,6 @@ message FindMatchResponse {
 
 message FindMatchPush {
 	string Code = 1;
-  	string IP = 2;
-  	int32 Port = 3;
+  string IP = 2;
+  int32 Port = 3;
 }
