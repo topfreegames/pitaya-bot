@@ -40,6 +40,10 @@ build-linux:
 	@mkdir -p out
 	@GOOS=linux GOARCH=amd64 go build -o ./out/pitaya-bot-linux ./main.go
 
+build-windows:
+	@mkdir -p out
+	@GOOS=windows GOARCH=amd64 go build -o ./out/pitaya-bot-windows.exe ./main.go
+
 test: unit-test-coverage
 
 unit-test-coverage:
@@ -48,5 +52,3 @@ unit-test-coverage:
 
 build-docker-image: build-linux
 	@docker build -t pitaya-bot . -f Dockerfile-dev
-
-
