@@ -1,3 +1,7 @@
+# Deprecation Notice
+
+Pitaya-bot is no longer the recommended way to load test pitaya applications. We recommend using [xk6-pitaya](https://github.com/topfreegames/pitaya/tree/main/xk6-pitaya)
+
 # pitaya-bot [![GoDoc][1]][2] [![Docs][3]][4] [![Go Report Card][5]][6] [![MIT licensed][7]][8] [![Build Status][9]][10] [![Coverage Status][11]][12]
 
 [1]: https://godoc.org/github.com/topfreegames/pitaya-bot?status.svg
